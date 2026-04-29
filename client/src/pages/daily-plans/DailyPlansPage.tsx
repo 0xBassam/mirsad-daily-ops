@@ -1,0 +1,77 @@
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import apiClient from '../../api/client';
+import { DailyPlan } from '../../types';
+import { PageLoader } from '../../components/ui/LoadingSpinner';
+import { StatusBadge } from '../../components/ui/Badge';
+import { Pagination } from '../../components/ui/Pagination';
+import { formatDate } from '../../utils/formatDate';
+import { Plus, Eye, Copy, Trash2 } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export function DailyPlansPage() {
+  const [page, setPage] = useState(1);
+  const qc = useQueryClient();
+
+  const { data, isLoading } = useQuery({
+    queryKey: ['daily-plans', page],
+    queryFn: () => apiClient.get(`/daily-plans?page=${page}&limit=20`).then(r => r.data),
+  });
+
+  const copyMutation = useMutation({
+    mutationFn: (id: string) => {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      return apiClient.post(`/daily-plans/${id}/copy`, { targetDate: tomorrow.toISOString() });
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success('Plan copied to tomorrow'); },
+    onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiClient.delete(`/daily-plans/${id}`),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success('Deleted'); },
+    onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
+  });
+
+  if (isLoading) return <PageLoader />;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">Daily Allocation Plans</h1>
+        <Link to="/daily-plans/new" className="btn-primary"><Plus className="h-4 w-4" /> New Plan</Link>
+      </div>
+      <div className="card overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr>{['Date', 'Project', 'Building', 'Shift', 'Status', 'Created By', 'Actions'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {data?.data?.map((p: DailyPlan) => (
+              <tr key={p._id} className="hover:bg-slate-50">
+                <td className="px-4 py-3 font-medium text-slate-900">{formatDate(p.date)}</td>
+                <td className="px-4 py-3 text-slate-500">{typeof p.project === 'object' ? p.project.name : '-'}</td>
+                <td className="px-4 py-3 text-slate-500">{typeof p.building === 'object' ? p.building.name : '-'}</td>
+                <td className="px-4 py-3 capitalize text-slate-500">{p.shift}</td>
+                <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
+                <td className="px-4 py-3 text-slate-500">{p.createdBy?.fullName || '—'}</td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-2">
+                    <Link to={`/daily-plans/${p._id}`} className="text-slate-400 hover:text-indigo-600"><Eye className="h-4 w-4" /></Link>
+                    <button onClick={() => copyMutation.mutate(p._id)} className="text-slate-400 hover:text-green-600"><Copy className="h-4 w-4" /></button>
+                    {p.status === 'draft' && (
+                      <button onClick={() => deleteMutation.mutate(p._id)} className="text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {data?.pagination && <Pagination pagination={data.pagination} onPageChange={setPage} />}
+      </div>
+    </div>
+  );
+}
