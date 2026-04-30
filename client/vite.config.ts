@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+const isGitHubPages = !!process.env.GITHUB_PAGES;
+
 export default defineConfig({
   plugins: [react()],
-  base: process.env.GITHUB_PAGES ? '/mirsad-daily-ops/' : '/',
+  base: isGitHubPages ? '/mirsad-daily-ops/' : '/',
+  define: isGitHubPages ? { 'import.meta.env.VITE_DEMO_MODE': '"true"' } : {},
   server: {
     proxy: {
       '/api': {
