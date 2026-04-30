@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/client';
 import { AuditLog } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -14,6 +15,7 @@ const ACTION_COLORS: Record<string, 'green' | 'red' | 'blue' | 'yellow' | 'gray'
 };
 
 export function AuditLogsPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [actionFilter, setActionFilter] = useState('');
 
@@ -29,22 +31,22 @@ export function AuditLogsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Audit Logs</h1>
-        <p className="text-slate-500 text-sm mt-1">System activity trail</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t('auditLogs.title')}</h1>
+        <p className="text-slate-500 text-sm mt-1">{t('auditLogs.subtitle')}</p>
       </div>
       <div className="flex flex-wrap gap-2">
         {actions.map(a => (
           <button key={a} onClick={() => setActionFilter(a)}
             className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors capitalize ${actionFilter === a ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'}`}>
-            {a || 'All'}
+            {a || t('common.all')}
           </button>
         ))}
       </div>
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>{['Time', 'User', 'Action', 'Entity Type', 'Details'].map(h => (
-              <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>
+            <tr>{[t('common.date'), t('common.createdBy'), t('auditLogs.action'), t('auditLogs.entity'), t('common.details')].map(h => (
+              <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>
             ))}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">

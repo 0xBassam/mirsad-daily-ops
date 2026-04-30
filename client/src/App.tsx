@@ -30,6 +30,9 @@ import { ExpiryTrackingPage } from './pages/expiry/ExpiryTrackingPage';
 import { SpoilageAlertsPage } from './pages/spoilage/SpoilageAlertsPage';
 import { CorrectiveActionsPage } from './pages/corrective-actions/CorrectiveActionsPage';
 import { CorrectiveActionDetailPage } from './pages/corrective-actions/CorrectiveActionDetailPage';
+import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
+import { ReportDetailPage } from './pages/reports/ReportDetailPage';
+import { InventoryItemDetailPage } from './pages/inventory/InventoryItemDetailPage';
 
 export default function App() {
   return (
@@ -44,6 +47,7 @@ export default function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:id" element={<ProjectDetailPage />} />
               <Route path="/buildings" element={<BuildingsPage />} />
               <Route path="/floors" element={<FloorsPage />} />
               <Route path="/items" element={<ItemsPage />} />
@@ -54,7 +58,9 @@ export default function App() {
               <Route path="/floor-checks" element={<FloorChecksPage />} />
               <Route path="/floor-checks/:id" element={<FloorCheckDetailPage />} />
               <Route path="/inventory/food" element={<FoodInventoryPage />} />
+              <Route path="/inventory/food/:id" element={<InventoryItemDetailPage />} />
               <Route path="/inventory/materials" element={<MaterialsPage />} />
+              <Route path="/inventory/materials/:id" element={<InventoryItemDetailPage />} />
               <Route path="/inventory/movements" element={<MovementsPage />} />
               <Route path="/suppliers" element={<SuppliersPage />} />
               <Route path="/suppliers/:id" element={<SupplierDetailPage />} />
@@ -68,6 +74,7 @@ export default function App() {
               <Route path="/corrective-actions/:id" element={<CorrectiveActionDetailPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/reports/:id" element={<ReportDetailPage />} />
               <Route path="/audit-logs" element={<AuditLogsPage />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>

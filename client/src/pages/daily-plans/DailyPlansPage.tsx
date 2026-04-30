@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import apiClient from '../../api/client';
 import { DailyPlan } from '../../types';
@@ -11,6 +12,7 @@ import { Plus, Eye, Copy, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function DailyPlansPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const qc = useQueryClient();
 
@@ -25,13 +27,13 @@ export function DailyPlansPage() {
       tomorrow.setDate(tomorrow.getDate() + 1);
       return apiClient.post(`/daily-plans/${id}/copy`, { targetDate: tomorrow.toISOString() });
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success('Plan copied to tomorrow'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success(t('dailyPlans.copiedMessage')); },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => apiClient.delete(`/daily-plans/${id}`),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success('Deleted'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success(t('common.delete')); },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 
@@ -40,13 +42,13 @@ export function DailyPlansPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Daily Allocation Plans</h1>
-        <Link to="/daily-plans/new" className="btn-primary"><Plus className="h-4 w-4" /> New Plan</Link>
+        <h1 className="text-2xl font-bold text-slate-900">{t('dailyPlans.title')}</h1>
+        <Link to="/daily-plans/new" className="btn-primary"><Plus className="h-4 w-4" /> {t('common.newPlan')}</Link>
       </div>
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>{['Date', 'Project', 'Building', 'Shift', 'Status', 'Created By', 'Actions'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
+            <tr>{[t('common.date'), t('common.project'), t('common.building'), t('common.shift'), t('common.status'), t('common.createdBy'), t('common.actions')].map(h => <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.map((p: DailyPlan) => (
@@ -54,7 +56,7 @@ export function DailyPlansPage() {
                 <td className="px-4 py-3 font-medium text-slate-900">{formatDate(p.date)}</td>
                 <td className="px-4 py-3 text-slate-500">{typeof p.project === 'object' ? p.project.name : '-'}</td>
                 <td className="px-4 py-3 text-slate-500">{typeof p.building === 'object' ? p.building.name : '-'}</td>
-                <td className="px-4 py-3 capitalize text-slate-500">{p.shift}</td>
+                <td className="px-4 py-3 text-slate-500">{p.shift ? t(`status.${p.shift}`) : '-'}</td>
                 <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
                 <td className="px-4 py-3 text-slate-500">{p.createdBy?.fullName || '—'}</td>
                 <td className="px-4 py-3">

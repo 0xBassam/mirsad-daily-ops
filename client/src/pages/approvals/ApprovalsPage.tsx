@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import apiClient from '../../api/client';
 import { FloorCheck } from '../../types';
@@ -12,6 +13,7 @@ import { Eye, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function ApprovalsPage() {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [page, setPage] = useState(1);
   const qc = useQueryClient();
@@ -37,19 +39,19 @@ export function ApprovalsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Approval Queue</h1>
-        <p className="text-slate-500 text-sm mt-1">Floor checks pending your action</p>
+        <h1 className="text-2xl font-bold text-slate-900">{t('approvals.title')}</h1>
+        <p className="text-slate-500 text-sm mt-1">{t('approvals.pendingAction')}</p>
       </div>
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>{['Date', 'Floor', 'Building', 'Supervisor', 'Status', 'Next Step', 'Actions'].map(h => (
-              <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>
+            <tr>{[t('common.date'), t('common.floor'), t('common.building'), t('common.supervisor'), t('common.status'), t('common.nextStep'), t('common.actions')].map(h => (
+              <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>
             ))}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.length === 0 && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">No pending items</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">{t('common.noPendingItems')}</td></tr>
             )}
             {data?.data?.map((c: FloorCheck) => (
               <tr key={c._id} className="hover:bg-slate-50">
@@ -61,7 +63,7 @@ export function ApprovalsPage() {
                 <td className="px-4 py-3 text-slate-500 text-xs capitalize">{c.currentApprovalStep?.replace(/_/g, ' ')}</td>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <Link to={`/floor-checks/${c._id}`} className="text-slate-400 hover:text-indigo-600" title="View"><Eye className="h-4 w-4" /></Link>
+                    <Link to={`/floor-checks/${c._id}`} className="text-slate-400 hover:text-indigo-600" title={t('common.view')}><Eye className="h-4 w-4" /></Link>
                     {c.status === 'submitted' && user?.role === 'assistant_supervisor' && (
                       <button onClick={() => actionMutation.mutate({ id: c._id, action: 'review' })} className="text-slate-400 hover:text-blue-600" title="Mark Under Review">
                         <CheckCircle className="h-4 w-4" />
@@ -69,13 +71,13 @@ export function ApprovalsPage() {
                     )}
                     {c.status === 'under_review' && user?.role === 'project_manager' && (
                       <>
-                        <button onClick={() => actionMutation.mutate({ id: c._id, action: 'approve' })} className="text-slate-400 hover:text-green-600" title="Approve">
+                        <button onClick={() => actionMutation.mutate({ id: c._id, action: 'approve' })} className="text-slate-400 hover:text-green-600" title={t('common.approve')}>
                           <CheckCircle className="h-4 w-4" />
                         </button>
-                        <button onClick={() => actionMutation.mutate({ id: c._id, action: 'return' })} className="text-slate-400 hover:text-amber-600" title="Return">
+                        <button onClick={() => actionMutation.mutate({ id: c._id, action: 'return' })} className="text-slate-400 hover:text-amber-600" title={t('common.return')}>
                           <RotateCcw className="h-4 w-4" />
                         </button>
-                        <button onClick={() => actionMutation.mutate({ id: c._id, action: 'reject' })} className="text-slate-400 hover:text-red-600" title="Reject">
+                        <button onClick={() => actionMutation.mutate({ id: c._id, action: 'reject' })} className="text-slate-400 hover:text-red-600" title={t('common.reject')}>
                           <XCircle className="h-4 w-4" />
                         </button>
                       </>

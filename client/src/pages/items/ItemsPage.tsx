@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/client';
 import { Item } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -10,6 +11,7 @@ import { Plus, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function ItemsPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [typeFilter, setTypeFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
@@ -25,7 +27,7 @@ export function ItemsPage() {
 
   const saveMutation = useMutation({
     mutationFn: (body: any) => editing ? apiClient.put(`/items/${editing._id}`, body) : apiClient.post('/items', body),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['items'] }); toast.success('Saved'); setShowModal(false); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['items'] }); toast.success(t('common.save')); setShowModal(false); },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 
@@ -44,31 +46,37 @@ export function ItemsPage() {
 
   if (isLoading) return <PageLoader />;
 
+  const typeFilters = [
+    { value: '', label: t('common.all') },
+    { value: 'food', label: t('status.food') },
+    { value: 'material', label: t('status.material') },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Items Master</h1>
-        <button onClick={() => openEdit()} className="btn-primary"><Plus className="h-4 w-4" /> Add Item</button>
+        <h1 className="text-2xl font-bold text-slate-900">{t('nav.itemsMaster')}</h1>
+        <button onClick={() => openEdit()} className="btn-primary"><Plus className="h-4 w-4" /> {t('common.addItem')}</button>
       </div>
       <div className="flex gap-2">
-        {['', 'food', 'material'].map(t => (
-          <button key={t} onClick={() => setTypeFilter(t)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${typeFilter === t ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'}`}>
-            {t === '' ? 'All' : t.charAt(0).toUpperCase() + t.slice(1)}
+        {typeFilters.map(f => (
+          <button key={f.value} onClick={() => setTypeFilter(f.value)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${typeFilter === f.value ? 'bg-indigo-600 text-white' : 'bg-white text-slate-600 border border-slate-300 hover:bg-slate-50'}`}>
+            {f.label}
           </button>
         ))}
       </div>
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>{['Name', 'Category', 'Type', 'Unit', 'Limit', 'Status', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
+            <tr>{[t('common.name'), t('common.category'), t('common.type'), t('common.unit'), t('common.limit'), t('common.status'), ''].map(h => <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.map((item: Item) => (
               <tr key={item._id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 font-medium text-slate-900">{item.name}</td>
                 <td className="px-4 py-3 text-slate-500">{typeof item.category === 'object' ? item.category.name : '-'}</td>
-                <td className="px-4 py-3"><Badge variant={item.type === 'food' ? 'green' : 'blue'}>{item.type}</Badge></td>
+                <td className="px-4 py-3"><Badge variant={item.type === 'food' ? 'green' : 'blue'}>{item.type === 'food' ? t('status.food') : t('status.material')}</Badge></td>
                 <td className="px-4 py-3 text-slate-500">{item.unit}</td>
                 <td className="px-4 py-3 text-slate-500">{item.limitQty}</td>
                 <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
@@ -79,29 +87,29 @@ export function ItemsPage() {
         </table>
         {data?.pagination && <Pagination pagination={data.pagination} onPageChange={setPage} />}
       </div>
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Item' : 'Add Item'} size="lg">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `${t('common.edit')} ${t('nav.itemsMaster')}` : t('common.addItem')} size="lg">
         <form onSubmit={e => { e.preventDefault(); saveMutation.mutate({ ...form, limitQty: Number(form.limitQty) }); }} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Name</label><input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.name')}</label><input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.type')}</label>
               <select className="input" value={form.type} onChange={e => setForm({ ...form, type: e.target.value })}>
-                <option value="food">Food</option><option value="material">Material</option>
+                <option value="food">{t('status.food')}</option><option value="material">{t('status.material')}</option>
               </select>
             </div>
           </div>
-          <div><label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+          <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.category')}</label>
             <select className="input" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} required>
-              <option value="">Select category</option>
+              <option value="">{t('common.selectCategory')}</option>
               {categories?.data?.map((c: any) => <option key={c._id} value={c._id}>{c.name}</option>)}
             </select>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Unit</label><input className="input" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} required /></div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Monthly Limit</label><input type="number" className="input" value={form.limitQty} onChange={e => setForm({ ...form, limitQty: +e.target.value })} /></div>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.unit')}</label><input className="input" value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })} required /></div>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.monthlyLimit')}</label><input type="number" className="input" value={form.limitQty} onChange={e => setForm({ ...form, limitQty: +e.target.value })} /></div>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-primary" disabled={saveMutation.isPending}>{editing ? 'Update' : 'Create'}</button>
+            <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">{t('common.cancel')}</button>
+            <button type="submit" className="btn-primary" disabled={saveMutation.isPending}>{editing ? t('common.update') : t('common.create')}</button>
           </div>
         </form>
       </Modal>

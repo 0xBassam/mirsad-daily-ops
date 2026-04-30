@@ -12,14 +12,14 @@ export const BUILDING_IDS = ['bbb000000000000000000001','bbb00000000000000000000
 export const USERS = [
   { _id:'usr000000000000000000001', fullName:'Ahmed Al-Rashidi',     email:'admin@mirsad.demo',       role:'admin',                phone:'+966501234567', status:'active', project:null,                                           createdAt:d(60) },
   { _id:'usr000000000000000000002', fullName:'Sara Al-Mutairi',      email:'admin2@mirsad.demo',      role:'admin',                phone:'+966501234568', status:'active', project:null,                                           createdAt:d(55) },
-  { _id:'usr000000000000000000003', fullName:'Mohammed Al-Ghamdi',   email:'supervisor@mirsad.demo',  role:'supervisor',           phone:'+966502345678', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(50) },
-  { _id:'usr000000000000000000004', fullName:'Fatima Al-Zahrani',    email:'supervisor2@mirsad.demo', role:'supervisor',           phone:'+966502345679', status:'active', project:{ _id:PROJECT_IDS[1], name:'KAFD' },            createdAt:d(48) },
-  { _id:'usr000000000000000000005', fullName:'Khalid Al-Otaibi',     email:'assistant@mirsad.demo',   role:'assistant_supervisor', phone:'+966503456789', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(45) },
-  { _id:'usr000000000000000000006', fullName:'Nora Al-Harbi',        email:'assistant2@mirsad.demo',  role:'assistant_supervisor', phone:'+966503456790', status:'active', project:{ _id:PROJECT_IDS[1], name:'KAFD' },            createdAt:d(43) },
-  { _id:'usr000000000000000000007', fullName:'Abdullah Al-Qahtani',  email:'manager@mirsad.demo',     role:'project_manager',      phone:'+966504567890', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(40) },
-  { _id:'usr000000000000000000008', fullName:'Tariq Al-Dosari',      email:'manager2@mirsad.demo',    role:'project_manager',      phone:'+966504567891', status:'active', project:{ _id:PROJECT_IDS[2], name:'Red Sea Project' }, createdAt:d(38) },
-  { _id:'usr000000000000000000009', fullName:'Omar Al-Zahrani',      email:'client@mirsad.demo',      role:'client',               phone:'+966505678901', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(35) },
-  { _id:'usr000000000000000000010', fullName:'Layla Al-Shehri',      email:'client2@mirsad.demo',     role:'client',               phone:'+966505678902', status:'active', project:{ _id:PROJECT_IDS[1], name:'KAFD' },            createdAt:d(33) },
+  { _id:'usr000000000000000000003', fullName:'Mohammed Al-Ghamdi',   email:'supervisor@mirsad.demo',  role:'supervisor',           phone:'+966502345678', status:'active', project:{ _id:PROJECT_IDS[0], name:'CDMDNA Building Operations' },        createdAt:d(50) },
+  { _id:'usr000000000000000000004', fullName:'Fatima Al-Zahrani',    email:'supervisor2@mirsad.demo', role:'supervisor',           phone:'+966502345679', status:'active', project:{ _id:PROJECT_IDS[1], name:'Ministry Hospitality Services' },      createdAt:d(48) },
+  { _id:'usr000000000000000000005', fullName:'Khalid Al-Otaibi',     email:'assistant@mirsad.demo',   role:'assistant_supervisor', phone:'+966503456789', status:'active', project:{ _id:PROJECT_IDS[0], name:'CDMDNA Building Operations' },        createdAt:d(45) },
+  { _id:'usr000000000000000000006', fullName:'Nora Al-Harbi',        email:'assistant2@mirsad.demo',  role:'assistant_supervisor', phone:'+966503456790', status:'active', project:{ _id:PROJECT_IDS[1], name:'Ministry Hospitality Services' },      createdAt:d(43) },
+  { _id:'usr000000000000000000007', fullName:'Abdullah Al-Qahtani',  email:'manager@mirsad.demo',     role:'project_manager',      phone:'+966504567890', status:'active', project:{ _id:PROJECT_IDS[0], name:'CDMDNA Building Operations' },        createdAt:d(40) },
+  { _id:'usr000000000000000000008', fullName:'Tariq Al-Dosari',      email:'manager2@mirsad.demo',    role:'project_manager',      phone:'+966504567891', status:'active', project:{ _id:PROJECT_IDS[2], name:'Executive Coffee & Snacks Service' }, createdAt:d(38) },
+  { _id:'usr000000000000000000009', fullName:'Omar Al-Zahrani',      email:'client@mirsad.demo',      role:'client',               phone:'+966505678901', status:'active', project:{ _id:PROJECT_IDS[0], name:'CDMDNA Building Operations' },        createdAt:d(35) },
+  { _id:'usr000000000000000000010', fullName:'Layla Al-Shehri',      email:'client2@mirsad.demo',     role:'client',               phone:'+966505678902', status:'active', project:{ _id:PROJECT_IDS[1], name:'Ministry Hospitality Services' },      createdAt:d(33) },
 ];
 
 export const DEMO_PASSWORDS: Record<string,string> = {
@@ -32,26 +32,29 @@ export const DEMO_PASSWORDS: Record<string,string> = {
 
 // ── PROJECTS ──────────────────────────────────────────────────────────────────
 export const PROJECTS = [
-  { _id:PROJECT_IDS[0], name:'NEOM Phase 1',                   clientName:'NEOM Company',    locationCode:'NE-P1',   status:'active', createdAt:d(60) },
-  { _id:PROJECT_IDS[1], name:'King Abdullah Financial District',clientName:'KAFD Authority', locationCode:'KAFD-1',  status:'active', createdAt:d(45) },
-  { _id:PROJECT_IDS[2], name:'Red Sea Project',                 clientName:'RSG',             locationCode:'RSP-1',   status:'active', createdAt:d(30) },
+  { _id:PROJECT_IDS[0], name:'CDMDNA Building Operations',         clientName:'CDMDNA',            locationCode:'CDM-001', status:'active', createdAt:d(60) },
+  { _id:PROJECT_IDS[1], name:'Ministry Hospitality Services',      clientName:'Ministry',          locationCode:'MHS-001', status:'active', createdAt:d(45) },
+  { _id:PROJECT_IDS[2], name:'Executive Coffee & Snacks Service',  clientName:'Executive Office',  locationCode:'ECS-001', status:'active', createdAt:d(30) },
 ];
 
 // ── BUILDINGS ─────────────────────────────────────────────────────────────────
 export const BUILDINGS = [
-  { _id:BUILDING_IDS[0], project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },                    name:'Main Residential Block A', status:'active', createdAt:d(55) },
-  { _id:BUILDING_IDS[1], project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },                    name:'Main Residential Block B', status:'active', createdAt:d(54) },
-  { _id:BUILDING_IDS[2], project:{ _id:PROJECT_IDS[1], name:'King Abdullah Financial District' }, name:'Tower 1 — KAFD',           status:'active', createdAt:d(40) },
-  { _id:BUILDING_IDS[3], project:{ _id:PROJECT_IDS[1], name:'King Abdullah Financial District' }, name:'Tower 2 — KAFD',           status:'active', createdAt:d(39) },
-  { _id:BUILDING_IDS[4], project:{ _id:PROJECT_IDS[2], name:'Red Sea Project' },                  name:'Beach Resort Block',       status:'active', createdAt:d(25) },
-  { _id:BUILDING_IDS[5], project:{ _id:PROJECT_IDS[2], name:'Red Sea Project' },                  name:'Staff Accommodation',      status:'active', createdAt:d(24) },
+  { _id:BUILDING_IDS[0], project:{ _id:PROJECT_IDS[0], name:'CDMDNA Building Operations' },        name:'CDMDNA Building',          status:'active', createdAt:d(55) },
+  { _id:BUILDING_IDS[1], project:{ _id:PROJECT_IDS[0], name:'CDMDNA Building Operations' },        name:'Ministry Annex',           status:'active', createdAt:d(54) },
+  { _id:BUILDING_IDS[2], project:{ _id:PROJECT_IDS[1], name:'Ministry Hospitality Services' },     name:'Main Ministry Building',   status:'active', createdAt:d(40) },
+  { _id:BUILDING_IDS[3], project:{ _id:PROJECT_IDS[1], name:'Ministry Hospitality Services' },     name:'Ministry Annex B',         status:'active', createdAt:d(39) },
+  { _id:BUILDING_IDS[4], project:{ _id:PROJECT_IDS[2], name:'Executive Coffee & Snacks Service' }, name:'Executive Lounge Building',status:'active', createdAt:d(25) },
+  { _id:BUILDING_IDS[5], project:{ _id:PROJECT_IDS[2], name:'Executive Coffee & Snacks Service' }, name:'Coffee Station Block',     status:'active', createdAt:d(24) },
 ];
 
 // ── FLOORS ────────────────────────────────────────────────────────────────────
 const FLOOR_NAMES = [
-  ['2F','3F','4F','19F'], ['MAKASSB','SECURITY','KAFAA-1','KAFAA-2'],
-  ['Level 1','Level 2','Level 3','Level 4'], ['Basement','Ground','Mezzanine','Roof'],
-  ['Beach A','Beach B','Pool Deck','Cabana'], ['Block A','Block B','Block C','Block D'],
+  ['2 Floor','3 Floor','4 Floor','19 Floor'],
+  ['MAKASSB','SECURITY','KAFAA-1','KAFAA-2'],
+  ['Executive Lounge','Coffee Station','VIP Lounge','Reception'],
+  ['Ground Floor','Mezzanine','First Floor','Second Floor'],
+  ['Level A','Level B','Terrace','Rooftop'],
+  ['Main Hall','Side Hall','Storage Area','Kitchen'],
 ];
 export const FLOORS = BUILDING_IDS.flatMap((bid, b) =>
   FLOOR_NAMES[b].map((name, f) => ({
@@ -72,11 +75,14 @@ export const CATEGORIES = [
 
 // ── ITEMS ─────────────────────────────────────────────────────────────────────
 const rawFood: [string,string,number][] = [
-  ['Basmati Rice','kg',500],['White Bread','loaf',200],['Chicken Breast','kg',300],['Whole Milk','L',150],
-  ['Tomatoes','kg',100],['Apples','kg',80],['Water Bottles 500ml','case',400],['Salt','kg',50],
-  ['Canned Tuna','can',200],['Frozen Beef','kg',250],['Dates','kg',100],['Sunflower Oil','L',200],
-  ['Lentils','kg',150],['Eggs','dozen',300],['Yogurt','kg',120],['Pasta','kg',180],
-  ['Sugar','kg',100],['Tea Bags','box',80],['Instant Coffee','jar',50],['Olive Oil','L',90],
+  ['Shakshouka Samoli Sandwich','pcs',200],['Sourdough Mozzarella Cheese Sandwich','pcs',150],
+  ['Labnah Wrap with Vegetables','pcs',180],['Chicken Burger with Swiss Cheese','pcs',160],
+  ['Roast Beef Sandwich','pcs',120],['Chicken Tikka with Rice','box',100],
+  ['Grill Chicken Bowl','box',120],['Power Salad with Chicken','box',100],
+  ['Fruit Salad','cup',150],['Fresh Juice','bottle',200],
+  ['Yogurt','cup',180],['Mixed Nuts','bag',100],
+  ['Sweet Bakery','pcs',250],['Salted Bakery','pcs',200],['Granola','bag',80],
+  ['Pasta','kg',180],['Sugar','kg',100],['Instant Coffee','jar',50],['Olive Oil','L',90],['Eggs','dozen',300],
   ['Bread Rolls','pcs',300],['Flatbread','pcs',250],['Lamb Chops','kg',200],['Salmon Fillet','kg',150],
   ['Cream Cheese','kg',80],['Butter','kg',100],['Cucumbers','kg',90],['Onions','kg',120],
   ['Orange Juice','L',100],['Green Tea','box',60],['Mayonnaise','kg',70],['Ketchup','bottle',80],
@@ -84,9 +90,9 @@ const rawFood: [string,string,number][] = [
   ['Cheese Slices','pcs',200],['Sour Cream','kg',70],['Brown Rice','kg',300],['Cooking Spray','can',60],
 ];
 const rawMat: [string,string,number][] = [
-  ['Floor Cleaner','L',100],['Hand Sanitizer','L',80],['Mop Set','set',20],['Bed Sheets Twin','set',150],
-  ['Shampoo 500ml','bottle',200],['Safety Helmet','pcs',50],['Extension Cord','pcs',30],['Pipe Wrench','pcs',10],
-  ['Screwdriver Set','set',15],['A4 Paper','ream',100],['Gloves Latex','box',80],['Trash Bags Large','roll',120],
+  ['Water Bottles','case',400],['Paper Cups','sleeve',300],['Plastic Spoons','bag',200],['Plastic Forks','bag',200],
+  ['Paper Plates','sleeve',250],['Coffee Beans','kg',80],['Fresh Milk','L',150],['Tea Bags','box',120],
+  ['Sugar Sachets','box',300],['Napkins','pack',400],['Gloves Latex','box',80],['Trash Bags Large','roll',120],
   ['Toilet Paper','roll',500],['Dish Soap','L',60],['Face Masks N95','box',40],['Broom','pcs',25],
   ['Disinfectant Spray','can',90],['Light Bulbs LED','pcs',60],['Vacuum Cleaner Bags','pcs',40],['Rubber Gloves','pair',100],
   ['Laundry Detergent','kg',80],['Fabric Softener','L',60],['Shower Gel','bottle',150],['Hard Hat','pcs',30],
@@ -277,6 +283,16 @@ export const SPOILAGE_ALERTS = Array.from({length:30},(_,i)=>({
   resolvedBy: alertStatuses[i]==='resolved'?{ _id:USERS[4]._id, fullName:USERS[4].fullName }:undefined,
 }));
 
+// ── REPORTS ───────────────────────────────────────────────────────────────────
+export const REPORTS = [
+  { _id:pad('rpt',1), title:'Daily Floor Check Report - 2 Floor - 27 Apr 2026',      reportType:'daily_floor_check',      project:PROJECTS[0], building:BUILDINGS[0], floor:FLOORS[0],  dateFrom:d(3), dateTo:d(3), status:'ready',      generatedBy:{ _id:USERS[0]._id, fullName:USERS[0].fullName }, createdAt:d(3) },
+  { _id:pad('rpt',2), title:'Daily Project Summary - CDMDNA Building - 27 Apr 2026', reportType:'daily_project_summary',  project:PROJECTS[0], building:BUILDINGS[0], floor:null,        dateFrom:d(3), dateTo:d(3), status:'ready',      generatedBy:{ _id:USERS[0]._id, fullName:USERS[0].fullName }, createdAt:d(3) },
+  { _id:pad('rpt',3), title:'Weekly Warehouse Report - Week 18',                      reportType:'weekly_warehouse',        project:PROJECTS[0], building:null,         floor:null,        dateFrom:d(7), dateTo:d(1), status:'ready',      generatedBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:d(2) },
+  { _id:pad('rpt',4), title:'Monthly Food Inventory Report - May 2026',               reportType:'monthly_food_inventory',  project:PROJECTS[0], building:null,         floor:null,        dateFrom:dF(1),dateTo:dF(30),status:'ready',     generatedBy:{ _id:USERS[0]._id, fullName:USERS[0].fullName }, createdAt:d(1) },
+  { _id:pad('rpt',5), title:'Monthly Materials Report - May 2026',                    reportType:'monthly_materials',       project:PROJECTS[0], building:null,         floor:null,        dateFrom:dF(1),dateTo:dF(30),status:'ready',     generatedBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:d(1) },
+  { _id:pad('rpt',6), title:'Approval Summary Report',                                reportType:'approval_summary',        project:PROJECTS[0], building:null,         floor:null,        dateFrom:d(30),dateTo:d(0), status:'ready',      generatedBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:d(0) },
+];
+
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 export const DASHBOARD = {
   checks:{ total:FLOOR_CHECKS.length, completed:FLOOR_CHECKS.filter(f=>f.status==='approved').length, pending:FLOOR_CHECKS.filter(f=>['submitted','under_review'].includes(f.status)).length },
@@ -291,4 +307,10 @@ export const DASHBOARD = {
   activeCorrectiveActions:CORRECTIVE_ACTIONS.filter(c=>['open','in_progress'].includes(c.status)).length,
   fridgeChecksToday:3,
   activeSpoilageAlerts:SPOILAGE_ALERTS.filter(s=>s.status==='active').length,
+  topConsumedItems: [...INVENTORY_FOOD].sort((a,b)=>b.consumedQty-a.consumedQty).slice(0,5).map(inv=>({ name:(inv.item as any).name as string, consumed:inv.consumedQty })),
+  checksByFloor: (() => {
+    const counts: Record<string,{name:string;count:number}> = {};
+    FLOOR_CHECKS.forEach(fc=>{ const fl=fc.floor as any; if(fl?._id){ counts[fl._id]=counts[fl._id]||{name:fl.name,count:0}; counts[fl._id].count++; } });
+    return Object.values(counts).sort((a,b)=>b.count-a.count).slice(0,5);
+  })(),
 };

@@ -7,7 +7,8 @@ import { StatusBadge } from '../../components/ui/Badge';
 import { formatDateTime } from '../../utils/formatDate';
 import {
   CheckSquare, FileText, AlertTriangle, Clock, ThumbsUp, XCircle,
-  Package, Warehouse, TrendingDown, Thermometer, ShieldCheck, Bell
+  Package, Warehouse, TrendingDown, Thermometer, ShieldCheck, Bell,
+  BarChart2, TrendingUp
 } from 'lucide-react';
 
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: number | string; color: string }) {
@@ -39,7 +40,7 @@ export function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">{t('dashboard.title')}</h1>
-        <p className="text-slate-500 text-sm mt-1">Real-time operations overview</p>
+        <p className="text-slate-500 text-sm mt-1">{t('dashboard.subtitle')}</p>
       </div>
 
       {/* Today's Checks */}
@@ -54,7 +55,7 @@ export function DashboardPage() {
 
       {/* Reports */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Reports & Approvals</h2>
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('dashboard.reportsApprovals')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <StatCard icon={Clock} label={t('dashboard.pendingApprovals')} value={data.pendingApprovals} color="bg-amber-500" />
           <StatCard icon={FileText} label={t('dashboard.submitted')} value={data.reports.submitted} color="bg-blue-500" />
@@ -76,7 +77,7 @@ export function DashboardPage() {
       {/* Phase 2: Food Safety & Corrective Actions */}
       {(data.expiringIn3Days !== undefined || data.activeCorrectiveActions !== undefined) && (
         <div>
-          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Food Safety</h2>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('nav.foodSafety')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {data.expiringIn3Days !== undefined && (
               <StatCard icon={Clock} label={t('dashboard.expiringIn3Days')} value={data.expiringIn3Days} color="bg-amber-500" />
@@ -163,6 +164,61 @@ export function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Top Consumed Items & Checks by Floor */}
+      {(data.topConsumedItems?.length || data.checksByFloor?.length) ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {data.topConsumedItems?.length ? (
+            <div className="card p-5">
+              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-orange-500" /> {t('dashboard.topConsumedItems')}
+              </h3>
+              <div className="space-y-3">
+                {data.topConsumedItems.map((item, i) => {
+                  const max = data.topConsumedItems![0].consumed;
+                  const pct = max > 0 ? Math.round((item.consumed / max) * 100) : 0;
+                  return (
+                    <div key={item.name}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-slate-700 truncate max-w-[70%]">{item.name}</span>
+                        <span className="font-semibold text-slate-900">{item.consumed}</span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-orange-400 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
+          {data.checksByFloor?.length ? (
+            <div className="card p-5">
+              <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                <BarChart2 className="h-4 w-4 text-indigo-500" /> {t('dashboard.checksByFloor')}
+              </h3>
+              <div className="space-y-3">
+                {data.checksByFloor.map((floor) => {
+                  const max = data.checksByFloor![0].count;
+                  const pct = max > 0 ? Math.round((floor.count / max) * 100) : 0;
+                  return (
+                    <div key={floor.name}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="text-slate-700 truncate max-w-[70%]">{floor.name}</span>
+                        <span className="font-semibold text-slate-900">{floor.count} {t('dashboard.checks')}</span>
+                      </div>
+                      <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div className="h-full bg-indigo-400 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/client';
 import { StockMovement } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -17,6 +18,7 @@ const MOVEMENT_COLORS: Record<string, 'green' | 'red' | 'blue' | 'yellow' | 'gra
 };
 
 export function MovementsPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ project: '', item: '', movementType: 'RECEIVE', quantity: 1, movementDate: new Date().toISOString().split('T')[0], notes: '' });
@@ -32,7 +34,7 @@ export function MovementsPage() {
 
   const createMutation = useMutation({
     mutationFn: (body: any) => apiClient.post('/inventory/movements', body),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['movements'] }); toast.success('Movement recorded'); setShowModal(false); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['movements'] }); toast.success(t('common.save')); setShowModal(false); },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 
@@ -41,13 +43,13 @@ export function MovementsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Stock Movements</h1>
-        <button onClick={() => setShowModal(true)} className="btn-primary"><Plus className="h-4 w-4" /> Record Movement</button>
+        <h1 className="text-2xl font-bold text-slate-900">{t('nav.stockMovements')}</h1>
+        <button onClick={() => setShowModal(true)} className="btn-primary"><Plus className="h-4 w-4" /> {t('common.recordMovement')}</button>
       </div>
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>{['Date', 'Item', 'Type', 'Qty', 'Project', 'Source', 'Notes', 'By'].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
+            <tr>{[t('common.date'), t('common.name'), t('common.type'), t('common.quantity'), t('common.project'), t('movements.sourceType'), t('common.notes'), t('common.createdBy')].map(h => <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.map((m: StockMovement) => {
@@ -70,39 +72,39 @@ export function MovementsPage() {
         {data?.pagination && <Pagination pagination={data.pagination} onPageChange={setPage} />}
       </div>
 
-      <Modal open={showModal} onClose={() => setShowModal(false)} title="Record Stock Movement" size="lg">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={t('common.recordMovement')} size="lg">
         <form onSubmit={e => { e.preventDefault(); createMutation.mutate({ ...form, quantity: Number(form.quantity) }); }} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Project</label>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.project')}</label>
               <select className="input" value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} required>
-                <option value="">Select project</option>
+                <option value="">{t('common.selectProject')}</option>
                 {projects?.data?.map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
               </select>
             </div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Item</label>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.name')}</label>
               <select className="input" value={form.item} onChange={e => setForm({ ...form, item: e.target.value })} required>
-                <option value="">Select item</option>
+                <option value="">{t('common.selectItem')}</option>
                 {items?.data?.map((it: any) => <option key={it._id} value={it._id}>{it.name}</option>)}
               </select>
             </div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Movement Type</label>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.movementType')}</label>
               <select className="input" value={form.movementType} onChange={e => setForm({ ...form, movementType: e.target.value })}>
-                {MOVEMENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                {MOVEMENT_TYPES.map(mt => <option key={mt} value={mt}>{mt}</option>)}
               </select>
             </div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Quantity</label>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.quantity')}</label>
               <input type="number" min="1" className="input" value={form.quantity} onChange={e => setForm({ ...form, quantity: +e.target.value })} required />
             </div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
+            <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.date')}</label>
               <input type="date" className="input" value={form.movementDate} onChange={e => setForm({ ...form, movementDate: e.target.value })} required />
             </div>
           </div>
-          <div><label className="block text-sm font-medium text-slate-700 mb-1">Notes</label>
+          <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.notes')}</label>
             <input className="input" value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-primary" disabled={createMutation.isPending}>Record</button>
+            <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">{t('common.cancel')}</button>
+            <button type="submit" className="btn-primary" disabled={createMutation.isPending}>{t('common.record')}</button>
           </div>
         </form>
       </Modal>

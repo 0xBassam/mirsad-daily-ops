@@ -5,6 +5,7 @@ import {
   CATEGORIES, ITEMS, DAILY_PLANS, FLOOR_CHECKS,
   INVENTORY_FOOD, INVENTORY_MATERIALS, MOVEMENTS, AUDIT_LOGS, DASHBOARD,
   SUPPLIERS, BATCHES, FRIDGE_CHECKS, CORRECTIVE_ACTIONS, SPOILAGE_ALERTS,
+  REPORTS,
 } from '../mocks/data';
 
 function makeToken(user: typeof USERS[0]) {
@@ -216,7 +217,12 @@ export function setupDemoMocks() {
   mock.onGet('/audit-logs').reply(config => [200, paginated(AUDIT_LOGS, config.params || {})]);
 
   // Reports
-  mock.onGet('/reports').reply(200, { success: true, data: [], pagination: { total: 0, page: 1, limit: 20, pages: 0 } });
+  mock.onGet('/reports').reply(config => [200, paginated(REPORTS, config.params || {})]);
+  mock.onGet(/\/reports\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const r = REPORTS.find(x => x._id === id);
+    return r ? [200, { success: true, data: r }] : [404, { success: false, message: 'Not found' }];
+  });
   mock.onPost('/reports').reply(201, { success: true, data: { _id: `rpt_${Date.now()}` } });
 
   // Attachments
@@ -309,5 +315,24 @@ export function setupDemoMocks() {
     const idx = SPOILAGE_ALERTS.findIndex(x => x._id === id);
     if (idx !== -1) SPOILAGE_ALERTS[idx] = { ...SPOILAGE_ALERTS[idx], status: 'resolved', resolvedBy: { _id: USERS[4]._id, fullName: USERS[4].fullName } };
     return [200, { success: true, data: SPOILAGE_ALERTS[idx] }];
+  });
+
+  // Project detail
+  mock.onGet(/\/projects\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const p = PROJECTS.find(x => x._id === id);
+    return p ? [200, { success: true, data: p }] : [404, { success: false, message: 'Not found' }];
+  });
+
+  // Inventory item detail
+  mock.onGet(/\/inventory\/food\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const item = INVENTORY_FOOD.find(x => x._id === id);
+    return item ? [200, { success: true, data: item }] : [404, { success: false, message: 'Not found' }];
+  });
+  mock.onGet(/\/inventory\/materials\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const item = INVENTORY_MATERIALS.find(x => x._id === id);
+    return item ? [200, { success: true, data: item }] : [404, { success: false, message: 'Not found' }];
   });
 }

@@ -192,6 +192,24 @@ export interface DashboardStats {
   activeCorrectiveActions?: number;
   fridgeChecksToday?: number;
   activeSpoilageAlerts?: number;
+  topConsumedItems?: { name: string; consumed: number }[];
+  checksByFloor?: { name: string; count: number }[];
+}
+
+export type ReportType = 'daily_floor_check' | 'daily_project_summary' | 'weekly_warehouse' | 'monthly_food_inventory' | 'monthly_materials' | 'approval_summary';
+
+export interface Report {
+  _id: string;
+  title: string;
+  reportType: ReportType;
+  project: { _id: string; name: string };
+  building?: { _id: string; name: string } | null;
+  floor?: { _id: string; name: string } | null;
+  dateFrom: string;
+  dateTo: string;
+  status: 'ready' | 'generating';
+  generatedBy: { _id: string; fullName: string };
+  createdAt: string;
 }
 
 // ── Phase 2 ────────────────────────────────────────────────────────────────

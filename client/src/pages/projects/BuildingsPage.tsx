@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/client';
 import { Building } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -10,6 +11,7 @@ import { Plus, Pencil } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function BuildingsPage() {
+  const { t } = useTranslation();
   const [page, setPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<Building | null>(null);
@@ -21,7 +23,7 @@ export function BuildingsPage() {
 
   const saveMutation = useMutation({
     mutationFn: (body: any) => editing ? apiClient.put(`/buildings/${editing._id}`, body) : apiClient.post('/buildings', body),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['buildings'] }); toast.success('Saved'); setShowModal(false); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['buildings'] }); toast.success(t('common.save')); setShowModal(false); },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 
@@ -37,13 +39,13 @@ export function BuildingsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">Buildings</h1>
-        <button onClick={() => openEdit()} className="btn-primary"><Plus className="h-4 w-4" /> Add Building</button>
+        <h1 className="text-2xl font-bold text-slate-900">{t('nav.buildings')}</h1>
+        <button onClick={() => openEdit()} className="btn-primary"><Plus className="h-4 w-4" /> {t('common.addBuilding')}</button>
       </div>
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>{['Name', 'Project', 'Status', ''].map(h => <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
+            <tr>{[t('common.name'), t('common.project'), t('common.status'), ''].map(h => <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.map((b: Building) => (
@@ -58,23 +60,23 @@ export function BuildingsPage() {
         </table>
         {data?.pagination && <Pagination pagination={data.pagination} onPageChange={setPage} />}
       </div>
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Building' : 'Add Building'}>
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `${t('common.edit')} ${t('nav.buildings')}` : t('common.addBuilding')}>
         <form onSubmit={e => { e.preventDefault(); saveMutation.mutate(form); }} className="space-y-4">
-          <div><label className="block text-sm font-medium text-slate-700 mb-1">Name</label><input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
-          <div><label className="block text-sm font-medium text-slate-700 mb-1">Project</label>
+          <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.name')}</label><input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>
+          <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.project')}</label>
             <select className="input" value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} required>
-              <option value="">Select project</option>
+              <option value="">{t('common.selectProject')}</option>
               {projects?.data?.map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
             </select>
           </div>
-          <div><label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+          <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.status')}</label>
             <select className="input" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-              <option value="active">Active</option><option value="inactive">Inactive</option>
+              <option value="active">{t('common.active')}</option><option value="inactive">{t('common.inactive')}</option>
             </select>
           </div>
           <div className="flex justify-end gap-3 pt-2">
-            <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
-            <button type="submit" className="btn-primary" disabled={saveMutation.isPending}>{editing ? 'Update' : 'Create'}</button>
+            <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">{t('common.cancel')}</button>
+            <button type="submit" className="btn-primary" disabled={saveMutation.isPending}>{editing ? t('common.update') : t('common.create')}</button>
           </div>
         </form>
       </Modal>
