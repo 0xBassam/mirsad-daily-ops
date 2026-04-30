@@ -13,14 +13,7 @@ const queryClient = new QueryClient({
   },
 });
 
-async function prepare() {
-  if (import.meta.env.VITE_DEMO_MODE === 'true') {
-    const { worker } = await import('./mocks/browser');
-    await worker.start({ onUnhandledRequest: 'bypass', serviceWorker: { url: import.meta.env.BASE_URL + 'mockServiceWorker.js' } });
-  }
-}
-
-prepare().then(() => {
+function renderApp() {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
       <QueryClientProvider client={queryClient}>
@@ -28,4 +21,13 @@ prepare().then(() => {
       </QueryClientProvider>
     </React.StrictMode>
   );
-});
+}
+
+if (import.meta.env.VITE_DEMO_MODE === 'true') {
+  import('./api/demoMocks').then(({ setupDemoMocks }) => {
+    setupDemoMocks();
+    renderApp();
+  });
+} else {
+  renderApp();
+}
