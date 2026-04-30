@@ -2,19 +2,25 @@ import mongoose from 'mongoose';
 import { env } from './env';
 
 export async function connectDB(): Promise<void> {
-  const maxRetries = 5;
-  let retries = 0;
+  let uri = env.MONGODB_URI;
 
-  while (retries < maxRetries) {
-    try {
-      await mongoose.connect(env.MONGODB_URI);
-      console.log('MongoDB connected');
-      return;
-    } catch (err) {
-      retries++;
-      console.error(`MongoDB connection attempt ${retries}/${maxRetries} failed:`, err);
-      if (retries === maxRetries) throw err;
-      await new Promise(r => setTimeout(r, 2000 * retries));
-    }
+  const isPlaceholder = !uri || uri.includes('username:password@cluster');
+
+  if (isPlaceholder) {
+    const { startEmbeddedMongo } = await import('../db/embeddedMongo');
+    uri = await startEmbeddedMongo();
+    console.log('Using embedded in-memory MongoDB (demo mode)');
   }
+
+  await mongoose.connect(uri, { serverSelectionTimeoutMS: 15000 });
+  console.log('MongoDB connected');
+
+  if (isPlaceholder) {
+    const { seedDemo } = await import('../db/seedDemo');
+    await seedDemo();
+  }
+}
+
+export async function disconnectDB(): Promise<void> {
+  await mongoose.disconnect();
 }
