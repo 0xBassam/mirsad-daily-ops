@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/client';
 import { DailyPlan } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 
 export function DailyPlansPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const qc = useQueryClient();
 
@@ -52,7 +53,7 @@ export function DailyPlansPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.map((p: DailyPlan) => (
-              <tr key={p._id} className="hover:bg-slate-50">
+              <tr key={p._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/daily-plans/${p._id}`)}>
                 <td className="px-4 py-3 font-medium text-slate-900">{formatDate(p.date)}</td>
                 <td className="px-4 py-3 text-slate-500">{typeof p.project === 'object' ? p.project.name : '-'}</td>
                 <td className="px-4 py-3 text-slate-500">{typeof p.building === 'object' ? p.building.name : '-'}</td>
@@ -60,9 +61,8 @@ export function DailyPlansPage() {
                 <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
                 <td className="px-4 py-3 text-slate-500">{p.createdBy?.fullName || '—'}</td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Link to={`/daily-plans/${p._id}`} className="text-slate-400 hover:text-indigo-600"><Eye className="h-4 w-4" /></Link>
-                    <button onClick={() => copyMutation.mutate(p._id)} className="text-slate-400 hover:text-green-600"><Copy className="h-4 w-4" /></button>
+                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                    <button onClick={() => copyMutation.mutate(p._id)} className="text-slate-400 hover:text-green-600" title={t('dailyPlans.copy')}><Copy className="h-4 w-4" /></button>
                     {p.status === 'draft' && (
                       <button onClick={() => deleteMutation.mutate(p._id)} className="text-slate-400 hover:text-red-600"><Trash2 className="h-4 w-4" /></button>
                     )}

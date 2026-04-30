@@ -8,7 +8,7 @@ import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { StatusBadge, Badge } from '../../components/ui/Badge';
 import { Pagination } from '../../components/ui/Pagination';
 import { formatDate } from '../../utils/formatDate';
-import { Eye, Download } from 'lucide-react';
+import { Download } from 'lucide-react';
 
 const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray'> = {
   daily_floor_check: 'blue',
@@ -45,7 +45,7 @@ export function ReportsPage() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.map((r: Report) => (
-              <tr key={r._id} className="hover:bg-slate-50">
+              <tr key={r._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/reports/${r._id}`)}>
                 <td className="px-4 py-3 font-medium text-slate-900 max-w-xs">{r.title}</td>
                 <td className="px-4 py-3">
                   <Badge variant={TYPE_COLORS[r.reportType] || 'gray'}>{t(`reports.${r.reportType}`)}</Badge>
@@ -54,15 +54,10 @@ export function ReportsPage() {
                 <td className="px-4 py-3 text-slate-500 text-xs">{formatDate(r.dateFrom)} – {formatDate(r.dateTo)}</td>
                 <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                 <td className="px-4 py-3 text-slate-500">{r.generatedBy?.fullName || '—'}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => navigate(`/reports/${r._id}`)} className="text-slate-400 hover:text-indigo-600" title={t('reports.viewReport')}>
-                      <Eye className="h-4 w-4" />
-                    </button>
-                    <a href="#" className="text-slate-400 hover:text-red-600" title={t('reports.exportPdf')}>
-                      <Download className="h-4 w-4" />
-                    </a>
-                  </div>
+                <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
+                  <a href="#" className="text-slate-400 hover:text-red-600" title={t('reports.exportPdf')}>
+                    <Download className="h-4 w-4" />
+                  </a>
                 </td>
               </tr>
             ))}

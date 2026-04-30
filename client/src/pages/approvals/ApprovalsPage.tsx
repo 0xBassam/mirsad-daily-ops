@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import apiClient from '../../api/client';
 import { FloorCheck } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -9,12 +9,13 @@ import { StatusBadge } from '../../components/ui/Badge';
 import { Pagination } from '../../components/ui/Pagination';
 import { formatDate } from '../../utils/formatDate';
 import { useAuth } from '../../contexts/AuthContext';
-import { Eye, CheckCircle, XCircle, RotateCcw } from 'lucide-react';
+import { CheckCircle, XCircle, RotateCcw } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export function ApprovalsPage() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const qc = useQueryClient();
 
@@ -54,7 +55,7 @@ export function ApprovalsPage() {
               <tr><td colSpan={7} className="px-4 py-8 text-center text-slate-400">{t('common.noPendingItems')}</td></tr>
             )}
             {data?.data?.map((c: FloorCheck) => (
-              <tr key={c._id} className="hover:bg-slate-50">
+              <tr key={c._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/floor-checks/${c._id}`)}>
                 <td className="px-4 py-3 font-medium">{formatDate(c.date)}</td>
                 <td className="px-4 py-3 text-slate-600">{typeof c.floor === 'object' ? c.floor.name : '-'}</td>
                 <td className="px-4 py-3 text-slate-500">{typeof c.building === 'object' ? c.building.name : '-'}</td>
@@ -62,8 +63,7 @@ export function ApprovalsPage() {
                 <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                 <td className="px-4 py-3 text-slate-500 text-xs capitalize">{c.currentApprovalStep?.replace(/_/g, ' ')}</td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <Link to={`/floor-checks/${c._id}`} className="text-slate-400 hover:text-indigo-600" title={t('common.view')}><Eye className="h-4 w-4" /></Link>
+                  <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
                     {c.status === 'submitted' && user?.role === 'assistant_supervisor' && (
                       <button onClick={() => actionMutation.mutate({ id: c._id, action: 'review' })} className="text-slate-400 hover:text-blue-600" title="Mark Under Review">
                         <CheckCircle className="h-4 w-4" />

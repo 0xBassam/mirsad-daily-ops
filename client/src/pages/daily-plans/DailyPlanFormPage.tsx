@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/client';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { Plus, Trash2, ArrowLeft } from 'lucide-react';
@@ -11,6 +12,7 @@ interface PlanLine { floor: string; item: string; plannedQty: number; notes: str
 export function DailyPlanFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const qc = useQueryClient();
   const isEdit = !!id;
 
@@ -51,7 +53,7 @@ export function DailyPlanFormPage() {
 
   const saveMutation = useMutation({
     mutationFn: (body: any) => isEdit ? apiClient.put(`/daily-plans/${id}`, body) : apiClient.post('/daily-plans', body),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success('Saved'); navigate('/daily-plans'); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['daily-plans'] }); toast.success(t('common.save')); navigate('/daily-plans'); },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 
@@ -74,53 +76,71 @@ export function DailyPlanFormPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Link to="/daily-plans" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5" /></Link>
-        <h1 className="text-2xl font-bold text-slate-900">{isEdit ? 'Edit Daily Plan' : 'New Daily Plan'}</h1>
+        <h1 className="text-2xl font-bold text-slate-900">
+          {isEdit ? `${t('common.edit')} ${t('dailyPlans.title')}` : t('dailyPlans.new')}
+        </h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="card p-6">
-          <h2 className="font-semibold text-slate-800 mb-4">Plan Details</h2>
+          <h2 className="font-semibold text-slate-800 mb-4">{t('dailyPlans.title')}</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Date</label><input type="date" className="input" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required /></div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Project</label>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.date')}</label>
+              <input type="date" className="input" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.project')}</label>
               <select className="input" value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} required>
-                <option value="">Select project</option>
+                <option value="">{t('common.selectProject')}</option>
                 {projects?.data?.map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
               </select>
             </div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Building</label>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.building')}</label>
               <select className="input" value={form.building} onChange={e => setForm({ ...form, building: e.target.value })} required>
-                <option value="">Select building</option>
+                <option value="">{t('common.selectBuilding')}</option>
                 {buildings?.data?.map((b: any) => <option key={b._id} value={b._id}>{b.name}</option>)}
               </select>
             </div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Shift</label>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.shift')}</label>
               <select className="input" value={form.shift} onChange={e => setForm({ ...form, shift: e.target.value })}>
-                {['morning', 'afternoon', 'evening', 'night'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                {['morning', 'afternoon', 'evening', 'night'].map(s => (
+                  <option key={s} value={s}>{t(`status.${s}`)}</option>
+                ))}
               </select>
             </div>
-            <div><label className="block text-sm font-medium text-slate-700 mb-1">Status</label>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.status')}</label>
               <select className="input" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                {['draft', 'published', 'closed'].map(s => <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>)}
+                {['draft', 'published', 'closed'].map(s => (
+                  <option key={s} value={s}>{t(`status.${s}`)}</option>
+                ))}
               </select>
             </div>
           </div>
-          <div className="mt-4"><label className="block text-sm font-medium text-slate-700 mb-1">Notes</label><textarea className="input" rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} /></div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.notes')}</label>
+            <textarea className="input" rows={2} value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} />
+          </div>
         </div>
 
         <div className="card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-slate-800">Plan Lines ({lines.length})</h2>
-            <button type="button" onClick={addLine} className="btn-secondary text-xs"><Plus className="h-3.5 w-3.5" /> Add Line</button>
+            <h2 className="font-semibold text-slate-800">{t('dailyPlans.lines')} ({lines.length})</h2>
+            <button type="button" onClick={addLine} className="btn-secondary text-xs">
+              <Plus className="h-3.5 w-3.5" /> {t('common.add')}
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
-                  <th className="text-left py-2 px-2 text-xs text-slate-500 uppercase">Floor</th>
-                  <th className="text-left py-2 px-2 text-xs text-slate-500 uppercase">Item</th>
-                  <th className="text-left py-2 px-2 text-xs text-slate-500 uppercase">Planned Qty</th>
-                  <th className="text-left py-2 px-2 text-xs text-slate-500 uppercase">Notes</th>
+                  <th className="text-start py-2 px-2 text-xs text-slate-500 uppercase">{t('common.floor')}</th>
+                  <th className="text-start py-2 px-2 text-xs text-slate-500 uppercase">{t('common.name')}</th>
+                  <th className="text-start py-2 px-2 text-xs text-slate-500 uppercase">{t('dailyPlans.plannedQty')}</th>
+                  <th className="text-start py-2 px-2 text-xs text-slate-500 uppercase">{t('common.notes')}</th>
                   <th></th>
                 </tr>
               </thead>
@@ -129,19 +149,25 @@ export function DailyPlanFormPage() {
                   <tr key={i} className="border-b border-slate-100">
                     <td className="py-2 px-2">
                       <select className="input text-xs" value={line.floor} onChange={e => updateLine(i, 'floor', e.target.value)} required>
-                        <option value="">Floor</option>
+                        <option value="">{t('common.floor')}</option>
                         {floors?.data?.map((f: any) => <option key={f._id} value={f._id}>{f.name}</option>)}
                       </select>
                     </td>
                     <td className="py-2 px-2">
                       <select className="input text-xs" value={line.item} onChange={e => updateLine(i, 'item', e.target.value)} required>
-                        <option value="">Item</option>
+                        <option value="">{t('common.name')}</option>
                         {items?.data?.map((it: any) => <option key={it._id} value={it._id}>{it.name}</option>)}
                       </select>
                     </td>
-                    <td className="py-2 px-2"><input type="number" min="0" className="input text-xs w-24" value={line.plannedQty} onChange={e => updateLine(i, 'plannedQty', +e.target.value)} /></td>
-                    <td className="py-2 px-2"><input className="input text-xs" value={line.notes} onChange={e => updateLine(i, 'notes', e.target.value)} placeholder="Optional" /></td>
-                    <td className="py-2 px-2"><button type="button" onClick={() => removeLine(i)} className="text-slate-300 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button></td>
+                    <td className="py-2 px-2">
+                      <input type="number" min="0" className="input text-xs w-24" value={line.plannedQty} onChange={e => updateLine(i, 'plannedQty', +e.target.value)} />
+                    </td>
+                    <td className="py-2 px-2">
+                      <input className="input text-xs" value={line.notes} onChange={e => updateLine(i, 'notes', e.target.value)} placeholder={t('common.notes')} />
+                    </td>
+                    <td className="py-2 px-2">
+                      <button type="button" onClick={() => removeLine(i)} className="text-slate-300 hover:text-red-500"><Trash2 className="h-3.5 w-3.5" /></button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -150,8 +176,8 @@ export function DailyPlanFormPage() {
         </div>
 
         <div className="flex justify-end gap-3">
-          <Link to="/daily-plans" className="btn-secondary">Cancel</Link>
-          <button type="submit" className="btn-primary" disabled={saveMutation.isPending}>Save Plan</button>
+          <Link to="/daily-plans" className="btn-secondary">{t('common.cancel')}</Link>
+          <button type="submit" className="btn-primary" disabled={saveMutation.isPending}>{t('common.save')}</button>
         </div>
       </form>
     </div>

@@ -39,17 +39,17 @@ export function CorrectiveActionsPage() {
       <div className="card p-4 flex flex-wrap gap-3">
         <select className="input w-auto" value={status} onChange={e => setStatus(e.target.value)}>
           <option value="">{t('common.all')} {t('common.status')}</option>
-          <option value="open">Open</option>
-          <option value="in_progress">In Progress</option>
-          <option value="resolved">Resolved</option>
-          <option value="closed">Closed</option>
+          <option value="open">{t('status.open')}</option>
+          <option value="in_progress">{t('status.in_progress')}</option>
+          <option value="resolved">{t('status.resolved')}</option>
+          <option value="closed">{t('status.closed')}</option>
         </select>
         <select className="input w-auto" value={priority} onChange={e => setPriority(e.target.value)}>
           <option value="">{t('common.all')} {t('common.priority')}</option>
-          <option value="critical">Critical</option>
-          <option value="high">High</option>
-          <option value="medium">Medium</option>
-          <option value="low">Low</option>
+          <option value="critical">{t('status.critical')}</option>
+          <option value="high">{t('status.high')}</option>
+          <option value="medium">{t('status.medium')}</option>
+          <option value="low">{t('status.low')}</option>
         </select>
       </div>
 
@@ -80,7 +80,7 @@ export function CorrectiveActionsPage() {
                       {new Date(action.dueDate).toLocaleDateString()}
                       {daysOverdue > 0 && action.status !== 'resolved' && ` (${daysOverdue}d overdue)`}
                     </strong></span>
-                    <span>Source: {action.sourceType}</span>
+                    <span>{t('common.source')}: {action.sourceType}</span>
                   </div>
                 </div>
                 <Eye className="h-4 w-4 text-slate-400 flex-shrink-0 mt-1" />
