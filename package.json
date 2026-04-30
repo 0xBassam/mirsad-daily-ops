@@ -6,8 +6,11 @@
     "install:all": "cd server && npm install && cd ../client && npm install",
     "dev:server": "cd server && npm run dev",
     "dev:client": "cd client && npm run dev",
-    "build": "cd client && npm run build",
-    "start": "cd server && npm start",
+    "build": "cd client && npm run build && cd server && npm run build",
+    "start": "node server/dist/server.js",
     "seed": "cd server && npm run seed"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }

@@ -19,6 +19,8 @@ import dashboardRoutes from './dashboardRoutes';
 
 const router = Router();
 
+router.get('/health', (_req, res) => res.json({ status: 'ok' }));
+
 router.use('/auth', authRoutes);
 router.use('/users', verifyJWT, userRoutes);
 router.use('/projects', verifyJWT, projectRoutes);
