@@ -6,7 +6,6 @@ const isGitHubPages = !!process.env.GITHUB_PAGES;
 export default defineConfig({
   plugins: [react()],
   base: isGitHubPages ? '/mirsad-daily-ops/' : '/',
-  define: isGitHubPages ? { 'import.meta.env.VITE_DEMO_MODE': '"true"' } : {},
   server: {
     proxy: {
       '/api': {
