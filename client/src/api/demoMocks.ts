@@ -31,7 +31,8 @@ export function setupDemoMocks() {
     const user = USERS.find(u => u.email === email);
     if (!user || DEMO_PASSWORDS[email] !== password)
       return [401, { success: false, message: 'Invalid credentials' }];
-    return [200, { success: true, data: { token: makeToken(user), user } }];
+    // Match server format: token and user are at top level, not nested under data
+    return [200, { success: true, token: makeToken(user), user }];
   });
 
   mock.onGet('/auth/me').reply(200, { success: true, data: USERS[0] });
