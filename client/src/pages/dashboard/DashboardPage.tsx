@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import apiClient from '../../api/client';
 import { DashboardStats } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -6,7 +7,7 @@ import { StatusBadge } from '../../components/ui/Badge';
 import { formatDateTime } from '../../utils/formatDate';
 import {
   CheckSquare, FileText, AlertTriangle, Clock, ThumbsUp, XCircle,
-  Package, Warehouse, TrendingDown, Users
+  Package, Warehouse, TrendingDown, Thermometer, ShieldCheck, Bell
 } from 'lucide-react';
 
 function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType; label: string; value: number | string; color: string }) {
@@ -24,6 +25,7 @@ function StatCard({ icon: Icon, label, value, color }: { icon: React.ElementType
 }
 
 export function DashboardPage() {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => apiClient.get<{ success: boolean; data: DashboardStats }>('/dashboard').then(r => r.data.data),
@@ -36,53 +38,74 @@ export function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t('dashboard.title')}</h1>
         <p className="text-slate-500 text-sm mt-1">Real-time operations overview</p>
       </div>
 
       {/* Today's Checks */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Today's Floor Checks</h2>
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('dashboard.todayChecks')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard icon={CheckSquare} label="Total Checks" value={data.checks.total} color="bg-indigo-500" />
-          <StatCard icon={ThumbsUp} label="Completed" value={data.checks.completed} color="bg-green-500" />
-          <StatCard icon={Clock} label="Pending" value={data.checks.pending} color="bg-amber-500" />
+          <StatCard icon={CheckSquare} label={t('dashboard.total')} value={data.checks.total} color="bg-indigo-500" />
+          <StatCard icon={ThumbsUp} label={t('dashboard.completed')} value={data.checks.completed} color="bg-green-500" />
+          <StatCard icon={Clock} label={t('dashboard.pending')} value={data.checks.pending} color="bg-amber-500" />
         </div>
       </div>
 
       {/* Reports */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Reports</h2>
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Reports & Approvals</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard icon={Clock} label="Pending Approvals" value={data.pendingApprovals} color="bg-amber-500" />
-          <StatCard icon={FileText} label="Submitted" value={data.reports.submitted} color="bg-blue-500" />
-          <StatCard icon={ThumbsUp} label="Approved" value={data.reports.approved} color="bg-green-500" />
-          <StatCard icon={XCircle} label="Rejected" value={data.reports.rejected} color="bg-red-500" />
+          <StatCard icon={Clock} label={t('dashboard.pendingApprovals')} value={data.pendingApprovals} color="bg-amber-500" />
+          <StatCard icon={FileText} label={t('dashboard.submitted')} value={data.reports.submitted} color="bg-blue-500" />
+          <StatCard icon={ThumbsUp} label={t('dashboard.approved')} value={data.reports.approved} color="bg-green-500" />
+          <StatCard icon={XCircle} label={t('dashboard.rejected')} value={data.reports.rejected} color="bg-red-500" />
         </div>
       </div>
 
       {/* Inventory Alerts */}
       <div>
-        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Inventory Status</h2>
+        <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('dashboard.materialsWarehouse')}</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <StatCard icon={AlertTriangle} label="Shortage Items" value={data.shortages} color="bg-red-500" />
-          <StatCard icon={TrendingDown} label="Low Stock" value={data.lowStock} color="bg-amber-500" />
-          <StatCard icon={Package} label="Out of Stock" value={data.outOfStock} color="bg-red-600" />
+          <StatCard icon={AlertTriangle} label={t('dashboard.shortageItems')} value={data.shortages} color="bg-red-500" />
+          <StatCard icon={TrendingDown} label={t('dashboard.lowStock')} value={data.lowStock} color="bg-amber-500" />
+          <StatCard icon={Package} label={t('dashboard.outOfStock')} value={data.outOfStock} color="bg-red-600" />
         </div>
       </div>
+
+      {/* Phase 2: Food Safety & Corrective Actions */}
+      {(data.expiringIn3Days !== undefined || data.activeCorrectiveActions !== undefined) && (
+        <div>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Food Safety</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {data.expiringIn3Days !== undefined && (
+              <StatCard icon={Clock} label={t('dashboard.expiringIn3Days')} value={data.expiringIn3Days} color="bg-amber-500" />
+            )}
+            {data.activeCorrectiveActions !== undefined && (
+              <StatCard icon={ShieldCheck} label={t('dashboard.activeCorrectiveActions')} value={data.activeCorrectiveActions} color="bg-orange-500" />
+            )}
+            {data.fridgeChecksToday !== undefined && (
+              <StatCard icon={Thermometer} label={t('dashboard.fridgeChecksToday')} value={data.fridgeChecksToday} color="bg-blue-500" />
+            )}
+            {data.activeSpoilageAlerts !== undefined && (
+              <StatCard icon={Bell} label={t('dashboard.activeSpoilageAlerts')} value={data.activeSpoilageAlerts} color="bg-red-500" />
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Inventory Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="card p-5">
           <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            <Package className="h-4 w-4 text-green-500" /> Food Inventory
+            <Package className="h-4 w-4 text-green-500" /> {t('dashboard.foodInventory')}
           </h3>
           <div className="space-y-2">
             {[
-              { label: 'Available', val: data.foodInventory.available, color: 'bg-green-500' },
-              { label: 'Low Stock', val: data.foodInventory.lowStock, color: 'bg-amber-500' },
-              { label: 'Out of Stock', val: data.foodInventory.outOfStock, color: 'bg-red-500' },
-              { label: 'Over Consumed', val: data.foodInventory.overConsumed, color: 'bg-red-700' },
+              { label: t('status.available'), val: data.foodInventory.available, color: 'bg-green-500' },
+              { label: t('status.low_stock'), val: data.foodInventory.lowStock, color: 'bg-amber-500' },
+              { label: t('status.out_of_stock'), val: data.foodInventory.outOfStock, color: 'bg-red-500' },
+              { label: t('status.over_consumed'), val: data.foodInventory.overConsumed, color: 'bg-red-700' },
             ].map(({ label, val, color }) => (
               <div key={label} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -97,13 +120,13 @@ export function DashboardPage() {
 
         <div className="card p-5">
           <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
-            <Warehouse className="h-4 w-4 text-blue-500" /> Materials Warehouse
+            <Warehouse className="h-4 w-4 text-blue-500" /> {t('nav.materialsWarehouse')}
           </h3>
           <div className="space-y-2">
             {[
-              { label: 'Available', val: data.materialsInventory.available, color: 'bg-green-500' },
-              { label: 'Low Stock', val: data.materialsInventory.lowStock, color: 'bg-amber-500' },
-              { label: 'Out of Stock', val: data.materialsInventory.outOfStock, color: 'bg-red-500' },
+              { label: t('status.available'), val: data.materialsInventory.available, color: 'bg-green-500' },
+              { label: t('status.low_stock'), val: data.materialsInventory.lowStock, color: 'bg-amber-500' },
+              { label: t('status.out_of_stock'), val: data.materialsInventory.outOfStock, color: 'bg-red-500' },
             ].map(({ label, val, color }) => (
               <div key={label} className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -121,7 +144,7 @@ export function DashboardPage() {
       {data.recentActivity.length > 0 && (
         <div className="card overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200">
-            <h3 className="font-semibold text-slate-800">Recent Approval Activity</h3>
+            <h3 className="font-semibold text-slate-800">{t('dashboard.recentActivity')}</h3>
           </div>
           <div className="divide-y divide-slate-100">
             {data.recentActivity.slice(0, 8).map((rec: any) => (

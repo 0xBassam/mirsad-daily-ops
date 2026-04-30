@@ -2,63 +2,87 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Building2, Layers, Package, ClipboardList,
   CheckSquare, Utensils, Warehouse, ArrowLeftRight, GitBranch,
-  FileText, BookOpen, LogOut, ChevronDown
+  FileText, BookOpen, LogOut, ChevronDown, Thermometer, Clock,
+  AlertTriangle, Boxes, Truck, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
 import { ROLE_LABELS } from '../../utils/roleHelpers';
 import { clsx } from 'clsx';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { setLanguage } from '../../i18n/index';
 import apiClient from '../../api/client';
 
 interface NavItem {
   to: string;
   icon: React.ElementType;
-  label: string;
+  labelKey: string;
   roles: UserRole[];
-  children?: { to: string; label: string }[];
+  children?: { to: string; labelKey: string }[];
 }
 
 const navItems: NavItem[] = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'client'] },
-  { to: '/users', icon: Users, label: 'Users', roles: ['admin'] },
+  { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'client'] },
+  { to: '/users', icon: Users, labelKey: 'nav.users', roles: ['admin'] },
   {
-    to: '/projects', icon: Building2, label: 'Projects & Locations', roles: ['admin', 'project_manager'],
+    to: '/projects', icon: Building2, labelKey: 'nav.projectsLocations', roles: ['admin', 'project_manager'],
     children: [
-      { to: '/projects', label: 'Projects' },
-      { to: '/buildings', label: 'Buildings' },
-      { to: '/floors', label: 'Floors' },
+      { to: '/projects', labelKey: 'nav.projects' },
+      { to: '/buildings', labelKey: 'nav.buildings' },
+      { to: '/floors', labelKey: 'nav.floors' },
     ],
   },
   {
-    to: '/items', icon: Package, label: 'Items Master', roles: ['admin', 'project_manager'],
+    to: '/items', icon: Package, labelKey: 'nav.itemsMaster', roles: ['admin', 'project_manager'],
     children: [
-      { to: '/items', label: 'Items' },
-      { to: '/categories', label: 'Categories' },
+      { to: '/items', labelKey: 'nav.items' },
+      { to: '/categories', labelKey: 'nav.categories' },
     ],
   },
-  { to: '/daily-plans', icon: ClipboardList, label: 'Daily Plans', roles: ['admin', 'supervisor', 'project_manager'] },
-  { to: '/floor-checks', icon: CheckSquare, label: 'Floor Checks', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
+  { to: '/daily-plans', icon: ClipboardList, labelKey: 'nav.dailyPlans', roles: ['admin', 'supervisor', 'project_manager'] },
+  { to: '/floor-checks', icon: CheckSquare, labelKey: 'nav.floorChecks', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
   {
-    to: '/inventory', icon: Utensils, label: 'Inventory', roles: ['admin', 'project_manager', 'assistant_supervisor'],
+    to: '/inventory', icon: Utensils, labelKey: 'nav.inventory', roles: ['admin', 'project_manager', 'assistant_supervisor'],
     children: [
-      { to: '/inventory/food', label: 'Food Inventory' },
-      { to: '/inventory/materials', label: 'Materials Warehouse' },
-      { to: '/inventory/movements', label: 'Stock Movements' },
+      { to: '/inventory/food', labelKey: 'nav.foodInventory' },
+      { to: '/inventory/materials', labelKey: 'nav.materialsWarehouse' },
+      { to: '/inventory/movements', labelKey: 'nav.stockMovements' },
     ],
   },
-  { to: '/approvals', icon: GitBranch, label: 'Approvals', roles: ['assistant_supervisor', 'project_manager', 'client', 'admin'] },
-  { to: '/reports', icon: FileText, label: 'Reports', roles: ['admin', 'project_manager', 'client'] },
-  { to: '/audit-logs', icon: BookOpen, label: 'Audit Logs', roles: ['admin'] },
+  {
+    to: '/food-safety', icon: Thermometer, labelKey: 'nav.foodSafety', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'],
+    children: [
+      { to: '/fridge-checks', labelKey: 'nav.fridgeChecks' },
+      { to: '/expiry-tracking', labelKey: 'nav.expiryTracking' },
+      { to: '/spoilage-alerts', labelKey: 'nav.spoilageAlerts' },
+    ],
+  },
+  {
+    to: '/traceability', icon: Boxes, labelKey: 'nav.traceability', roles: ['admin', 'project_manager', 'assistant_supervisor'],
+    children: [
+      { to: '/batches', labelKey: 'nav.batches' },
+      { to: '/suppliers', labelKey: 'nav.suppliers' },
+    ],
+  },
+  { to: '/corrective-actions', icon: ShieldCheck, labelKey: 'nav.correctiveActions', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
+  { to: '/approvals', icon: GitBranch, labelKey: 'nav.approvals', roles: ['assistant_supervisor', 'project_manager', 'client', 'admin'] },
+  { to: '/reports', icon: FileText, labelKey: 'nav.reports', roles: ['admin', 'project_manager', 'client'] },
+  { to: '/audit-logs', icon: BookOpen, labelKey: 'nav.auditLogs', roles: ['admin'] },
 ];
 
 export function Sidebar() {
   const { user, logout } = useAuth();
+  const { t, i18n } = useTranslation();
   const [expanded, setExpanded] = useState<string | null>(null);
 
   async function handleLogout() {
     try { await apiClient.post('/auth/logout'); } catch { /* ignore */ }
     logout();
+  }
+
+  function handleLang(lang: 'en' | 'ar') {
+    setLanguage(lang);
   }
 
   const visibleItems = navItems.filter(item => user && item.roles.includes(user.role));
@@ -86,11 +110,11 @@ export function Sidebar() {
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
                 >
                   <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="flex-1 text-left">{item.label}</span>
+                  <span className="flex-1 text-start">{t(item.labelKey)}</span>
                   <ChevronDown className={clsx('h-3.5 w-3.5 transition-transform', isExpanded && 'rotate-180')} />
                 </button>
                 {isExpanded && (
-                  <div className="ml-7 mt-0.5 space-y-0.5">
+                  <div className="ms-7 mt-0.5 space-y-0.5">
                     {item.children!.map(child => (
                       <NavLink
                         key={child.to}
@@ -100,7 +124,7 @@ export function Sidebar() {
                             isActive ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white hover:bg-slate-800')
                         }
                       >
-                        {child.label}
+                        {t(child.labelKey)}
                       </NavLink>
                     ))}
                   </div>
@@ -119,11 +143,30 @@ export function Sidebar() {
               }
             >
               <Icon className="h-4 w-4 flex-shrink-0" />
-              {item.label}
+              {t(item.labelKey)}
             </NavLink>
           );
         })}
       </nav>
+
+      {/* Language toggle */}
+      <div className="px-4 py-2 border-t border-slate-700">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">{t('common.language')}:</span>
+          <button
+            onClick={() => handleLang('en')}
+            className={clsx('text-xs px-2 py-0.5 rounded transition-colors', i18n.language === 'en' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white')}
+          >
+            EN
+          </button>
+          <button
+            onClick={() => handleLang('ar')}
+            className={clsx('text-xs px-2 py-0.5 rounded transition-colors', i18n.language === 'ar' ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-white')}
+          >
+            عربي
+          </button>
+        </div>
+      </div>
 
       {/* User info */}
       <div className="px-4 py-4 border-t border-slate-700">
@@ -141,7 +184,7 @@ export function Sidebar() {
           className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
         >
           <LogOut className="h-4 w-4" />
-          Sign out
+          {t('auth.signOut')}
         </button>
       </div>
     </aside>

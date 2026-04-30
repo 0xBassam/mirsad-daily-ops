@@ -4,6 +4,7 @@ import {
   USERS, DEMO_PASSWORDS, PROJECTS, BUILDINGS, FLOORS,
   CATEGORIES, ITEMS, DAILY_PLANS, FLOOR_CHECKS,
   INVENTORY_FOOD, INVENTORY_MATERIALS, MOVEMENTS, AUDIT_LOGS, DASHBOARD,
+  SUPPLIERS, BATCHES, FRIDGE_CHECKS, CORRECTIVE_ACTIONS, SPOILAGE_ALERTS,
 } from '../mocks/data';
 
 function makeToken(user: typeof USERS[0]) {
@@ -220,4 +221,93 @@ export function setupDemoMocks() {
 
   // Attachments
   mock.onPost('/attachments').reply(201, { success: true, data: { _id: `att_${Date.now()}`, url: '/placeholder.png', filename: 'demo.png', originalName: 'demo.png', mimeType: 'image/png', size: 0 } });
+
+  // ── Phase 2 ──────────────────────────────────────────────────────────────────
+
+  // Suppliers
+  mock.onGet('/suppliers').reply(config => [200, paginated(SUPPLIERS, config.params || {})]);
+  mock.onGet(/\/suppliers\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const s = SUPPLIERS.find(x => x._id === id);
+    return s ? [200, { success: true, data: s }] : [404, { success: false, message: 'Not found' }];
+  });
+
+  // Batches
+  mock.onGet('/batches').reply(config => {
+    const p = config.params || {};
+    let list = [...BATCHES];
+    if (p.status) list = list.filter(b => b.status === p.status);
+    if (p.storageZone) list = list.filter(b => b.storageZone === p.storageZone);
+    return [200, paginated(list, p)];
+  });
+  mock.onGet(/\/batches\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const b = BATCHES.find(x => x._id === id);
+    return b ? [200, { success: true, data: b }] : [404, { success: false, message: 'Not found' }];
+  });
+
+  // Expiry tracking (derived from batches)
+  mock.onGet('/expiry-tracking').reply(config => {
+    const tab = config.params?.tab || 'expired';
+    const now2 = new Date();
+    const list = BATCHES.filter(b => {
+      const exp = new Date(b.expiryDate);
+      const diff = (exp.getTime() - now2.getTime()) / 86400000;
+      if (tab === 'expired') return diff < 0;
+      if (tab === 'today')   return diff >= 0 && diff < 1;
+      if (tab === '3days')   return diff >= 0 && diff <= 3;
+      if (tab === '7days')   return diff >= 0 && diff <= 7;
+      return false;
+    });
+    return [200, paginated(list, config.params || {})];
+  });
+
+  // Fridge Checks
+  mock.onGet('/fridge-checks').reply(config => [200, paginated(FRIDGE_CHECKS, config.params || {})]);
+  mock.onGet(/\/fridge-checks\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const f = FRIDGE_CHECKS.find(x => x._id === id);
+    return f ? [200, { success: true, data: f }] : [404, { success: false, message: 'Not found' }];
+  });
+  mock.onPost('/fridge-checks').reply(config => {
+    const body = JSON.parse(config.data);
+    const item = { _id: `frd_${Date.now()}`, status: 'ok', createdAt: new Date().toISOString(), itemsChecked: [], ...body };
+    FRIDGE_CHECKS.unshift(item as typeof FRIDGE_CHECKS[0]);
+    return [201, { success: true, data: item }];
+  });
+
+  // Corrective Actions
+  mock.onGet('/corrective-actions').reply(config => {
+    const p = config.params || {};
+    let list = [...CORRECTIVE_ACTIONS];
+    if (p.status) list = list.filter(c => c.status === p.status);
+    if (p.priority) list = list.filter(c => c.priority === p.priority);
+    return [200, paginated(list, p)];
+  });
+  mock.onGet(/\/corrective-actions\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const c = CORRECTIVE_ACTIONS.find(x => x._id === id);
+    return c ? [200, { success: true, data: c }] : [404, { success: false, message: 'Not found' }];
+  });
+  mock.onPut(/\/corrective-actions\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const idx = CORRECTIVE_ACTIONS.findIndex(x => x._id === id);
+    if (idx === -1) return [404, { success: false, message: 'Not found' }];
+    CORRECTIVE_ACTIONS[idx] = { ...CORRECTIVE_ACTIONS[idx], ...JSON.parse(config.data) };
+    return [200, { success: true, data: CORRECTIVE_ACTIONS[idx] }];
+  });
+
+  // Spoilage Alerts
+  mock.onGet('/spoilage-alerts').reply(config => {
+    const p = config.params || {};
+    let list = [...SPOILAGE_ALERTS];
+    if (p.status) list = list.filter(s => s.status === p.status);
+    return [200, paginated(list, p)];
+  });
+  mock.onPut(/\/spoilage-alerts\/.+\/resolve/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = SPOILAGE_ALERTS.findIndex(x => x._id === id);
+    if (idx !== -1) SPOILAGE_ALERTS[idx] = { ...SPOILAGE_ALERTS[idx], status: 'resolved', resolvedBy: { _id: USERS[4]._id, fullName: USERS[4].fullName } };
+    return [200, { success: true, data: SPOILAGE_ALERTS[idx] }];
+  });
 }

@@ -20,6 +20,16 @@ import { MovementsPage } from './pages/inventory/MovementsPage';
 import { ApprovalsPage } from './pages/approvals/ApprovalsPage';
 import { ReportsPage } from './pages/reports/ReportsPage';
 import { AuditLogsPage } from './pages/audit/AuditLogsPage';
+import { SuppliersPage } from './pages/suppliers/SuppliersPage';
+import { SupplierDetailPage } from './pages/suppliers/SupplierDetailPage';
+import { BatchesPage } from './pages/batches/BatchesPage';
+import { BatchDetailPage } from './pages/batches/BatchDetailPage';
+import { FridgeChecksPage } from './pages/fridge-checks/FridgeChecksPage';
+import { FridgeCheckDetailPage } from './pages/fridge-checks/FridgeCheckDetailPage';
+import { ExpiryTrackingPage } from './pages/expiry/ExpiryTrackingPage';
+import { SpoilageAlertsPage } from './pages/spoilage/SpoilageAlertsPage';
+import { CorrectiveActionsPage } from './pages/corrective-actions/CorrectiveActionsPage';
+import { CorrectiveActionDetailPage } from './pages/corrective-actions/CorrectiveActionDetailPage';
 
 export default function App() {
   return (
@@ -46,6 +56,16 @@ export default function App() {
               <Route path="/inventory/food" element={<FoodInventoryPage />} />
               <Route path="/inventory/materials" element={<MaterialsPage />} />
               <Route path="/inventory/movements" element={<MovementsPage />} />
+              <Route path="/suppliers" element={<SuppliersPage />} />
+              <Route path="/suppliers/:id" element={<SupplierDetailPage />} />
+              <Route path="/batches" element={<BatchesPage />} />
+              <Route path="/batches/:id" element={<BatchDetailPage />} />
+              <Route path="/fridge-checks" element={<FridgeChecksPage />} />
+              <Route path="/fridge-checks/:id" element={<FridgeCheckDetailPage />} />
+              <Route path="/expiry-tracking" element={<ExpiryTrackingPage />} />
+              <Route path="/spoilage-alerts" element={<SpoilageAlertsPage />} />
+              <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
+              <Route path="/corrective-actions/:id" element={<CorrectiveActionDetailPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/audit-logs" element={<AuditLogsPage />} />

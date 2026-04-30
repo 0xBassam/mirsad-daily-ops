@@ -1,247 +1,294 @@
-// Static demo dataset — mirrors server/src/db/seedDemo.ts
-
+// ── helpers ──────────────────────────────────────────────────────────────────
 const now = new Date();
 const d = (daysAgo: number) => new Date(now.getTime() - daysAgo * 86400000).toISOString();
+const dF = (daysAhead: number) => new Date(now.getTime() + daysAhead * 86400000).toISOString();
+const pad = (prefix: string, n: number) => `${prefix}${String(n).padStart(24 - prefix.length, '0')}`;
 
-export const PROJECT_ID = 'aaa000000000000000000001';
-export const BUILDING_ID = 'bbb000000000000000000001';
+// ── IDs ───────────────────────────────────────────────────────────────────────
+export const PROJECT_IDS = ['aaa000000000000000000001','aaa000000000000000000002','aaa000000000000000000003'];
+export const BUILDING_IDS = ['bbb000000000000000000001','bbb000000000000000000002','bbb000000000000000000003','bbb000000000000000000004','bbb000000000000000000005','bbb000000000000000000006'];
 
+// ── USERS ─────────────────────────────────────────────────────────────────────
 export const USERS = [
-  { _id: 'usr000000000000000000001', fullName: 'Ahmed Al-Rashidi', email: 'admin@mirsad.demo', role: 'admin', status: 'active', phone: '+966501234567', createdAt: d(30) },
-  { _id: 'usr000000000000000000002', fullName: 'Mohammed Al-Ghamdi', email: 'supervisor@mirsad.demo', role: 'supervisor', status: 'active', phone: '+966502345678', project: { _id: PROJECT_ID, name: 'NEOM Phase 1' }, createdAt: d(28) },
-  { _id: 'usr000000000000000000003', fullName: 'Khalid Al-Otaibi', email: 'assistant@mirsad.demo', role: 'assistant_supervisor', status: 'active', phone: '+966503456789', project: { _id: PROJECT_ID, name: 'NEOM Phase 1' }, createdAt: d(25) },
-  { _id: 'usr000000000000000000004', fullName: 'Abdullah Al-Qahtani', email: 'manager@mirsad.demo', role: 'project_manager', status: 'active', phone: '+966504567890', project: { _id: PROJECT_ID, name: 'NEOM Phase 1' }, createdAt: d(20) },
-  { _id: 'usr000000000000000000005', fullName: 'Omar Al-Zahrani', email: 'client@mirsad.demo', role: 'client', status: 'active', phone: '+966505678901', project: { _id: PROJECT_ID, name: 'NEOM Phase 1' }, createdAt: d(15) },
+  { _id:'usr000000000000000000001', fullName:'Ahmed Al-Rashidi',     email:'admin@mirsad.demo',       role:'admin',                phone:'+966501234567', status:'active', project:null,                                           createdAt:d(60) },
+  { _id:'usr000000000000000000002', fullName:'Sara Al-Mutairi',      email:'admin2@mirsad.demo',      role:'admin',                phone:'+966501234568', status:'active', project:null,                                           createdAt:d(55) },
+  { _id:'usr000000000000000000003', fullName:'Mohammed Al-Ghamdi',   email:'supervisor@mirsad.demo',  role:'supervisor',           phone:'+966502345678', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(50) },
+  { _id:'usr000000000000000000004', fullName:'Fatima Al-Zahrani',    email:'supervisor2@mirsad.demo', role:'supervisor',           phone:'+966502345679', status:'active', project:{ _id:PROJECT_IDS[1], name:'KAFD' },            createdAt:d(48) },
+  { _id:'usr000000000000000000005', fullName:'Khalid Al-Otaibi',     email:'assistant@mirsad.demo',   role:'assistant_supervisor', phone:'+966503456789', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(45) },
+  { _id:'usr000000000000000000006', fullName:'Nora Al-Harbi',        email:'assistant2@mirsad.demo',  role:'assistant_supervisor', phone:'+966503456790', status:'active', project:{ _id:PROJECT_IDS[1], name:'KAFD' },            createdAt:d(43) },
+  { _id:'usr000000000000000000007', fullName:'Abdullah Al-Qahtani',  email:'manager@mirsad.demo',     role:'project_manager',      phone:'+966504567890', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(40) },
+  { _id:'usr000000000000000000008', fullName:'Tariq Al-Dosari',      email:'manager2@mirsad.demo',    role:'project_manager',      phone:'+966504567891', status:'active', project:{ _id:PROJECT_IDS[2], name:'Red Sea Project' }, createdAt:d(38) },
+  { _id:'usr000000000000000000009', fullName:'Omar Al-Zahrani',      email:'client@mirsad.demo',      role:'client',               phone:'+966505678901', status:'active', project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },    createdAt:d(35) },
+  { _id:'usr000000000000000000010', fullName:'Layla Al-Shehri',      email:'client2@mirsad.demo',     role:'client',               phone:'+966505678902', status:'active', project:{ _id:PROJECT_IDS[1], name:'KAFD' },            createdAt:d(33) },
 ];
 
-export const DEMO_PASSWORDS: Record<string, string> = {
-  'admin@mirsad.demo': 'Demo@12345',
-  'supervisor@mirsad.demo': 'Demo@12345',
-  'assistant@mirsad.demo': 'Demo@12345',
-  'manager@mirsad.demo': 'Demo@12345',
-  'client@mirsad.demo': 'Demo@12345',
+export const DEMO_PASSWORDS: Record<string,string> = {
+  'admin@mirsad.demo':'Demo@12345','admin2@mirsad.demo':'Demo@12345',
+  'supervisor@mirsad.demo':'Demo@12345','supervisor2@mirsad.demo':'Demo@12345',
+  'assistant@mirsad.demo':'Demo@12345','assistant2@mirsad.demo':'Demo@12345',
+  'manager@mirsad.demo':'Demo@12345','manager2@mirsad.demo':'Demo@12345',
+  'client@mirsad.demo':'Demo@12345','client2@mirsad.demo':'Demo@12345',
 };
 
+// ── PROJECTS ──────────────────────────────────────────────────────────────────
 export const PROJECTS = [
-  { _id: PROJECT_ID, name: 'NEOM Phase 1', clientName: 'NEOM Company', locationCode: 'NE-P1', status: 'active', createdAt: d(30) },
+  { _id:PROJECT_IDS[0], name:'NEOM Phase 1',                   clientName:'NEOM Company',    locationCode:'NE-P1',   status:'active', createdAt:d(60) },
+  { _id:PROJECT_IDS[1], name:'King Abdullah Financial District',clientName:'KAFD Authority', locationCode:'KAFD-1',  status:'active', createdAt:d(45) },
+  { _id:PROJECT_IDS[2], name:'Red Sea Project',                 clientName:'RSG',             locationCode:'RSP-1',   status:'active', createdAt:d(30) },
 ];
 
+// ── BUILDINGS ─────────────────────────────────────────────────────────────────
 export const BUILDINGS = [
-  { _id: BUILDING_ID, project: { _id: PROJECT_ID, name: 'NEOM Phase 1' }, name: 'Main Residential Block', status: 'active', createdAt: d(29) },
+  { _id:BUILDING_IDS[0], project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },                    name:'Main Residential Block A', status:'active', createdAt:d(55) },
+  { _id:BUILDING_IDS[1], project:{ _id:PROJECT_IDS[0], name:'NEOM Phase 1' },                    name:'Main Residential Block B', status:'active', createdAt:d(54) },
+  { _id:BUILDING_IDS[2], project:{ _id:PROJECT_IDS[1], name:'King Abdullah Financial District' }, name:'Tower 1 — KAFD',           status:'active', createdAt:d(40) },
+  { _id:BUILDING_IDS[3], project:{ _id:PROJECT_IDS[1], name:'King Abdullah Financial District' }, name:'Tower 2 — KAFD',           status:'active', createdAt:d(39) },
+  { _id:BUILDING_IDS[4], project:{ _id:PROJECT_IDS[2], name:'Red Sea Project' },                  name:'Beach Resort Block',       status:'active', createdAt:d(25) },
+  { _id:BUILDING_IDS[5], project:{ _id:PROJECT_IDS[2], name:'Red Sea Project' },                  name:'Staff Accommodation',      status:'active', createdAt:d(24) },
 ];
 
-const floorNames = ['2F', '3F', '4F', '19F', 'MAKASSB', 'SECURITY', 'KAFAA-1', 'KAFAA-2'];
-export const FLOORS = floorNames.map((name, i) => ({
-  _id: `flr00000000000000000000${i + 1}`.slice(0, 24),
-  building: { _id: BUILDING_ID, name: 'Main Residential Block' },
-  project: { _id: PROJECT_ID, name: 'NEOM Phase 1' },
-  name,
-  locationCode: `LOC-${name}`,
-  status: 'active',
-}));
+// ── FLOORS ────────────────────────────────────────────────────────────────────
+const FLOOR_NAMES = [
+  ['2F','3F','4F','19F'], ['MAKASSB','SECURITY','KAFAA-1','KAFAA-2'],
+  ['Level 1','Level 2','Level 3','Level 4'], ['Basement','Ground','Mezzanine','Roof'],
+  ['Beach A','Beach B','Pool Deck','Cabana'], ['Block A','Block B','Block C','Block D'],
+];
+export const FLOORS = BUILDING_IDS.flatMap((bid, b) =>
+  FLOOR_NAMES[b].map((name, f) => ({
+    _id: pad('flr', b * 4 + f + 1),
+    building: { _id: bid, name: BUILDINGS[b].name },
+    project:  { _id: BUILDINGS[b].project._id, name: BUILDINGS[b].project.name },
+    name, locationCode: `${name.replace(/\s/g,'-')}-${b+1}`, status:'active',
+  }))
+);
 
-const foodCatNames = ['Rice & Grains', 'Bread & Bakery', 'Proteins', 'Dairy', 'Vegetables', 'Fruits', 'Beverages', 'Condiments', 'Canned Goods', 'Frozen Foods', 'Snacks', 'Oils & Fats', 'Legumes'];
-const matCatNames = ['Cleaning Supplies', 'Sanitization', 'Kitchen Equipment', 'Bedding', 'Toiletries', 'Safety', 'Electrical', 'Plumbing', 'Tools', 'Stationery', 'PPE', 'Packaging'];
-
+// ── CATEGORIES ────────────────────────────────────────────────────────────────
+const foodCats  = ['Rice & Grains','Bread & Bakery','Proteins','Dairy','Vegetables','Fruits','Beverages','Condiments','Canned Goods','Frozen Foods','Snacks','Oils & Fats','Legumes'];
+const matCats   = ['Cleaning Supplies','Sanitization','Kitchen Equipment','Bedding','Toiletries','Safety','Electrical','Plumbing','Tools','Stationery','PPE','Packaging'];
 export const CATEGORIES = [
-  ...foodCatNames.map((name, i) => ({ _id: `cat00000000000000000000${i + 1}`.slice(0, 24), name, type: 'food', status: 'active' })),
-  ...matCatNames.map((name, i) => ({ _id: `cat0000000000000000000${i + 14}`.slice(0, 24), name, type: 'material', status: 'active' })),
+  ...foodCats.map((name,i) => ({ _id:pad('cat',i+1),  name, type:'food',     status:'active' })),
+  ...matCats.map((name,i)  => ({ _id:pad('cat',i+14), name, type:'material', status:'active' })),
 ];
 
-const foodItems = [
-  { name: 'Basmati Rice', unit: 'kg', limitQty: 500 },
-  { name: 'White Bread', unit: 'loaf', limitQty: 200 },
-  { name: 'Chicken Breast', unit: 'kg', limitQty: 300 },
-  { name: 'Whole Milk', unit: 'L', limitQty: 150 },
-  { name: 'Tomatoes', unit: 'kg', limitQty: 100 },
-  { name: 'Apples', unit: 'kg', limitQty: 80 },
-  { name: 'Water Bottles (500ml)', unit: 'case', limitQty: 400 },
-  { name: 'Salt', unit: 'kg', limitQty: 50 },
-  { name: 'Canned Tuna', unit: 'can', limitQty: 200 },
-  { name: 'Frozen Beef', unit: 'kg', limitQty: 250 },
-  { name: 'Dates', unit: 'kg', limitQty: 100 },
-  { name: 'Sunflower Oil', unit: 'L', limitQty: 200 },
-  { name: 'Lentils', unit: 'kg', limitQty: 150 },
-  { name: 'Eggs', unit: 'dozen', limitQty: 300 },
-  { name: 'Yogurt', unit: 'kg', limitQty: 120 },
-  { name: 'Pasta', unit: 'kg', limitQty: 180 },
-  { name: 'Cooking Oil Spray', unit: 'can', limitQty: 60 },
-  { name: 'Sugar', unit: 'kg', limitQty: 100 },
-  { name: 'Tea Bags', unit: 'box', limitQty: 80 },
-  { name: 'Instant Coffee', unit: 'jar', limitQty: 50 },
+// ── ITEMS ─────────────────────────────────────────────────────────────────────
+const rawFood: [string,string,number][] = [
+  ['Basmati Rice','kg',500],['White Bread','loaf',200],['Chicken Breast','kg',300],['Whole Milk','L',150],
+  ['Tomatoes','kg',100],['Apples','kg',80],['Water Bottles 500ml','case',400],['Salt','kg',50],
+  ['Canned Tuna','can',200],['Frozen Beef','kg',250],['Dates','kg',100],['Sunflower Oil','L',200],
+  ['Lentils','kg',150],['Eggs','dozen',300],['Yogurt','kg',120],['Pasta','kg',180],
+  ['Sugar','kg',100],['Tea Bags','box',80],['Instant Coffee','jar',50],['Olive Oil','L',90],
+  ['Bread Rolls','pcs',300],['Flatbread','pcs',250],['Lamb Chops','kg',200],['Salmon Fillet','kg',150],
+  ['Cream Cheese','kg',80],['Butter','kg',100],['Cucumbers','kg',90],['Onions','kg',120],
+  ['Orange Juice','L',100],['Green Tea','box',60],['Mayonnaise','kg',70],['Ketchup','bottle',80],
+  ['Chickpeas','kg',150],['Kidney Beans','kg',130],['Beef Strips','kg',200],['Mixed Vegetables','kg',180],
+  ['Cheese Slices','pcs',200],['Sour Cream','kg',70],['Brown Rice','kg',300],['Cooking Spray','can',60],
 ];
-
-const matItems = [
-  { name: 'Floor Cleaner', unit: 'L', limitQty: 100 },
-  { name: 'Hand Sanitizer', unit: 'L', limitQty: 80 },
-  { name: 'Mop Set', unit: 'set', limitQty: 20 },
-  { name: 'Bed Sheets (Twin)', unit: 'set', limitQty: 150 },
-  { name: 'Shampoo (500ml)', unit: 'bottle', limitQty: 200 },
-  { name: 'Safety Helmet', unit: 'pcs', limitQty: 50 },
-  { name: 'Extension Cord', unit: 'pcs', limitQty: 30 },
-  { name: 'Pipe Wrench', unit: 'pcs', limitQty: 10 },
-  { name: 'Screwdriver Set', unit: 'set', limitQty: 15 },
-  { name: 'A4 Paper', unit: 'ream', limitQty: 100 },
-  { name: 'Gloves (Latex)', unit: 'box', limitQty: 80 },
-  { name: 'Trash Bags (Large)', unit: 'roll', limitQty: 120 },
-  { name: 'Toilet Paper', unit: 'roll', limitQty: 500 },
-  { name: 'Dish Soap', unit: 'L', limitQty: 60 },
-  { name: 'Face Masks (N95)', unit: 'box', limitQty: 40 },
-  { name: 'Broom', unit: 'pcs', limitQty: 25 },
-  { name: 'Disinfectant Spray', unit: 'can', limitQty: 90 },
-  { name: 'Light Bulbs (LED)', unit: 'pcs', limitQty: 60 },
+const rawMat: [string,string,number][] = [
+  ['Floor Cleaner','L',100],['Hand Sanitizer','L',80],['Mop Set','set',20],['Bed Sheets Twin','set',150],
+  ['Shampoo 500ml','bottle',200],['Safety Helmet','pcs',50],['Extension Cord','pcs',30],['Pipe Wrench','pcs',10],
+  ['Screwdriver Set','set',15],['A4 Paper','ream',100],['Gloves Latex','box',80],['Trash Bags Large','roll',120],
+  ['Toilet Paper','roll',500],['Dish Soap','L',60],['Face Masks N95','box',40],['Broom','pcs',25],
+  ['Disinfectant Spray','can',90],['Light Bulbs LED','pcs',60],['Vacuum Cleaner Bags','pcs',40],['Rubber Gloves','pair',100],
+  ['Laundry Detergent','kg',80],['Fabric Softener','L',60],['Shower Gel','bottle',150],['Hard Hat','pcs',30],
+  ['Cable Ties','bag',50],['Duct Tape','roll',40],['Measuring Tape','pcs',20],['Notepad','pcs',100],
+  ['Safety Vest','pcs',40],['Hand Soap Liquid','L',80],
 ];
-
 export const ITEMS = [
-  ...foodItems.map((item, i) => ({
-    _id: `itm00000000000000000000${i + 1}`.slice(0, 24),
-    ...item,
-    category: CATEGORIES[Math.floor(i / 2)],
-    type: 'food',
-    status: 'active',
-  })),
-  ...matItems.map((item, i) => ({
-    _id: `itm0000000000000000000${i + 21}`.slice(0, 24),
-    ...item,
-    category: CATEGORIES[13 + Math.floor(i / 2)],
-    type: 'material',
-    status: 'active',
-  })),
+  ...rawFood.map(([name,unit,limitQty],i) => ({ _id:pad('itm',i+1),  name, category:CATEGORIES[Math.floor(i/4)],    type:'food',     unit, limitQty, status:'active' })),
+  ...rawMat.map(([name,unit,limitQty],i)  => ({ _id:pad('itm',i+41), name, category:CATEGORIES[13+Math.floor(i/3)], type:'material', unit, limitQty, status:'active' })),
 ];
 
-const shifts = ['morning', 'afternoon', 'evening', 'night'] as const;
-export const DAILY_PLANS = Array.from({ length: 7 }, (_, i) => ({
-  _id: `pln00000000000000000000${i + 1}`.slice(0, 24),
-  date: d(i),
-  project: { _id: PROJECT_ID, name: 'NEOM Phase 1' },
-  building: { _id: BUILDING_ID, name: 'Main Residential Block' },
-  shift: shifts[i % 4],
-  status: i === 0 ? 'draft' : 'published',
-  createdBy: { _id: USERS[1]._id, fullName: USERS[1].fullName },
-  createdAt: d(i + 1),
-  lines: FLOORS.slice(0, 4).map((fl, li) => ({
-    _id: `pll${i}${li}000000000000000000`.slice(0, 24),
-    floor: fl,
-    item: ITEMS[li * 2],
-    plannedQty: 10 + li * 5,
-    notes: '',
+// ── DAILY PLANS ───────────────────────────────────────────────────────────────
+const shifts = ['morning','afternoon','evening','night'] as const;
+export const DAILY_PLANS = Array.from({length:14},(_,i)=>({
+  _id:pad('pln',i+1), date:d(i),
+  project:PROJECTS[i%3], building:BUILDINGS[i%6], shift:shifts[i%4],
+  status: i<2?'draft':i<12?'published':'closed',
+  createdBy:{ _id:USERS[2]._id, fullName:USERS[2].fullName },
+  createdAt:d(i+1),
+  lines: FLOORS.slice(i%6*4, i%6*4+4).map((fl,li)=>({
+    _id:pad('pll',i*4+li+1), floor:fl, item:ITEMS[li*3], plannedQty:10+li*5, notes:'',
   })),
 }));
 
-const fcStatuses: Array<'approved' | 'approved' | 'submitted' | 'under_review' | 'returned' | 'draft'> =
-  ['approved', 'approved', 'approved', 'submitted', 'under_review', 'returned', 'draft', 'approved'];
-
-export const FLOOR_CHECKS = FLOORS.flatMap((floor, fi) =>
-  Array.from({ length: 7 }, (_, di) => {
-    const status = fcStatuses[(fi + di) % fcStatuses.length];
-    const id = `fck${fi}${di}000000000000000000`.slice(0, 24);
+// ── FLOOR CHECKS ──────────────────────────────────────────────────────────────
+const fcStatuses = ['approved','approved','submitted','under_review','returned','approved','draft','approved'];
+export const FLOOR_CHECKS = FLOORS.flatMap((floor,fi)=>
+  Array.from({length:5},(_,di)=>{
+    const status = fcStatuses[(fi+di)%fcStatuses.length] as string;
+    const id = pad('fck',fi*5+di+1);
+    const sup = USERS[2+(fi%2)];
     return {
-      _id: id,
-      date: d(di),
-      project: { _id: PROJECT_ID, name: 'NEOM Phase 1' },
-      building: { _id: BUILDING_ID, name: 'Main Residential Block' },
-      floor,
-      shift: shifts[di % 4],
-      supervisor: { _id: USERS[1]._id, fullName: USERS[1].fullName },
-      status,
-      currentApprovalStep: status === 'submitted' ? 'assistant_review' : status === 'under_review' ? 'manager_approval' : 'complete',
-      notes: status === 'returned' ? 'Please recheck quantities on floor 3' : '',
-      createdAt: d(di + 1),
-      approvalRecords: status === 'approved' ? [
-        { _id: `apr${fi}${di}a000000000000000`.slice(0, 24), step: 'supervisor_submit', action: 'submitted', actor: { _id: USERS[1]._id, fullName: USERS[1].fullName, role: 'supervisor' }, comment: '', version: 1, createdAt: d(di + 0.5) },
-        { _id: `apr${fi}${di}b000000000000000`.slice(0, 24), step: 'assistant_review', action: 'approved', actor: { _id: USERS[2]._id, fullName: USERS[2].fullName, role: 'assistant_supervisor' }, comment: 'Verified', version: 1, createdAt: d(di + 0.3) },
-        { _id: `apr${fi}${di}c000000000000000`.slice(0, 24), step: 'manager_approval', action: 'approved', actor: { _id: USERS[3]._id, fullName: USERS[3].fullName, role: 'project_manager' }, comment: 'Approved', version: 1, createdAt: d(di + 0.1) },
-      ] : [],
-      lines: ITEMS.slice(0, 6).map((item, li) => ({
-        _id: `fcl${fi}${di}${li}00000000000000`.slice(0, 24),
-        item,
-        plannedQty: 10 + li * 3,
-        actualQty: 10 + li * 3 - (li % 3 === 0 ? 1 : 0),
-        difference: li % 3 === 0 ? -1 : 0,
-        lineStatus: li % 3 === 0 ? 'shortage' : 'ok',
-        notes: '',
-        photos: [],
+      _id:id, date:d(di), project:floor.project, building:floor.building, floor,
+      shift:shifts[di%4], supervisor:{ _id:sup._id, fullName:sup.fullName },
+      status, currentApprovalStep: status==='submitted'?'assistant_review':status==='under_review'?'manager_approval':'complete',
+      notes: status==='returned'?'Please recheck floor quantities':'',
+      createdAt:d(di+1),
+      approvalRecords: status==='approved'?[
+        { _id:pad('apr',fi*15+di*3+1), step:'supervisor_submit',  action:'submitted', actor:{ _id:USERS[2]._id, fullName:USERS[2].fullName, role:'supervisor' },           comment:'',        version:1, createdAt:d(di+0.5) },
+        { _id:pad('apr',fi*15+di*3+2), step:'assistant_review',   action:'approved',  actor:{ _id:USERS[4]._id, fullName:USERS[4].fullName, role:'assistant_supervisor' }, comment:'Verified',version:1, createdAt:d(di+0.3) },
+        { _id:pad('apr',fi*15+di*3+3), step:'manager_approval',   action:'approved',  actor:{ _id:USERS[6]._id, fullName:USERS[6].fullName, role:'project_manager' },      comment:'Approved',version:1, createdAt:d(di+0.1) },
+      ]:[],
+      lines: ITEMS.slice(fi%10,fi%10+6).map((item,li)=>({
+        _id:pad('fcl',fi*30+di*6+li+1), item,
+        plannedQty:10+li*3, actualQty:10+li*3-(li%3===0?1:0),
+        difference:li%3===0?-1:0, lineStatus:li%3===0?'shortage':'ok', notes:'', photos:[],
       })),
     };
   })
 );
 
-const period = () => {
-  const m = now.getMonth() + 1;
-  return `${now.getFullYear()}-${String(m).padStart(2, '0')}`;
-};
+// ── INVENTORY ─────────────────────────────────────────────────────────────────
+const period = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const foodItems = ITEMS.filter(i=>i.type==='food');
+const matItems  = ITEMS.filter(i=>i.type==='material');
 
-export const INVENTORY_FOOD = ITEMS.filter(i => i.type === 'food').map((item, i) => ({
-  _id: `invf0000000000000000000${i + 1}`.slice(0, 24),
-  project: { _id: PROJECT_ID, name: 'NEOM Phase 1' },
-  item: { _id: item._id, name: item.name, unit: item.unit, category: item.category },
-  period: period(),
-  monthlyLimit: item.limitQty,
-  openingBalance: Math.floor(item.limitQty * 0.2),
-  receivedQty: Math.floor(item.limitQty * 0.8),
-  consumedQty: Math.floor(item.limitQty * 0.5),
-  issuedQty: 0,
-  damagedQty: Math.floor(item.limitQty * 0.02),
-  returnedQty: Math.floor(item.limitQty * 0.05),
-  remainingQty: Math.floor(item.limitQty * 0.53),
-  status: i % 7 === 0 ? 'low_stock' : i % 13 === 0 ? 'out_of_stock' : 'available',
+export const INVENTORY_FOOD = foodItems.map((item,i)=>({
+  _id:pad('invf',i+1), project:PROJECTS[0], item, period,
+  monthlyLimit:item.limitQty, openingBalance:Math.floor(item.limitQty*0.2),
+  receivedQty:Math.floor(item.limitQty*0.8), consumedQty:Math.floor(item.limitQty*0.5),
+  issuedQty:0, damagedQty:Math.floor(item.limitQty*0.02), returnedQty:Math.floor(item.limitQty*0.05),
+  remainingQty:Math.floor(item.limitQty*0.53),
+  status: i%9===0?'out_of_stock':i%5===0?'low_stock':'available',
 }));
 
-export const INVENTORY_MATERIALS = ITEMS.filter(i => i.type === 'material').map((item, i) => ({
-  _id: `invm0000000000000000000${i + 1}`.slice(0, 24),
-  project: { _id: PROJECT_ID, name: 'NEOM Phase 1' },
-  item: { _id: item._id, name: item.name, unit: item.unit, category: item.category },
-  period: period(),
-  monthlyLimit: item.limitQty,
-  openingBalance: Math.floor(item.limitQty * 0.3),
-  receivedQty: Math.floor(item.limitQty * 0.7),
-  consumedQty: 0,
-  issuedQty: Math.floor(item.limitQty * 0.4),
-  damagedQty: Math.floor(item.limitQty * 0.01),
-  returnedQty: Math.floor(item.limitQty * 0.03),
-  remainingQty: Math.floor(item.limitQty * 0.62),
-  status: i % 9 === 0 ? 'low_stock' : 'available',
+export const INVENTORY_MATERIALS = matItems.map((item,i)=>({
+  _id:pad('invm',i+1), project:PROJECTS[0], item, period,
+  monthlyLimit:item.limitQty, openingBalance:Math.floor(item.limitQty*0.3),
+  receivedQty:Math.floor(item.limitQty*0.7), consumedQty:0,
+  issuedQty:Math.floor(item.limitQty*0.4), damagedQty:Math.floor(item.limitQty*0.01),
+  returnedQty:Math.floor(item.limitQty*0.03), remainingQty:Math.floor(item.limitQty*0.62),
+  status: i%9===0?'low_stock':'available',
 }));
 
-const movTypes = ['receive', 'issue', 'consumption', 'damage', 'return', 'adjustment'];
-export const MOVEMENTS = Array.from({ length: 30 }, (_, i) => ({
-  _id: `mov00000000000000000000${i + 1}`.slice(0, 24),
-  project: { _id: PROJECT_ID, name: 'NEOM Phase 1' },
-  item: ITEMS[i % ITEMS.length],
-  movementType: movTypes[i % movTypes.length],
-  quantity: 10 + (i % 20) * 5,
-  movementDate: d(i % 14),
-  sourceType: 'manual',
-  notes: '',
-  createdBy: { _id: USERS[0]._id, fullName: USERS[0].fullName },
-  createdAt: d(i % 14 + 1),
+// ── STOCK MOVEMENTS ───────────────────────────────────────────────────────────
+const movTypes = ['receive','issue','consumption','damage','return','adjustment'];
+export const MOVEMENTS = Array.from({length:80},(_,i)=>({
+  _id:pad('mov',i+1), project:PROJECTS[i%3], item:ITEMS[i%ITEMS.length],
+  movementType:movTypes[i%movTypes.length], quantity:10+(i%20)*5,
+  movementDate:d(i%30), sourceType:'manual', notes:'',
+  createdBy:{ _id:USERS[0]._id, fullName:USERS[0].fullName }, createdAt:d(i%30+1),
 }));
 
-export const AUDIT_LOGS = [
-  { _id: 'aud000000000000000000001', user: { _id: USERS[0]._id, fullName: USERS[0].fullName, email: USERS[0].email, role: 'admin' }, action: 'login', entityType: 'User', entityId: USERS[0]._id, createdAt: d(0) },
-  { _id: 'aud000000000000000000002', user: { _id: USERS[1]._id, fullName: USERS[1].fullName, email: USERS[1].email, role: 'supervisor' }, action: 'create', entityType: 'FloorCheck', entityId: FLOOR_CHECKS[0]._id, createdAt: d(1) },
-  { _id: 'aud000000000000000000003', user: { _id: USERS[1]._id, fullName: USERS[1].fullName, email: USERS[1].email, role: 'supervisor' }, action: 'submit', entityType: 'FloorCheck', entityId: FLOOR_CHECKS[1]._id, createdAt: d(2) },
-  { _id: 'aud000000000000000000004', user: { _id: USERS[2]._id, fullName: USERS[2].fullName, email: USERS[2].email, role: 'assistant_supervisor' }, action: 'approve', entityType: 'FloorCheck', entityId: FLOOR_CHECKS[2]._id, createdAt: d(2) },
-  { _id: 'aud000000000000000000005', user: { _id: USERS[3]._id, fullName: USERS[3].fullName, email: USERS[3].email, role: 'project_manager' }, action: 'approve', entityType: 'FloorCheck', entityId: FLOOR_CHECKS[2]._id, createdAt: d(3) },
+// ── AUDIT LOGS ────────────────────────────────────────────────────────────────
+const auditActions = ['login','create','update','submit','approve','reject','return'];
+export const AUDIT_LOGS = Array.from({length:40},(_,i)=>({
+  _id:pad('aud',i+1), user:USERS[i%USERS.length], action:auditActions[i%auditActions.length],
+  entityType:['FloorCheck','User','DailyPlan','InventoryBalance'][i%4],
+  entityId:pad('fck',i+1), createdAt:d(i%20),
+}));
+
+// ── SUPPLIERS ─────────────────────────────────────────────────────────────────
+export const SUPPLIERS = [
+  { _id:pad('sup',1), name:'Al-Mawrid Food Trading',        nameAr:'شركة المورد للتجارة الغذائية',       contactName:'Faisal Al-Amri',    phone:'+966512345678', email:'contact@almawrid.sa',   category:'food',     rating:4.5, status:'active',   licenseNumber:'SA-F-2023-001', address:'Riyadh Industrial City', createdAt:d(90) },
+  { _id:pad('sup',2), name:'Arabian Fresh Produce Co.',     nameAr:'شركة الجزيرة للمنتجات الطازجة',      contactName:'Nasser Al-Qahtani', phone:'+966523456789', email:'info@arabianfresh.sa',  category:'food',     rating:4.2, status:'active',   licenseNumber:'SA-F-2022-045', address:'Jeddah Food Market',     createdAt:d(85) },
+  { _id:pad('sup',3), name:'Gulf Dairy Supplies',           nameAr:'مستلزمات الخليج للألبان',            contactName:'Hana Al-Otaibi',    phone:'+966534567890', email:'supply@gulfdairy.sa',   category:'food',     rating:3.8, status:'active',   licenseNumber:'SA-F-2021-112', address:'Dammam',                 createdAt:d(80) },
+  { _id:pad('sup',4), name:'Saudi Cleaning Solutions',      nameAr:'الحلول السعودية للنظافة',            contactName:'Mansour Al-Ghamdi', phone:'+966545678901', email:'orders@scsclean.sa',    category:'material', rating:4.0, status:'active',   licenseNumber:'SA-M-2023-078', address:'Riyadh',                 createdAt:d(75) },
+  { _id:pad('sup',5), name:'ProSafe Equipment Trading',     nameAr:'بروسيف لتجارة معدات السلامة',        contactName:'Abdullah Shehri',   phone:'+966556789012', email:'sales@prosafe.sa',      category:'material', rating:4.7, status:'active',   licenseNumber:'SA-M-2022-201', address:'KAFD, Riyadh',           createdAt:d(70) },
+  { _id:pad('sup',6), name:'Al-Barakah Frozen Foods',       nameAr:'شركة البركة للأغذية المجمدة',        contactName:'Saleh Al-Dosari',   phone:'+966567890123', email:'info@albarakah.sa',     category:'food',     rating:3.5, status:'active',   licenseNumber:'SA-F-2023-156', address:'Madinah',                createdAt:d(65) },
+  { _id:pad('sup',7), name:'Kingdom Hospitality Supplies',  nameAr:'مستلزمات الضيافة للمملكة',          contactName:'Reem Al-Harbi',     phone:'+966578901234', email:'contact@khsupplies.sa', category:'both',     rating:4.3, status:'active',   licenseNumber:'SA-B-2022-089', address:'Mecca Road, Jeddah',     createdAt:d(60) },
+  { _id:pad('sup',8), name:'Delta Packaging Co.',           nameAr:'دلتا لتغليف المواد',                 contactName:'Khaled Al-Mutairi', phone:'+966589012345', email:'sales@deltapack.sa',    category:'material', rating:2.9, status:'inactive', licenseNumber:'SA-M-2020-034', address:'Riyadh',                 createdAt:d(55) },
 ];
 
-export const DASHBOARD: Record<string, unknown> = {
-  checks: { total: FLOOR_CHECKS.length, completed: FLOOR_CHECKS.filter(f => f.status === 'approved').length, pending: FLOOR_CHECKS.filter(f => ['submitted', 'under_review'].includes(f.status)).length },
-  reports: { submitted: 12, approved: 8, rejected: 2 },
-  shortages: FLOOR_CHECKS.flatMap(f => f.lines).filter(l => l.lineStatus === 'shortage').length,
-  lowStock: INVENTORY_FOOD.filter(i => i.status === 'low_stock').length + INVENTORY_MATERIALS.filter(i => i.status === 'low_stock').length,
-  outOfStock: INVENTORY_FOOD.filter(i => i.status === 'out_of_stock').length,
-  pendingApprovals: FLOOR_CHECKS.filter(f => ['submitted', 'under_review'].includes(f.status)).length,
-  foodInventory: {
-    available: INVENTORY_FOOD.filter(i => i.status === 'available').length,
-    lowStock: INVENTORY_FOOD.filter(i => i.status === 'low_stock').length,
-    outOfStock: INVENTORY_FOOD.filter(i => i.status === 'out_of_stock').length,
-    overConsumed: 0,
-  },
-  materialsInventory: {
-    available: INVENTORY_MATERIALS.filter(i => i.status === 'available').length,
-    lowStock: INVENTORY_MATERIALS.filter(i => i.status === 'low_stock').length,
-    outOfStock: 0,
-  },
-  recentActivity: FLOOR_CHECKS[0].approvalRecords.slice(0, 5),
+// ── BATCHES ───────────────────────────────────────────────────────────────────
+const zones = ['cold','chilled','ambient','freezer','dry_storage','coffee_station','hospitality'] as const;
+const batchExpiries = [dF(-5),dF(-2),dF(0),dF(1),dF(2),dF(3),dF(7),dF(14),dF(30),dF(60),dF(90),dF(120),dF(180)];
+const batchStatuses = (exp: string) => { const d2=new Date(exp).getTime()-now.getTime(); return d2<0?'expired':d2<259200000?'active':'active'; };
+export const BATCHES = Array.from({length:25},(_,i)=>({
+  _id:pad('bat',i+1),
+  batchNumber:`BAT-2026-${String(i+1).padStart(3,'0')}`,
+  item:{ _id:ITEMS[i%10]._id, name:ITEMS[i%10].name, unit:ITEMS[i%10].unit, type:ITEMS[i%10].type },
+  supplier:{ _id:SUPPLIERS[i%7]._id, name:SUPPLIERS[i%7].name },
+  quantity:100+i*20, receivedDate:d(20+i%10),
+  expiryDate: batchExpiries[i%batchExpiries.length],
+  storageZone:zones[i%zones.length],
+  remainingQty:Math.max(0,80+i*15-i*5),
+  status: i<5?'expired':i===5?'spoiled':batchStatuses(batchExpiries[i%batchExpiries.length]),
+  project:{ _id:PROJECT_IDS[i%3], name:PROJECTS[i%3].name }, notes:'',
+}));
+
+// ── FRIDGE CHECKS ─────────────────────────────────────────────────────────────
+const fridgeStatuses = ['ok','ok','ok','ok','ok','ok','ok','ok','issue_found','issue_found','issue_found','issue_found','corrective_action_required','corrective_action_required','corrective_action_required'];
+export const FRIDGE_CHECKS = Array.from({length:15},(_,i)=>({
+  _id:pad('frd',i+1), date:d(i%7),
+  floor:FLOORS[i%6], building:BUILDINGS[i%6], project:PROJECTS[i%3],
+  storageZone:(['cold','chilled','freezer'] as const)[i%3],
+  checkedBy:{ _id:USERS[4]._id, fullName:USERS[4].fullName },
+  temperature: fridgeStatuses[i]==='ok' ? 2+Math.random()*2 : 8+Math.random()*5,
+  expectedTempMin:1, expectedTempMax:5,
+  cleanlinessOk: i%5!==4,
+  cleanlinessNotes: i%5===4 ? 'Shelves require immediate cleaning' : '',
+  status: fridgeStatuses[i] as 'ok'|'issue_found'|'corrective_action_required',
+  correctiveActionId: fridgeStatuses[i]==='corrective_action_required'?pad('cac',i+1):undefined,
+  itemsChecked: BATCHES.slice(i%10,i%10+3).map((batch,li)=>({
+    _id:pad('fci',i*3+li+1),
+    batch:{ _id:batch._id, batchNumber:batch.batchNumber },
+    item:{ _id:batch.item._id, name:batch.item.name, unit:batch.item.unit },
+    expiryDate:batch.expiryDate,
+    isExpired: new Date(batch.expiryDate)<now,
+    isNearExpiry: new Date(batch.expiryDate).getTime()-now.getTime() < 3*86400000 && new Date(batch.expiryDate)>=now,
+    quantity:batch.remainingQty,
+    condition: new Date(batch.expiryDate)<now?'expired':li%5===0?'damaged':'good',
+    nameTagPresent: li%4!==0, notes:'',
+  })),
+  createdAt:d(i%7+1),
+}));
+
+// ── CORRECTIVE ACTIONS ────────────────────────────────────────────────────────
+const caPriorities = ['low','medium','high','critical'] as const;
+const caStatuses   = ['open','open','open','open','open','open','in_progress','in_progress','in_progress','in_progress','in_progress','in_progress','resolved','resolved','resolved','resolved','resolved','closed','closed','closed'] as const;
+const caTitles = [
+  'Temperature breach in cold storage — Floor 2F','Missing name tags on fridge items',
+  'Expired items found during fridge check','Cleanliness issue in freezer zone',
+  'Chicken Breast batch near expiry — immediate action','Damaged packaging detected in dry storage',
+  'FIFO order not followed for canned goods','Temperature log gap — 6-hour period',
+  'Mould detected on bread stock','Pest control required in storage area',
+  'Incomplete fridge check documentation','Improper stacking in cold zone',
+  'Unauthorised item found in food storage','Cross-contamination risk — raw and cooked',
+  'Floor drain blocked in kitchen area','Refrigerator door seal damaged',
+  'Expired sanitizer in use','Missing HACCP records for batch',
+  'Supplier delivery rejection — quality issue','Staff not following PPE protocol in kitchen',
+];
+export const CORRECTIVE_ACTIONS = Array.from({length:20},(_,i)=>({
+  _id:pad('cac',i+1), title:caTitles[i],
+  description:`Detailed corrective action required: ${caTitles[i]}. Immediate inspection and remediation needed.`,
+  sourceType:(['fridge_check','floor_check','inventory','manual'] as const)[i%4],
+  sourceRef: i%4===0?pad('frd',i+1):i%4===1?pad('fck',i+1):undefined,
+  assignedTo:{ _id:USERS[4]._id, fullName:USERS[4].fullName },
+  dueDate:dF(2+i%12), priority:caPriorities[i%4], status:caStatuses[i],
+  resolution: ['resolved','closed'].includes(caStatuses[i])?'Issue identified and resolved. Preventive measures put in place.':undefined,
+  resolvedAt: ['resolved','closed'].includes(caStatuses[i])?d(1):undefined,
+  createdBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:d(i+1),
+}));
+
+// ── SPOILAGE ALERTS ───────────────────────────────────────────────────────────
+const alertTypes  = ['expired','near_expiry','temperature_breach','damaged','spoiled'] as const;
+const alertStatuses = ['active','active','active','active','active','active','active','active','active','active','active','active','resolved','resolved','resolved','resolved','resolved','resolved','resolved','resolved','dismissed','dismissed','dismissed','dismissed','dismissed','dismissed','dismissed','dismissed','dismissed','dismissed'] as const;
+export const SPOILAGE_ALERTS = Array.from({length:30},(_,i)=>({
+  _id:pad('spa',i+1),
+  batch:{ _id:BATCHES[i%10]._id, batchNumber:BATCHES[i%10].batchNumber },
+  item:BATCHES[i%10].item,
+  alertType:alertTypes[i%5],
+  daysUntilExpiry: alertTypes[i%5]==='near_expiry'?i%3+1:alertTypes[i%5]==='expired'?-(i%5+1):undefined,
+  quantity:10+(i%15)*5,
+  storageZone:zones[i%zones.length],
+  status:alertStatuses[i],
+  detectedAt:d(i%15),
+  resolvedBy: alertStatuses[i]==='resolved'?{ _id:USERS[4]._id, fullName:USERS[4].fullName }:undefined,
+}));
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────────
+export const DASHBOARD = {
+  checks:{ total:FLOOR_CHECKS.length, completed:FLOOR_CHECKS.filter(f=>f.status==='approved').length, pending:FLOOR_CHECKS.filter(f=>['submitted','under_review'].includes(f.status)).length },
+  reports:{ submitted:28, approved:18, rejected:4 },
+  shortages:12, lowStock:INVENTORY_FOOD.filter(i=>i.status==='low_stock').length,
+  outOfStock:INVENTORY_FOOD.filter(i=>i.status==='out_of_stock').length,
+  pendingApprovals:FLOOR_CHECKS.filter(f=>['submitted','under_review'].includes(f.status)).length,
+  foodInventory:{ available:INVENTORY_FOOD.filter(i=>i.status==='available').length, lowStock:INVENTORY_FOOD.filter(i=>i.status==='low_stock').length, outOfStock:INVENTORY_FOOD.filter(i=>i.status==='out_of_stock').length, overConsumed:2 },
+  materialsInventory:{ available:INVENTORY_MATERIALS.filter(i=>i.status==='available').length, lowStock:INVENTORY_MATERIALS.filter(i=>i.status==='low_stock').length, outOfStock:0 },
+  recentActivity:FLOOR_CHECKS[0].approvalRecords.slice(0,5),
+  expiringIn3Days:BATCHES.filter(b=>{ const diff=(new Date(b.expiryDate).getTime()-now.getTime())/86400000; return diff>=0&&diff<=3; }).length,
+  activeCorrectiveActions:CORRECTIVE_ACTIONS.filter(c=>['open','in_progress'].includes(c.status)).length,
+  fridgeChecksToday:3,
+  activeSpoilageAlerts:SPOILAGE_ALERTS.filter(s=>s.status==='active').length,
 };
