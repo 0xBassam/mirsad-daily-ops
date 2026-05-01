@@ -19,7 +19,7 @@ export function FoodInventoryPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['food-inventory', page, period],
-    queryFn: () => apiClient.get(`/inventory/food?page=${page}&limit=25&period=${period}`).then(r => r.data),
+    queryFn: () => apiClient.get('/inventory/food', { params: { page, limit: 25, period } }).then(r => r.data),
   });
 
   if (isLoading) return <PageLoader />;

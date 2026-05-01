@@ -26,7 +26,7 @@ export function ReportsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['reports', page],
-    queryFn: () => apiClient.get(`/reports?page=${page}&limit=20`).then(r => r.data),
+    queryFn: () => apiClient.get('/reports', { params: { page, limit: 20 } }).then(r => r.data),
   });
 
   if (isLoading) return <PageLoader />;

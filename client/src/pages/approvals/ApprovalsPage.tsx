@@ -25,7 +25,7 @@ export function ApprovalsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['approvals-queue', page, pendingStatuses],
-    queryFn: () => apiClient.get(`/floor-checks?page=${page}&limit=20&status=${pendingStatuses}`).then(r => r.data),
+    queryFn: () => apiClient.get('/floor-checks', { params: { page, limit: 20, status: pendingStatuses } }).then(r => r.data),
   });
 
   const actionMutation = useMutation({

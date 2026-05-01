@@ -23,7 +23,7 @@ export function ProjectsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['projects', page],
-    queryFn: () => apiClient.get(`/projects?page=${page}&limit=20`).then(r => r.data),
+    queryFn: () => apiClient.get('/projects', { params: { page, limit: 20 } }).then(r => r.data),
   });
 
   const saveMutation = useMutation({

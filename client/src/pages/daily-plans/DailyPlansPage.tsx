@@ -19,7 +19,7 @@ export function DailyPlansPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['daily-plans', page],
-    queryFn: () => apiClient.get(`/daily-plans?page=${page}&limit=20`).then(r => r.data),
+    queryFn: () => apiClient.get('/daily-plans', { params: { page, limit: 20 } }).then(r => r.data),
   });
 
   const copyMutation = useMutation({

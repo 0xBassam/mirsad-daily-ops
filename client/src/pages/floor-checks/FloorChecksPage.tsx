@@ -16,7 +16,7 @@ export function FloorChecksPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['floor-checks', page, statusFilter],
-    queryFn: () => apiClient.get(`/floor-checks?page=${page}&limit=20&status=${statusFilter}`).then(r => r.data),
+    queryFn: () => apiClient.get('/floor-checks', { params: { page, limit: 20, ...(statusFilter && { status: statusFilter }) } }).then(r => r.data),
   });
 
   if (isLoading) return <PageLoader />;

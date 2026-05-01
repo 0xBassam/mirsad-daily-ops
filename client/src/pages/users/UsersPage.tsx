@@ -24,7 +24,7 @@ export function UsersPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['users', page],
-    queryFn: () => apiClient.get(`/users?page=${page}&limit=20`).then(r => r.data),
+    queryFn: () => apiClient.get('/users', { params: { page, limit: 20 } }).then(r => r.data),
   });
 
   const createMutation = useMutation({

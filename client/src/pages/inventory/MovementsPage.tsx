@@ -26,11 +26,11 @@ export function MovementsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['movements', page],
-    queryFn: () => apiClient.get(`/inventory/movements?page=${page}&limit=25`).then(r => r.data),
+    queryFn: () => apiClient.get('/inventory/movements', { params: { page, limit: 25 } }).then(r => r.data),
   });
 
-  const { data: projects } = useQuery({ queryKey: ['projects-all'], queryFn: () => apiClient.get('/projects?limit=100').then(r => r.data) });
-  const { data: items } = useQuery({ queryKey: ['items-all'], queryFn: () => apiClient.get('/items?limit=200&status=active').then(r => r.data) });
+  const { data: projects } = useQuery({ queryKey: ['projects-all'], queryFn: () => apiClient.get('/projects', { params: { limit: 100 } }).then(r => r.data) });
+  const { data: items } = useQuery({ queryKey: ['items-all'], queryFn: () => apiClient.get('/items', { params: { limit: 200, status: 'active' } }).then(r => r.data) });
 
   const createMutation = useMutation({
     mutationFn: (body: any) => apiClient.post('/inventory/movements', body),

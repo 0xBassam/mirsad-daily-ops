@@ -46,10 +46,10 @@ export function DailyPlanFormPage() {
     setInitialized(true);
   }
 
-  const { data: projects } = useQuery({ queryKey: ['projects-all'], queryFn: () => apiClient.get('/projects?limit=100').then(r => r.data) });
-  const { data: buildings } = useQuery({ queryKey: ['buildings-all'], queryFn: () => apiClient.get('/buildings?limit=100').then(r => r.data) });
-  const { data: floors } = useQuery({ queryKey: ['floors-all'], queryFn: () => apiClient.get('/floors?limit=100&status=active').then(r => r.data) });
-  const { data: items } = useQuery({ queryKey: ['items-all'], queryFn: () => apiClient.get('/items?limit=200&status=active').then(r => r.data) });
+  const { data: projects } = useQuery({ queryKey: ['projects-all'], queryFn: () => apiClient.get('/projects', { params: { limit: 100 } }).then(r => r.data) });
+  const { data: buildings } = useQuery({ queryKey: ['buildings-all'], queryFn: () => apiClient.get('/buildings', { params: { limit: 100 } }).then(r => r.data) });
+  const { data: floors } = useQuery({ queryKey: ['floors-all'], queryFn: () => apiClient.get('/floors', { params: { limit: 100, status: 'active' } }).then(r => r.data) });
+  const { data: items } = useQuery({ queryKey: ['items-all'], queryFn: () => apiClient.get('/items', { params: { limit: 200, status: 'active' } }).then(r => r.data) });
 
   const saveMutation = useMutation({
     mutationFn: (body: any) => isEdit ? apiClient.put(`/daily-plans/${id}`, body) : apiClient.post('/daily-plans', body),

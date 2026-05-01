@@ -18,7 +18,7 @@ export function CategoriesPage() {
   const [form, setForm] = useState({ name: '', type: 'food', status: 'active' });
   const qc = useQueryClient();
 
-  const { data, isLoading } = useQuery({ queryKey: ['categories', page], queryFn: () => apiClient.get(`/categories?page=${page}&limit=30`).then(r => r.data) });
+  const { data, isLoading } = useQuery({ queryKey: ['categories', page], queryFn: () => apiClient.get('/categories', { params: { page, limit: 30 } }).then(r => r.data) });
 
   const saveMutation = useMutation({
     mutationFn: (body: any) => editing ? apiClient.put(`/categories/${editing._id}`, body) : apiClient.post('/categories', body),

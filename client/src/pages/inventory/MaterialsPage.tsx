@@ -18,7 +18,7 @@ export function MaterialsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['materials-inventory', page, period],
-    queryFn: () => apiClient.get(`/inventory/materials?page=${page}&limit=25&period=${period}`).then(r => r.data),
+    queryFn: () => apiClient.get('/inventory/materials', { params: { page, limit: 25, period } }).then(r => r.data),
   });
 
   if (isLoading) return <PageLoader />;

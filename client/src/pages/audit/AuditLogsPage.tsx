@@ -21,7 +21,7 @@ export function AuditLogsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['audit-logs', page, actionFilter],
-    queryFn: () => apiClient.get(`/audit-logs?page=${page}&limit=30&action=${actionFilter}`).then(r => r.data),
+    queryFn: () => apiClient.get('/audit-logs', { params: { page, limit: 30, ...(actionFilter && { action: actionFilter }) } }).then(r => r.data),
   });
 
   if (isLoading) return <PageLoader />;

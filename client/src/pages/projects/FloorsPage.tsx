@@ -18,9 +18,9 @@ export function FloorsPage() {
   const [form, setForm] = useState({ name: '', building: '', project: '', locationCode: '', status: 'active' });
   const qc = useQueryClient();
 
-  const { data, isLoading } = useQuery({ queryKey: ['floors', page], queryFn: () => apiClient.get(`/floors?page=${page}&limit=50`).then(r => r.data) });
-  const { data: buildings } = useQuery({ queryKey: ['buildings-all'], queryFn: () => apiClient.get('/buildings?limit=100').then(r => r.data) });
-  const { data: projects } = useQuery({ queryKey: ['projects-all'], queryFn: () => apiClient.get('/projects?limit=100').then(r => r.data) });
+  const { data, isLoading } = useQuery({ queryKey: ['floors', page], queryFn: () => apiClient.get('/floors', { params: { page, limit: 50 } }).then(r => r.data) });
+  const { data: buildings } = useQuery({ queryKey: ['buildings-all'], queryFn: () => apiClient.get('/buildings', { params: { limit: 100 } }).then(r => r.data) });
+  const { data: projects } = useQuery({ queryKey: ['projects-all'], queryFn: () => apiClient.get('/projects', { params: { limit: 100 } }).then(r => r.data) });
 
   const saveMutation = useMutation({
     mutationFn: (body: any) => editing ? apiClient.put(`/floors/${editing._id}`, body) : apiClient.post('/floors', body),

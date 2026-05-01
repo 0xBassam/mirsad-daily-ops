@@ -21,9 +21,9 @@ export function ItemsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['items', page, typeFilter],
-    queryFn: () => apiClient.get(`/items?page=${page}&limit=25&type=${typeFilter}`).then(r => r.data),
+    queryFn: () => apiClient.get('/items', { params: { page, limit: 25, ...(typeFilter && { type: typeFilter }) } }).then(r => r.data),
   });
-  const { data: categories } = useQuery({ queryKey: ['categories-all'], queryFn: () => apiClient.get('/categories?limit=100').then(r => r.data) });
+  const { data: categories } = useQuery({ queryKey: ['categories-all'], queryFn: () => apiClient.get('/categories', { params: { limit: 100 } }).then(r => r.data) });
 
   const saveMutation = useMutation({
     mutationFn: (body: any) => editing ? apiClient.put(`/items/${editing._id}`, body) : apiClient.post('/items', body),
