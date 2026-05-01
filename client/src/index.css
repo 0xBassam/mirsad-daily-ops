@@ -27,6 +27,16 @@
     @apply w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
   }
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-slate-200;
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 transition-shadow;
+  }
+  .kpi-card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4
+           hover:shadow-md transition-shadow cursor-default;
+  }
+  .alert-card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-4 border-s-4;
+  }
+  .nav-section-label {
+    @apply px-3 pt-5 pb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider select-none;
   }
 }

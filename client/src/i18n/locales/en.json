@@ -29,7 +29,13 @@
     "foodSafety": "Food Safety",
     "traceability": "Traceability",
     "projectsLocations": "Projects & Locations",
-    "itemsMaster": "Items Master"
+    "itemsMaster": "Items Master",
+    "section": {
+      "operations": "Operations",
+      "inventory": "Inventory",
+      "management": "Management",
+      "reportsGov": "Reports & Governance"
+    }
   },
   "auth": {
     "email": "Email",

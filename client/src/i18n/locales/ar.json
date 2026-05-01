@@ -29,7 +29,13 @@
     "foodSafety": "سلامة الغذاء",
     "traceability": "قابلية التتبع",
     "projectsLocations": "المشاريع والمواقع",
-    "itemsMaster": "قائمة الأصناف"
+    "itemsMaster": "قائمة الأصناف",
+    "section": {
+      "operations": "العمليات",
+      "inventory": "المخزون",
+      "management": "الإدارة",
+      "reportsGov": "التقارير والحوكمة"
+    }
   },
   "auth": {
     "email": "البريد الإلكتروني",
