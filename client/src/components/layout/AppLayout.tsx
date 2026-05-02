@@ -24,7 +24,7 @@ export function AppLayout() {
           'transition-transform duration-200 ease-in-out',
           sidebarOpen
             ? 'translate-x-0'
-            : 'ltr:-translate-x-full rtl:translate-x-full md:translate-x-0 md:rtl:translate-x-0',
+            : 'ltr:-translate-x-full rtl:translate-x-full md:!translate-x-0',
         ].join(' ')}
       >
         <Sidebar onClose={() => setSidebarOpen(false)} />
