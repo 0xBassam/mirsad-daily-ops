@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Building2, Package, ClipboardList,
   CheckSquare, Utensils, GitBranch,
   FileText, BookOpen, LogOut, ChevronDown, Thermometer,
-  Boxes, ShieldCheck, ShoppingCart, Trash2
+  Boxes, ShieldCheck, ShoppingCart, Trash2, ArrowRightLeft, Truck
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -40,8 +40,10 @@ const navSections: NavSection[] = [
       { to: '/floor-checks',       icon: CheckSquare,    labelKey: 'nav.floorChecks',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/approvals',          icon: GitBranch,      labelKey: 'nav.approvals',         roles: ['assistant_supervisor', 'project_manager', 'client', 'admin'] },
       { to: '/purchase-orders',    icon: ShoppingCart,   labelKey: 'nav.purchaseOrders',    roles: ['admin', 'project_manager', 'assistant_supervisor'] },
-      { to: '/spoilage',           icon: Trash2,         labelKey: 'nav.spoilageRecording', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
+      { to: '/spoilage',           icon: Trash2,           labelKey: 'nav.spoilageRecording', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/corrective-actions', icon: ShieldCheck,    labelKey: 'nav.correctiveActions', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
+      { to: '/transfers',          icon: ArrowRightLeft, labelKey: 'nav.transfers',         roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
+      { to: '/receiving',          icon: Truck,          labelKey: 'nav.receiving',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
     ],
   },
   {

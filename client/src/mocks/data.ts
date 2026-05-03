@@ -397,6 +397,54 @@ export const PURCHASE_ORDERS = [
   },
 ];
 
+// ── TRANSFERS ─────────────────────────────────────────────────────────────────
+const transferStatuses = ['confirmed','confirmed','confirmed','draft','draft','cancelled'] as const;
+export const TRANSFERS = Array.from({length:6},(_,i)=>({
+  _id: pad('tfr',i+1),
+  project: { _id:PROJECT_IDS[i%3], name:PROJECTS[i%3].name },
+  building: { _id:BUILDING_IDS[i%3], name:BUILDINGS[i%3].name },
+  floor: { _id:FLOORS[i%6]._id, name:FLOORS[i%6].name },
+  status: transferStatuses[i],
+  transferDate: d(i%10+1),
+  notes: i%2===0 ? `Daily restocking to ${FLOORS[i%6].name}` : '',
+  lines: ITEMS.slice(i%5, i%5+3).map((item, li) => ({
+    _id: pad('tfl', i*3+li+1),
+    item: { _id:item._id, name:item.name, unit:item.unit, type:item.type },
+    quantity: 50+li*25,
+    notes: '',
+  })),
+  createdBy: { _id:USERS[i%4+2]._id, fullName:USERS[i%4+2].fullName },
+  confirmedBy: transferStatuses[i]==='confirmed' ? { _id:USERS[6]._id, fullName:USERS[6].fullName } : undefined,
+  confirmedAt: transferStatuses[i]==='confirmed' ? d(i%10+1) : undefined,
+  createdAt: d(i%10+2),
+}));
+
+// ── RECEIVING ─────────────────────────────────────────────────────────────────
+const receivingStatuses = ['confirmed','confirmed','partial','pending','pending','rejected'] as const;
+export const RECEIVINGS = Array.from({length:6},(_,i)=>({
+  _id: pad('rcv',i+1),
+  project: { _id:PROJECT_IDS[i%2], name:PROJECTS[i%2].name },
+  supplier: { _id:SUPPLIERS[i%5]._id, name:SUPPLIERS[i%5].name, contactName:SUPPLIERS[i%5].contactName },
+  purchaseOrder: i < 4 ? { _id:PURCHASE_ORDERS[i%2]._id, poNumber:PURCHASE_ORDERS[i%2].poNumber, status:PURCHASE_ORDERS[i%2].status } : undefined,
+  deliveryDate: d(i*3+1),
+  status: receivingStatuses[i],
+  invoiceNumber: `INV-2026-${1000+i+1}`,
+  notes: i%3===0 ? 'Delivery checked on arrival. All items accounted for.' : '',
+  lines: ITEMS.slice(i%8, i%8+4).map((item,li)=>({
+    _id: pad('rcl', i*4+li+1),
+    item: { _id:item._id, name:item.name, unit:item.unit, type:item.type },
+    quantityOrdered: 200+li*50,
+    quantityReceived: receivingStatuses[i]==='rejected' ? 0 : 180+li*50,
+    condition: (li===2 && i===2) ? 'damaged' as const : li===3 && i===5 ? 'rejected' as const : 'good' as const,
+    batchNumber: `BAT-REC-${String(i*4+li+1).padStart(3,'0')}`,
+    notes: (li===2 && i===2) ? '2 boxes had torn packaging' : '',
+  })),
+  receivedBy: { _id:USERS[4]._id, fullName:USERS[4].fullName },
+  confirmedBy: ['confirmed','partial','rejected'].includes(receivingStatuses[i]) ? { _id:USERS[6]._id, fullName:USERS[6].fullName } : undefined,
+  confirmedAt: ['confirmed','partial','rejected'].includes(receivingStatuses[i]) ? d(i*3) : undefined,
+  createdAt: d(i*3+2),
+}));
+
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 export const DASHBOARD = {
   checks:{ total:FLOOR_CHECKS.length, completed:FLOOR_CHECKS.filter(f=>f.status==='approved').length, pending:FLOOR_CHECKS.filter(f=>['submitted','under_review'].includes(f.status)).length },

@@ -359,3 +359,53 @@ export interface PurchaseOrder {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface TransferLine {
+  _id: string;
+  item: { _id: string; name: string; unit: string; type: string } | string;
+  quantity: number;
+  notes?: string;
+}
+
+export interface Transfer {
+  _id: string;
+  project: { _id: string; name: string } | string;
+  building: { _id: string; name: string } | string;
+  floor: { _id: string; name: string } | string;
+  lines: TransferLine[];
+  status: 'draft' | 'confirmed' | 'cancelled';
+  transferDate: string;
+  notes?: string;
+  createdBy: { _id: string; fullName: string } | string;
+  confirmedBy?: { _id: string; fullName: string } | string;
+  confirmedAt?: string;
+  createdAt: string;
+}
+
+export interface ReceivingLine {
+  _id: string;
+  item: { _id: string; name: string; unit: string; type: string } | string;
+  purchaseOrderLine?: string;
+  quantityOrdered: number;
+  quantityReceived: number;
+  condition: 'good' | 'damaged' | 'rejected';
+  batchNumber?: string;
+  expiryDate?: string;
+  notes?: string;
+}
+
+export interface Receiving {
+  _id: string;
+  project: { _id: string; name: string } | string;
+  supplier: { _id: string; name: string; contactName?: string } | string;
+  purchaseOrder?: { _id: string; poNumber: string; status?: string } | string;
+  deliveryDate: string;
+  lines: ReceivingLine[];
+  status: 'pending' | 'confirmed' | 'partial' | 'rejected';
+  invoiceNumber?: string;
+  notes?: string;
+  receivedBy?: { _id: string; fullName: string } | string;
+  confirmedBy?: { _id: string; fullName: string } | string;
+  confirmedAt?: string;
+  createdAt: string;
+}

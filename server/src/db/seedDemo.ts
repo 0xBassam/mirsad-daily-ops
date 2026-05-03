@@ -314,6 +314,76 @@ export async function seedDemo(): Promise<void> {
     },
   ]);
 
+  // ── Transfers (warehouse → floor) ────────────────────────────────────────────
+  const tr1Id = oid(), tr2Id = oid(), tr3Id = oid();
+  await db.collection('transfers').insertMany([
+    {
+      _id: tr1Id, project: projectId, building: buildingId, floor: floor2Id,
+      status: 'confirmed', transferDate: daysAgo(5),
+      lines: [
+        { _id: oid(), item: iJc1,  quantity: 120, notes: '' },
+        { _id: oid(), item: iFr1,  quantity: 60,  notes: '' },
+        { _id: oid(), item: iSb1,  quantity: 80,  notes: '' },
+      ],
+      notes: 'Daily stock transfer to 2 Floor',
+      createdBy: supervisorId, confirmedBy: managerId, confirmedAt: daysAgo(5),
+      createdAt: daysAgo(5), updatedAt: daysAgo(5),
+    },
+    {
+      _id: tr2Id, project: projectId, building: buildingId, floor: floor3Id,
+      status: 'confirmed', transferDate: daysAgo(3),
+      lines: [
+        { _id: oid(), item: iWater1, quantity: 200, notes: '' },
+        { _id: oid(), item: iPCup1,  quantity: 300, notes: '' },
+      ],
+      notes: '3 Floor weekly restocking',
+      createdBy: supervisorId, confirmedBy: managerId, confirmedAt: daysAgo(3),
+      createdAt: daysAgo(3), updatedAt: daysAgo(3),
+    },
+    {
+      _id: tr3Id, project: projectId, building: buildingId, floor: floor19Id,
+      status: 'draft', transferDate: now,
+      lines: [
+        { _id: oid(), item: iBs1, quantity: 50,  notes: '' },
+        { _id: oid(), item: iJc2, quantity: 40,  notes: '' },
+      ],
+      notes: 'Pending approval before dispatch',
+      createdBy: supervisorId, createdAt: daysAgo(1), updatedAt: daysAgo(1),
+    },
+  ]);
+
+  // ── Receiving records (deliveries from suppliers) ─────────────────────────────
+  const rec1Id = oid(), rec2Id = oid();
+  await db.collection('receivings').insertMany([
+    {
+      _id: rec1Id, project: projectId, supplier: sup1Id, purchaseOrder: po1Id,
+      deliveryDate: daysAgo(10),
+      lines: [
+        { _id: oid(), item: iJc1,  quantityOrdered: 1500, quantityReceived: 1500, condition: 'good',    batchNumber: `BAT-REC-001` },
+        { _id: oid(), item: iFr1,  quantityOrdered: 600,  quantityReceived: 580,  condition: 'good',    batchNumber: `BAT-REC-002`, notes: '20 units missing from delivery' },
+        { _id: oid(), item: iSb1,  quantityOrdered: 400,  quantityReceived: 390,  condition: 'good',    batchNumber: `BAT-REC-003` },
+        { _id: oid(), item: iBs1,  quantityOrdered: 500,  quantityReceived: 500,  condition: 'good',    batchNumber: `BAT-REC-004` },
+      ],
+      status: 'confirmed', invoiceNumber: 'INV-2026-4512',
+      notes: 'May food delivery from Al-Mawrid — all items checked.',
+      receivedBy: assistantId, confirmedBy: managerId, confirmedAt: daysAgo(10),
+      createdAt: daysAgo(10), updatedAt: daysAgo(10),
+    },
+    {
+      _id: rec2Id, project: projectId, supplier: sup4Id, purchaseOrder: po2Id,
+      deliveryDate: daysAgo(2),
+      lines: [
+        { _id: oid(), item: iWater1, quantityOrdered: 2000, quantityReceived: 2000, condition: 'good' },
+        { _id: oid(), item: iPCup1,  quantityOrdered: 1500, quantityReceived: 1500, condition: 'good' },
+        { _id: oid(), item: iSup1,   quantityOrdered: 500,  quantityReceived: 500,  condition: 'good' },
+      ],
+      status: 'confirmed', invoiceNumber: 'INV-2026-2201',
+      notes: 'Materials delivery — Saudi Cleaning Solutions.',
+      receivedBy: assistantId, confirmedBy: managerId, confirmedAt: daysAgo(2),
+      createdAt: daysAgo(2), updatedAt: daysAgo(2),
+    },
+  ]);
+
   // ── Audit logs ─────────────────────────────────────────────────────────────────
   await db.collection('auditlogs').insertMany([
     { _id: oid(), user: adminId,      action: 'login',  entityType: 'user',           entityId: adminId,      createdAt: daysAgo(7) },
@@ -330,8 +400,12 @@ export async function seedDemo(): Promise<void> {
     { _id: oid(), user: assistantId,  action: 'login',  entityType: 'user',           entityId: assistantId,  createdAt: daysAgo(3) },
     { _id: oid(), user: adminId,      action: 'create', entityType: 'purchase_order', entityId: po1Id,        createdAt: daysAgo(25) },
     { _id: oid(), user: adminId,      action: 'create', entityType: 'purchase_order', entityId: po2Id,        createdAt: daysAgo(25) },
-    { _id: oid(), user: supervisorId, action: 'create', entityType: 'spoilage',       createdAt: daysAgo(2) },
+    { _id: oid(), user: supervisorId, action: 'create', entityType: 'spoilage',    createdAt: daysAgo(2) },
+    { _id: oid(), user: supervisorId, action: 'create', entityType: 'transfer',    entityId: tr1Id, createdAt: daysAgo(5) },
+    { _id: oid(), user: managerId,    action: 'confirm', entityType: 'transfer',   entityId: tr1Id, createdAt: daysAgo(5) },
+    { _id: oid(), user: assistantId,  action: 'create', entityType: 'receiving',   entityId: rec1Id, createdAt: daysAgo(10) },
+    { _id: oid(), user: managerId,    action: 'confirm', entityType: 'receiving',  entityId: rec1Id, createdAt: daysAgo(10) },
   ]);
 
-  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage records · 2 purchase orders');
+  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage · 2 POs · 3 transfers · 2 receivings');
 }

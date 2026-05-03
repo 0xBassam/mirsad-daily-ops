@@ -30,6 +30,8 @@
     "traceability": "قابلية التتبع",
     "purchaseOrders": "أوامر الشراء",
     "spoilageRecording": "تسجيل الهدر",
+    "transfers": "التحويلات",
+    "receiving": "الاستلام",
     "projectsLocations": "المشاريع والمواقع",
     "itemsMaster": "قائمة الأصناف",
     "section": {
@@ -207,6 +209,10 @@
     "partially_received": "مستلم جزئياً",
     "fully_received": "مستلم بالكامل",
     "near_depletion": "قارب على النفاد",
+    "partial": "جزئي",
+    "pending": "قيد الانتظار",
+    "confirmed": "مؤكد",
+    "cancelled": "ملغي",
     "allStatuses": "جميع الحالات",
     "temperature_breach": "خرق درجة الحرارة",
     "cold": "تبريد",
@@ -397,6 +403,34 @@
       "quality_issue": "مشكلة في الجودة",
       "spoiled": "فاسد",
       "other": "أخرى"
+    }
+  },
+  "transfers": {
+    "title": "تحويلات المستودع",
+    "subtitle": "نقل المخزون من المستودع إلى الطوابق",
+    "new": "تحويل جديد",
+    "confirm": "تأكيد التحويل",
+    "addItems": "إضافة أصناف",
+    "linesCount": "صنف/أصناف",
+    "createdSuccess": "تم إنشاء التحويل بنجاح.",
+    "confirmedSuccess": "تم تأكيد التحويل. تم تسجيل حركات المخزون.",
+    "items": "الأصناف"
+  },
+  "receiving": {
+    "title": "الاستلام",
+    "subtitle": "تسجيل توصيلات الموردين وتحديث المخزون",
+    "detail": "سجل التسليم",
+    "confirm": "تأكيد الاستلام",
+    "lines": "سطر/أسطر",
+    "poRef": "مرجع أمر الشراء",
+    "totalOrdered": "إجمالي المطلوب",
+    "totalReceived": "إجمالي المستلم",
+    "rejected": "الأسطر المرفوضة",
+    "receivedBy": "استُلم بواسطة",
+    "conditions": {
+      "good": "جيد",
+      "damaged": "تالف",
+      "rejected": "مرفوض"
     }
   }
 }

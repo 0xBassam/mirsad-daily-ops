@@ -16,7 +16,7 @@ export interface IStockMovement extends Document {
   movementType: MovementType;
   quantity: number;
   movementDate: Date;
-  sourceType: 'floor_check' | 'manual' | 'adjustment' | 'transfer' | 'damage' | 'return';
+  sourceType: 'floor_check' | 'manual' | 'adjustment' | 'transfer' | 'damage' | 'return' | 'spoilage' | 'purchase_order' | 'receiving';
   sourceRef?: mongoose.Types.ObjectId;
   notes?: string;
   createdBy?: mongoose.Types.ObjectId;
@@ -36,7 +36,7 @@ const stockMovementSchema = new Schema<IStockMovement>(
     movementDate: { type: Date, required: true },
     sourceType: {
       type: String,
-      enum: ['floor_check', 'manual', 'adjustment', 'transfer', 'damage', 'return'],
+      enum: ['floor_check', 'manual', 'adjustment', 'transfer', 'damage', 'return', 'spoilage', 'purchase_order', 'receiving'],
       default: 'manual',
     },
     sourceRef: { type: Schema.Types.ObjectId },

@@ -30,6 +30,8 @@
     "traceability": "Traceability",
     "purchaseOrders": "Purchase Orders",
     "spoilageRecording": "Spoilage Recording",
+    "transfers": "Transfers",
+    "receiving": "Receiving",
     "projectsLocations": "Projects & Locations",
     "itemsMaster": "Items Master",
     "section": {
@@ -207,6 +209,10 @@
     "partially_received": "Partially Received",
     "fully_received": "Fully Received",
     "near_depletion": "Near Depletion",
+    "partial": "Partial",
+    "pending": "Pending",
+    "confirmed": "Confirmed",
+    "cancelled": "Cancelled",
     "allStatuses": "All Statuses",
     "temperature_breach": "Temp Breach",
     "cold": "Cold Storage",
@@ -397,6 +403,34 @@
       "quality_issue": "Quality Issue",
       "spoiled": "Spoiled",
       "other": "Other"
+    }
+  },
+  "transfers": {
+    "title": "Warehouse Transfers",
+    "subtitle": "Move stock from warehouse to floors",
+    "new": "New Transfer",
+    "confirm": "Confirm Transfer",
+    "addItems": "Add Items",
+    "linesCount": "item(s)",
+    "createdSuccess": "Transfer created successfully.",
+    "confirmedSuccess": "Transfer confirmed. Stock movements recorded.",
+    "items": "Items"
+  },
+  "receiving": {
+    "title": "Receiving",
+    "subtitle": "Record supplier deliveries and update stock",
+    "detail": "Delivery Record",
+    "confirm": "Confirm Delivery",
+    "lines": "line(s)",
+    "poRef": "PO Ref",
+    "totalOrdered": "Total Ordered",
+    "totalReceived": "Total Received",
+    "rejected": "Rejected Lines",
+    "receivedBy": "Received By",
+    "conditions": {
+      "good": "Good",
+      "damaged": "Damaged",
+      "rejected": "Rejected"
     }
   }
 }

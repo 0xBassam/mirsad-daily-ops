@@ -20,6 +20,8 @@ import supplierRoutes from './supplierRoutes';
 import batchRoutes, { getExpiryTracking } from './batchRoutes';
 import spoilageRoutes, { getSpoilageAlerts, resolveSpoilageAlert } from './spoilageRoutes';
 import purchaseOrderRoutes from './purchaseOrderRoutes';
+import transferRoutes from './transferRoutes';
+import receivingRoutes from './receivingRoutes';
 
 const router = Router();
 
@@ -41,7 +43,7 @@ router.use('/reports', verifyJWT, reportRoutes);
 router.use('/audit-logs', verifyJWT, auditLogRoutes);
 router.use('/dashboard', verifyJWT, dashboardRoutes);
 
-// ── Phase 1: Starter features ─────────────────────────────────────────────────
+// ── Phase 1 & 2: Starter + Professional features ──────────────────────────────
 router.use('/suppliers', verifyJWT, supplierRoutes);
 router.use('/batches', verifyJWT, batchRoutes);
 router.get('/expiry-tracking', verifyJWT, getExpiryTracking);
@@ -49,5 +51,7 @@ router.use('/spoilage', verifyJWT, spoilageRoutes);
 router.get('/spoilage-alerts', verifyJWT, getSpoilageAlerts);
 router.put('/spoilage-alerts/:id/resolve', verifyJWT, resolveSpoilageAlert);
 router.use('/purchase-orders', verifyJWT, purchaseOrderRoutes);
+router.use('/transfers',      verifyJWT, transferRoutes);
+router.use('/receiving',      verifyJWT, receivingRoutes);
 
 export default router;

@@ -36,6 +36,9 @@ import { InventoryItemDetailPage } from './pages/inventory/InventoryItemDetailPa
 import { PurchaseOrdersPage } from './pages/purchase-orders/PurchaseOrdersPage';
 import { PurchaseOrderDetailPage } from './pages/purchase-orders/PurchaseOrderDetailPage';
 import { SpoilageRecordingPage } from './pages/spoilage-records/SpoilageRecordingPage';
+import { TransfersPage } from './pages/transfers/TransfersPage';
+import { ReceivingPage } from './pages/receiving/ReceivingPage';
+import { ReceivingDetailPage } from './pages/receiving/ReceivingDetailPage';
 
 export default function App() {
   return (
@@ -74,6 +77,9 @@ export default function App() {
               <Route path="/expiry-tracking" element={<ExpiryTrackingPage />} />
               <Route path="/spoilage-alerts" element={<SpoilageAlertsPage />} />
               <Route path="/spoilage" element={<SpoilageRecordingPage />} />
+              <Route path="/transfers" element={<TransfersPage />} />
+              <Route path="/receiving" element={<ReceivingPage />} />
+              <Route path="/receiving/:id" element={<ReceivingDetailPage />} />
               <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
               <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
               <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />

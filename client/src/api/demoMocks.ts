@@ -5,7 +5,7 @@ import {
   CATEGORIES, ITEMS, DAILY_PLANS, FLOOR_CHECKS,
   INVENTORY_FOOD, INVENTORY_MATERIALS, MOVEMENTS, AUDIT_LOGS, DASHBOARD,
   SUPPLIERS, BATCHES, FRIDGE_CHECKS, CORRECTIVE_ACTIONS, SPOILAGE_ALERTS,
-  REPORTS, PURCHASE_ORDERS, SPOILAGE_RECORDS,
+  REPORTS, PURCHASE_ORDERS, SPOILAGE_RECORDS, TRANSFERS, RECEIVINGS,
 } from '../mocks/data';
 
 function makeToken(user: typeof USERS[0]) {
@@ -365,6 +365,52 @@ export function setupDemoMocks() {
     };
     SPOILAGE_RECORDS.unshift(record as any);
     return [201, { success: true, data: record }];
+  });
+
+  // Transfers
+  mock.onGet('/transfers').reply(config => {
+    const p = config.params || {};
+    let list = [...TRANSFERS];
+    if (p.status) list = list.filter(t => t.status === p.status);
+    if (p.project) list = list.filter(t => (t.project as any)._id === p.project);
+    return [200, paginated(list, p)];
+  });
+  mock.onPost(/\/transfers\/.+\/confirm/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = TRANSFERS.findIndex(t => t._id === id);
+    if (idx !== -1) (TRANSFERS[idx] as any).status = 'confirmed';
+    return [200, { success: true, data: TRANSFERS[idx] }];
+  });
+  mock.onPost('/transfers').reply(config => {
+    const body = JSON.parse(config.data);
+    const t = { _id: `tfr_${Date.now()}`, status: 'draft', createdAt: new Date().toISOString(), ...body };
+    TRANSFERS.unshift(t as any);
+    return [201, { success: true, data: t }];
+  });
+
+  // Receiving
+  mock.onGet('/receiving').reply(config => {
+    const p = config.params || {};
+    let list = [...RECEIVINGS];
+    if (p.status) list = list.filter(r => r.status === p.status);
+    return [200, paginated(list, p)];
+  });
+  mock.onGet(/\/receiving\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const rec = RECEIVINGS.find(r => r._id === id);
+    return rec ? [200, { success: true, data: rec }] : [404, { success: false, message: 'Not found' }];
+  });
+  mock.onPost(/\/receiving\/.+\/confirm/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = RECEIVINGS.findIndex(r => r._id === id);
+    if (idx !== -1) (RECEIVINGS[idx] as any).status = 'confirmed';
+    return [200, { success: true, data: RECEIVINGS[idx] }];
+  });
+  mock.onPost('/receiving').reply(config => {
+    const body = JSON.parse(config.data);
+    const r = { _id: `rcv_${Date.now()}`, status: 'pending', createdAt: new Date().toISOString(), ...body };
+    RECEIVINGS.unshift(r as any);
+    return [201, { success: true, data: r }];
   });
 
   // Project detail
