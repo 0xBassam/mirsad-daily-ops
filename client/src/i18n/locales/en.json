@@ -164,7 +164,10 @@
     "select": "Select…",
     "saving": "Saving…",
     "item": "Item",
-    "recordedBy": "Recorded By"
+    "recordedBy": "Recorded By",
+    "rows": "rows",
+    "from": "From",
+    "to": "To"
   },
   "status": {
     "draft": "Draft",
@@ -408,7 +411,10 @@
     "weekly_warehouse": "Weekly Warehouse",
     "monthly_food_inventory": "Monthly Food Inventory",
     "monthly_materials": "Monthly Materials",
-    "approval_summary": "Approval Summary"
+    "approval_summary": "Approval Summary",
+    "generateNew": "Generate Report",
+    "generate": "Generate",
+    "generated": "Report generated successfully"
   },
   "auditLogs": {
     "title": "Audit Logs",

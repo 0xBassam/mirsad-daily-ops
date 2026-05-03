@@ -5,7 +5,19 @@ import { ArrowLeft } from 'lucide-react';
 import apiClient from '../../api/client';
 import { Batch } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
-import { differenceInDays, parseISO } from 'date-fns';
+import { differenceInDays, parseISO, format } from 'date-fns';
+import { clsx } from 'clsx';
+
+const MOVEMENT_COLORS: Record<string, string> = {
+  RECEIVE:      'text-green-600 bg-green-50',
+  ISSUE:        'text-red-600 bg-red-50',
+  TRANSFER_IN:  'text-blue-600 bg-blue-50',
+  TRANSFER_OUT: 'text-orange-600 bg-orange-50',
+  ADJUSTMENT:   'text-purple-600 bg-purple-50',
+  DAMAGE:       'text-red-700 bg-red-100',
+  RETURN:       'text-teal-600 bg-teal-50',
+  CONSUMPTION:  'text-amber-600 bg-amber-50',
+};
 
 function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -27,6 +39,12 @@ export function BatchDetailPage() {
   });
 
   const batch: Batch | undefined = data?.data;
+
+  const { data: movementsData, isLoading: movementsLoading } = useQuery({
+    queryKey: ['movements-by-item', batch?.item?._id],
+    queryFn: () => apiClient.get('/inventory/movements', { params: { item: batch!.item._id, limit: 20 } }).then(r => r.data),
+    enabled: !!batch?.item?._id,
+  });
 
   if (isLoading) return <div className="p-8 text-center text-slate-500">{t('common.loading')}</div>;
   if (!batch) return <div className="p-8 text-center text-slate-500">{t('common.noData')}</div>;
@@ -82,6 +100,43 @@ export function BatchDetailPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Stock Movements */}
+      <div className="card overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200">
+          <h3 className="font-semibold text-slate-800">Stock Movements — {batch.item.name}</h3>
+        </div>
+        {movementsLoading ? (
+          <div className="p-6 text-center text-slate-400">{t('common.loading')}</div>
+        ) : (movementsData?.data || []).length === 0 ? (
+          <div className="p-6 text-center text-slate-400">{t('common.noData')}</div>
+        ) : (
+          <table className="w-full text-sm">
+            <thead className="bg-slate-50">
+              <tr>
+                {['Date', 'Type', 'Qty', 'Source', 'Notes'].map(h => (
+                  <th key={h} className="px-4 py-2.5 text-start text-xs font-medium text-slate-500 uppercase">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {(movementsData?.data || []).map((mv: any) => (
+                <tr key={mv._id} className="hover:bg-slate-50">
+                  <td className="px-4 py-2.5 text-slate-500">{format(new Date(mv.movementDate), 'dd/MM/yyyy')}</td>
+                  <td className="px-4 py-2.5">
+                    <span className={clsx('text-xs font-semibold px-2 py-0.5 rounded-full', MOVEMENT_COLORS[mv.movementType] || 'text-slate-600 bg-slate-100')}>
+                      {mv.movementType}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2.5 font-medium text-slate-900">{mv.quantity} {batch.item.unit}</td>
+                  <td className="px-4 py-2.5 text-slate-500 text-xs">{mv.sourceType}</td>
+                  <td className="px-4 py-2.5 text-slate-400 text-xs">{mv.notes || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );

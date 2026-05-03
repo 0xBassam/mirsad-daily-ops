@@ -219,12 +219,29 @@ export function setupDemoMocks() {
 
   // Reports
   mock.onGet('/reports').reply(config => [200, paginated(REPORTS, config.params || {})]);
+  mock.onGet(/\/reports\/.+\/data/).reply(config => {
+    // Return empty preview data — real data only available on the live backend
+    return [200, { success: true, data: { headers: [], rows: [] } }];
+  });
   mock.onGet(/\/reports\/.+/).reply(config => {
     const id = config.url!.split('/').pop()!;
     const r = REPORTS.find(x => x._id === id);
     return r ? [200, { success: true, data: r }] : [404, { success: false, message: 'Not found' }];
   });
-  mock.onPost('/reports').reply(201, { success: true, data: { _id: `rpt_${Date.now()}` } });
+  mock.onPost('/reports').reply(config => {
+    const body = JSON.parse(config.data || '{}');
+    const newReport = {
+      _id: `rpt_${Date.now()}`,
+      ...body,
+      title: body.title || `${body.reportType} Report`,
+      status: 'generated',
+      generatedBy: { _id: 'usr000000000000000000001', fullName: 'Ahmed Al-Rashidi' },
+      project: body.project ? { _id: body.project, name: 'CDMDNA Building Operations' } : null,
+      createdAt: new Date().toISOString(),
+    };
+    REPORTS.unshift(newReport as any);
+    return [201, { success: true, data: newReport }];
+  });
 
   // Attachments
   mock.onPost('/attachments').reply(201, { success: true, data: { _id: `att_${Date.now()}`, url: '/placeholder.png', filename: 'demo.png', originalName: 'demo.png', mimeType: 'image/png', size: 0 } });
@@ -245,6 +262,7 @@ export function setupDemoMocks() {
     let list = [...BATCHES];
     if (p.status) list = list.filter(b => b.status === p.status);
     if (p.storageZone) list = list.filter(b => b.storageZone === p.storageZone);
+    if (p.supplier) list = list.filter(b => b.supplier?._id === p.supplier || b.supplier === p.supplier);
     return [200, paginated(list, p)];
   });
   mock.onGet(/\/batches\/.+/).reply(config => {

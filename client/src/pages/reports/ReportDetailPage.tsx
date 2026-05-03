@@ -7,7 +7,6 @@ import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { StatusBadge, Badge } from '../../components/ui/Badge';
 import { formatDate } from '../../utils/formatDate';
 import { ArrowLeft, Download } from 'lucide-react';
-import { FLOOR_CHECKS, INVENTORY_FOOD, INVENTORY_MATERIALS } from '../../mocks/data';
 
 const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray'> = {
   daily_floor_check: 'blue',
@@ -22,49 +21,22 @@ export function ReportDetailPage() {
   const { id } = useParams();
   const { t } = useTranslation();
 
-  const { data: report, isLoading } = useQuery({
+  const { data: reportData, isLoading: reportLoading } = useQuery({
     queryKey: ['report', id],
     queryFn: () => apiClient.get(`/reports/${id}`).then(r => r.data.data),
   });
 
-  if (isLoading || !report) return <PageLoader />;
+  const { data: previewData, isLoading: previewLoading } = useQuery({
+    queryKey: ['report-data', id],
+    queryFn: () => apiClient.get(`/reports/${id}/data`).then(r => r.data.data),
+    enabled: !!id,
+  });
 
-  const r = report as Report;
+  if (reportLoading || !reportData) return <PageLoader />;
 
-  const previewRows = (() => {
-    if (r.reportType === 'monthly_food_inventory') {
-      return INVENTORY_FOOD.slice(0, 8).map(inv => ({
-        col1: (inv.item as any).name,
-        col2: (inv.item as any).unit,
-        col3: String(inv.openingBalance),
-        col4: String(inv.receivedQty),
-        col5: String(inv.consumedQty),
-        col6: String(inv.remainingQty),
-      }));
-    }
-    if (r.reportType === 'monthly_materials') {
-      return INVENTORY_MATERIALS.slice(0, 8).map(inv => ({
-        col1: (inv.item as any).name,
-        col2: (inv.item as any).unit,
-        col3: String(inv.openingBalance),
-        col4: String(inv.receivedQty),
-        col5: String(inv.issuedQty),
-        col6: String(inv.remainingQty),
-      }));
-    }
-    return FLOOR_CHECKS.slice(0, 8).map(fc => ({
-      col1: formatDate(fc.date),
-      col2: (fc.floor as any).name,
-      col3: (fc.building as any).name,
-      col4: (fc.supervisor as any).fullName,
-      col5: fc.shift,
-      col6: fc.status,
-    }));
-  })();
-
-  const headers = r.reportType === 'monthly_food_inventory' || r.reportType === 'monthly_materials'
-    ? [t('common.name'), t('common.unit'), t('inventory.opening'), t('inventory.received'), r.reportType === 'monthly_food_inventory' ? t('inventory.consumed') : t('inventory.issued'), t('inventory.remainingQty')]
-    : [t('common.date'), t('common.floor'), t('common.building'), t('common.supervisor'), t('common.shift'), t('common.status')];
+  const r = reportData as Report;
+  const headers: string[]   = previewData?.headers || [];
+  const rows: Record<string, string>[] = previewData?.rows || [];
 
   return (
     <div className="space-y-6">
@@ -95,7 +67,10 @@ export function ReportDetailPage() {
 
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-          <h2 className="font-semibold text-slate-800">{t('reports.preview')}</h2>
+          <h2 className="font-semibold text-slate-800">
+            {t('reports.preview')}
+            {!previewLoading && <span className="ms-2 text-xs text-slate-400 font-normal">({rows.length} {t('common.rows')})</span>}
+          </h2>
           <div className="flex gap-3">
             <a href="#" className="btn-primary text-sm flex items-center gap-1.5">
               <Download className="h-4 w-4" /> {t('reports.exportPdf')}
@@ -105,30 +80,37 @@ export function ReportDetailPage() {
             </a>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-slate-50">
-              <tr>{headers.map(h => <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {previewRows.map((row, i) => (
-                <tr key={i} className="hover:bg-slate-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{row.col1}</td>
-                  <td className="px-4 py-3 text-slate-500">{row.col2}</td>
-                  <td className="px-4 py-3 text-slate-500">{row.col3}</td>
-                  <td className="px-4 py-3 text-slate-500">{row.col4}</td>
-                  <td className="px-4 py-3 text-slate-500">{row.col5}</td>
-                  <td className="px-4 py-3">
-                    {r.reportType === 'daily_floor_check' || r.reportType === 'daily_project_summary' || r.reportType === 'approval_summary'
-                      ? <StatusBadge status={row.col6} />
-                      : <span className="text-slate-900 font-medium">{row.col6}</span>
-                    }
-                  </td>
+        {previewLoading ? (
+          <div className="p-8 text-center text-slate-400">{t('common.loading')}</div>
+        ) : rows.length === 0 ? (
+          <div className="p-8 text-center text-slate-400">{t('common.noData')}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50">
+                <tr>
+                  {headers.map(h => (
+                    <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((row, i) => (
+                  <tr key={i} className="hover:bg-slate-50">
+                    {Object.values(row).map((val, j) => (
+                      <td key={j} className="px-4 py-3 text-slate-700">
+                        {j === Object.keys(row).length - 1 && typeof val === 'string' && ['ok','draft','submitted','approved','rejected','confirmed','active','resolved','closed','available','low_stock','out_of_stock'].includes(val)
+                          ? <StatusBadge status={val} />
+                          : String(val ?? '—')
+                        }
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -164,7 +164,10 @@
     "select": "اختر…",
     "saving": "جارٍ الحفظ…",
     "item": "الصنف",
-    "recordedBy": "سُجِّل بواسطة"
+    "recordedBy": "سُجِّل بواسطة",
+    "rows": "صف",
+    "from": "من",
+    "to": "إلى"
   },
   "status": {
     "draft": "مسودة",
@@ -408,7 +411,10 @@
     "weekly_warehouse": "التقرير الأسبوعي للمستودع",
     "monthly_food_inventory": "مخزون الغذاء الشهري",
     "monthly_materials": "المواد الشهرية",
-    "approval_summary": "ملخص الاعتمادات"
+    "approval_summary": "ملخص الاعتمادات",
+    "generateNew": "إنشاء تقرير",
+    "generate": "إنشاء",
+    "generated": "تم إنشاء التقرير بنجاح"
   },
   "auditLogs": {
     "title": "سجل الأحداث",

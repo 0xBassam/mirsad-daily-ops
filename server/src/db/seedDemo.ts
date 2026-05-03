@@ -494,6 +494,22 @@ export async function seedDemo(): Promise<void> {
     },
   ]);
 
+  // ── Reports ───────────────────────────────────────────────────────────────────
+  function monthStart(offset = 0): Date {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - offset); d.setHours(0,0,0,0); return d;
+  }
+  function monthEnd(offset = 0): Date {
+    const d = new Date(); d.setDate(0); d.setMonth(d.getMonth() - offset + 1); d.setHours(23,59,59,999); return d;
+  }
+  await db.collection('reports').insertMany([
+    { _id: oid(), reportType: 'daily_floor_check',     title: 'Daily Floor Check Report — 2 Floor',         project: projectId, building: buildingId, floor: floor2Id, dateFrom: daysAgo(1), dateTo: daysAgo(1), generatedBy: managerId,    status: 'generated', createdAt: daysAgo(1) },
+    { _id: oid(), reportType: 'daily_project_summary', title: 'Daily Project Summary — CDMDNA Building',     project: projectId, building: buildingId,                  dateFrom: daysAgo(1), dateTo: daysAgo(1), generatedBy: managerId,    status: 'generated', createdAt: daysAgo(1) },
+    { _id: oid(), reportType: 'weekly_warehouse',      title: 'Weekly Warehouse Report — Week',              project: projectId,                                        dateFrom: daysAgo(7), dateTo: daysAgo(1), generatedBy: managerId,    status: 'generated', createdAt: daysAgo(2) },
+    { _id: oid(), reportType: 'monthly_food_inventory',title: `Monthly Food Inventory Report — ${monthStart().toLocaleString('en', { month: 'long', year: 'numeric' })}`, project: projectId, dateFrom: monthStart(), dateTo: monthEnd(), generatedBy: adminId, status: 'generated', createdAt: daysAgo(3) },
+    { _id: oid(), reportType: 'monthly_materials',     title: `Monthly Materials Report — ${monthStart().toLocaleString('en', { month: 'long', year: 'numeric' })}`,     project: projectId, dateFrom: monthStart(), dateTo: monthEnd(), generatedBy: adminId, status: 'generated', createdAt: daysAgo(3) },
+    { _id: oid(), reportType: 'approval_summary',      title: 'Approval Summary Report',                     project: projectId,                                        dateFrom: daysAgo(30),dateTo: daysAgo(0), generatedBy: adminId,    status: 'generated', createdAt: daysAgo(4) },
+  ]);
+
   // ── Corrective Actions ────────────────────────────────────────────────────────
   const ca1Id = oid(), ca2Id = oid(), ca3Id = oid(), ca4Id = oid(), ca5Id = oid();
   await db.collection('correctiveactions').insertMany([
@@ -648,5 +664,5 @@ export async function seedDemo(): Promise<void> {
     { _id: oid(), user: managerId,    action: 'update', entityType: 'corrective_action', entityId: ca4Id, createdAt: daysAgo(1) },
   ]);
 
-  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage · 2 POs · 3 transfers · 2 receivings · 5 maintenance · 4 client requests · 5 fridge checks · 5 corrective actions');
+  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage · 2 POs · 3 transfers · 2 receivings · 5 maintenance · 4 client requests · 5 fridge checks · 5 corrective actions · 6 reports');
 }

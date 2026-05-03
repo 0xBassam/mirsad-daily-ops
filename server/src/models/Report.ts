@@ -4,10 +4,9 @@ export type ReportType =
   | 'daily_floor_check'
   | 'daily_project_summary'
   | 'weekly_warehouse'
-  | 'monthly_food'
+  | 'monthly_food_inventory'
   | 'monthly_materials'
-  | 'shortage'
-  | 'approval';
+  | 'approval_summary';
 
 export interface IReport extends Document {
   reportType: ReportType;
@@ -29,7 +28,7 @@ const reportSchema = new Schema<IReport>(
   {
     reportType: {
       type: String,
-      enum: ['daily_floor_check', 'daily_project_summary', 'weekly_warehouse', 'monthly_food', 'monthly_materials', 'shortage', 'approval'],
+      enum: ['daily_floor_check', 'daily_project_summary', 'weekly_warehouse', 'monthly_food_inventory', 'monthly_materials', 'approval_summary'],
       required: true,
     },
     title: { type: String },
