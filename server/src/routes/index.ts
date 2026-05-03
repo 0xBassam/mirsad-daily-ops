@@ -22,6 +22,8 @@ import spoilageRoutes, { getSpoilageAlerts, resolveSpoilageAlert } from './spoil
 import purchaseOrderRoutes from './purchaseOrderRoutes';
 import transferRoutes from './transferRoutes';
 import receivingRoutes from './receivingRoutes';
+import maintenanceRoutes from './maintenanceRoutes';
+import clientRequestRoutes from './clientRequestRoutes';
 
 const router = Router();
 
@@ -51,7 +53,9 @@ router.use('/spoilage', verifyJWT, spoilageRoutes);
 router.get('/spoilage-alerts', verifyJWT, getSpoilageAlerts);
 router.put('/spoilage-alerts/:id/resolve', verifyJWT, resolveSpoilageAlert);
 router.use('/purchase-orders', verifyJWT, purchaseOrderRoutes);
-router.use('/transfers',      verifyJWT, transferRoutes);
-router.use('/receiving',      verifyJWT, receivingRoutes);
+router.use('/transfers',        verifyJWT, transferRoutes);
+router.use('/receiving',        verifyJWT, receivingRoutes);
+router.use('/maintenance',      verifyJWT, maintenanceRoutes);
+router.use('/client-requests',  verifyJWT, clientRequestRoutes);
 
 export default router;

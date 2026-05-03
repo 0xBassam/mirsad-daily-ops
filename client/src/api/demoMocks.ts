@@ -6,6 +6,7 @@ import {
   INVENTORY_FOOD, INVENTORY_MATERIALS, MOVEMENTS, AUDIT_LOGS, DASHBOARD,
   SUPPLIERS, BATCHES, FRIDGE_CHECKS, CORRECTIVE_ACTIONS, SPOILAGE_ALERTS,
   REPORTS, PURCHASE_ORDERS, SPOILAGE_RECORDS, TRANSFERS, RECEIVINGS,
+  MAINTENANCE_REQUESTS, CLIENT_REQUESTS,
 } from '../mocks/data';
 
 function makeToken(user: typeof USERS[0]) {
@@ -411,6 +412,107 @@ export function setupDemoMocks() {
     const r = { _id: `rcv_${Date.now()}`, status: 'pending', createdAt: new Date().toISOString(), ...body };
     RECEIVINGS.unshift(r as any);
     return [201, { success: true, data: r }];
+  });
+
+  // Maintenance Requests
+  mock.onGet('/maintenance').reply(config => {
+    const p = config.params || {};
+    let list = [...MAINTENANCE_REQUESTS];
+    if (p.status)   list = list.filter(m => m.status === p.status);
+    if (p.priority) list = list.filter(m => m.priority === p.priority);
+    if (p.category) list = list.filter(m => m.category === p.category);
+    return [200, paginated(list, p)];
+  });
+  mock.onGet(/\/maintenance\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const mr = MAINTENANCE_REQUESTS.find(m => m._id === id);
+    return mr ? [200, { success: true, data: mr }] : [404, { success: false, message: 'Not found' }];
+  });
+  mock.onPost('/maintenance').reply(config => {
+    const body = JSON.parse(config.data);
+    const mr = { _id: `mnr_${Date.now()}`, status: 'open', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      reportedBy: { _id: USERS[0]._id, fullName: USERS[0].fullName }, ...body };
+    MAINTENANCE_REQUESTS.unshift(mr);
+    return [201, { success: true, data: mr }];
+  });
+  mock.onPost(/\/maintenance\/.+\/assign/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const body = JSON.parse(config.data);
+    const idx = MAINTENANCE_REQUESTS.findIndex(m => m._id === id);
+    if (idx !== -1) { MAINTENANCE_REQUESTS[idx] = { ...MAINTENANCE_REQUESTS[idx], status: 'assigned', assignedTo: USERS.find(u => u._id === body.assignedTo) || USERS[4], assignedAt: new Date().toISOString() }; }
+    return [200, { success: true, data: MAINTENANCE_REQUESTS[idx] }];
+  });
+  mock.onPost(/\/maintenance\/.+\/start/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = MAINTENANCE_REQUESTS.findIndex(m => m._id === id);
+    if (idx !== -1) MAINTENANCE_REQUESTS[idx] = { ...MAINTENANCE_REQUESTS[idx], status: 'in_progress' };
+    return [200, { success: true, data: MAINTENANCE_REQUESTS[idx] }];
+  });
+  mock.onPost(/\/maintenance\/.+\/resolve/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const body = JSON.parse(config.data);
+    const idx = MAINTENANCE_REQUESTS.findIndex(m => m._id === id);
+    if (idx !== -1) MAINTENANCE_REQUESTS[idx] = { ...MAINTENANCE_REQUESTS[idx], status: 'resolved', resolution: body.resolution, resolvedAt: new Date().toISOString() };
+    return [200, { success: true, data: MAINTENANCE_REQUESTS[idx] }];
+  });
+  mock.onPost(/\/maintenance\/.+\/close/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = MAINTENANCE_REQUESTS.findIndex(m => m._id === id);
+    if (idx !== -1) MAINTENANCE_REQUESTS[idx] = { ...MAINTENANCE_REQUESTS[idx], status: 'closed' };
+    return [200, { success: true, data: MAINTENANCE_REQUESTS[idx] }];
+  });
+
+  // Client Requests
+  mock.onGet('/client-requests').reply(config => {
+    const p = config.params || {};
+    let list = [...CLIENT_REQUESTS];
+    if (p.status)      list = list.filter(r => r.status === p.status);
+    if (p.requestType) list = list.filter(r => r.requestType === p.requestType);
+    return [200, paginated(list, p)];
+  });
+  mock.onGet(/\/client-requests\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const cr = CLIENT_REQUESTS.find(r => r._id === id);
+    return cr ? [200, { success: true, data: cr }] : [404, { success: false, message: 'Not found' }];
+  });
+  mock.onPost('/client-requests').reply(config => {
+    const body = JSON.parse(config.data);
+    const cr = { _id: `cre_${Date.now()}`, status: 'submitted', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      requestedBy: { _id: USERS[0]._id, fullName: USERS[0].fullName }, ...body };
+    CLIENT_REQUESTS.unshift(cr);
+    return [201, { success: true, data: cr }];
+  });
+  mock.onPost(/\/client-requests\/.+\/assign/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const body = JSON.parse(config.data);
+    const idx = CLIENT_REQUESTS.findIndex(r => r._id === id);
+    if (idx !== -1) CLIENT_REQUESTS[idx] = { ...CLIENT_REQUESTS[idx], status: 'assigned', assignedTo: USERS.find(u => u._id === body.assignedTo) || USERS[2] };
+    return [200, { success: true, data: CLIENT_REQUESTS[idx] }];
+  });
+  mock.onPost(/\/client-requests\/.+\/start/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = CLIENT_REQUESTS.findIndex(r => r._id === id);
+    if (idx !== -1) CLIENT_REQUESTS[idx] = { ...CLIENT_REQUESTS[idx], status: 'in_progress' };
+    return [200, { success: true, data: CLIENT_REQUESTS[idx] }];
+  });
+  mock.onPost(/\/client-requests\/.+\/deliver/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = CLIENT_REQUESTS.findIndex(r => r._id === id);
+    if (idx !== -1) CLIENT_REQUESTS[idx] = { ...CLIENT_REQUESTS[idx], status: 'delivered', deliveredAt: new Date().toISOString() };
+    return [200, { success: true, data: CLIENT_REQUESTS[idx] }];
+  });
+  mock.onPost(/\/client-requests\/.+\/confirm/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const idx = CLIENT_REQUESTS.findIndex(r => r._id === id);
+    if (idx !== -1) CLIENT_REQUESTS[idx] = { ...CLIENT_REQUESTS[idx], status: 'confirmed', confirmedAt: new Date().toISOString() };
+    return [200, { success: true, data: CLIENT_REQUESTS[idx] }];
+  });
+  mock.onPost(/\/client-requests\/.+\/reject/).reply(config => {
+    const id = config.url!.split('/')[2];
+    const body = JSON.parse(config.data);
+    const idx = CLIENT_REQUESTS.findIndex(r => r._id === id);
+    if (idx !== -1) CLIENT_REQUESTS[idx] = { ...CLIENT_REQUESTS[idx], status: 'rejected', rejectionReason: body.rejectionReason };
+    return [200, { success: true, data: CLIENT_REQUESTS[idx] }];
   });
 
   // Project detail

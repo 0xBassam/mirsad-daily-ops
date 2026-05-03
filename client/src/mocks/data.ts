@@ -445,6 +445,84 @@ export const RECEIVINGS = Array.from({length:6},(_,i)=>({
   createdAt: d(i*3+2),
 }));
 
+// ── MAINTENANCE REQUESTS ──────────────────────────────────────────────────────
+const mrCategories = ['electrical','plumbing','hvac','equipment','cleaning','structural','other'] as const;
+const mrPriorities = ['critical','high','high','medium','medium','medium','low','low'] as const;
+const mrStatuses   = ['in_progress','assigned','open','resolved','closed','open','in_progress','assigned'] as const;
+const mrTitles = [
+  'AC unit malfunction — 2 Floor server room',
+  'Broken socket outlets — 19 Floor pantry',
+  'Water leak — MAKASSB floor bathroom',
+  'Elevator inspection certificate renewal',
+  'Deep cleaning required — 3 Floor kitchen',
+  'Emergency exit sign not working — KAFAA-1',
+  'Freezer temperature alarm — cold storage',
+  'Loose handrail — main staircase',
+];
+const mrDescriptions = [
+  'The AC unit stopped cooling. Temperature rising above safe threshold.',
+  'Three socket outlets near the pantry counter are not functioning.',
+  'Slow water leak detected under bathroom sink.',
+  'Annual elevator inspection certificate due for renewal.',
+  'Monthly deep clean required. Grease buildup on exhaust hoods.',
+  'Emergency exit sign bulb needs replacement — safety compliance.',
+  'Freezer temp alarm triggered. Unit may need servicing.',
+  'Handrail on main staircase is loose and poses a safety risk.',
+];
+export const MAINTENANCE_REQUESTS: any[] = mrTitles.map((title, i) => ({
+  _id: pad('mnr', i+1),
+  title,
+  description: mrDescriptions[i],
+  project:  { _id:PROJECT_IDS[i%2], name:PROJECTS[i%2].name },
+  building: { _id:BUILDING_IDS[i%3], name:BUILDINGS[i%3].name },
+  floor:    i%3!==2 ? { _id:FLOORS[i%6]._id, name:FLOORS[i%6].name } : undefined,
+  category: mrCategories[i % mrCategories.length],
+  priority: mrPriorities[i % mrPriorities.length],
+  status:   mrStatuses[i % mrStatuses.length],
+  reportedBy: { _id:USERS[i%5+2<USERS.length?i%5+2:0]._id, fullName:USERS[i%5+2<USERS.length?i%5+2:0].fullName },
+  assignedTo: mrStatuses[i]!=='open' ? { _id:USERS[4]._id, fullName:USERS[4].fullName } : undefined,
+  assignedAt: mrStatuses[i]!=='open' ? d(i%5+1) : undefined,
+  resolvedAt: ['resolved','closed'].includes(mrStatuses[i]) ? d(i%3) : undefined,
+  resolution: ['resolved','closed'].includes(mrStatuses[i]) ? 'Issue identified and resolved successfully. Preventive measures applied.' : undefined,
+  createdAt: d(i%12+1), updatedAt: d(i%5),
+}));
+
+// ── CLIENT REQUESTS ───────────────────────────────────────────────────────────
+const crTypes     = ['catering','supplies','event','housekeeping','maintenance','catering','supplies','other'] as const;
+const crPriorities= ['high','medium','high','low','urgent','medium','low','medium'] as const;
+const crStatuses  = ['delivered','confirmed','in_progress','submitted','assigned','submitted','confirmed','delivered'] as const;
+const crTitles = [
+  'VIP meeting catering — Board Room A',
+  'Office supplies replenishment — Floor 4',
+  'Quarterly staff celebration event',
+  'Daily coffee station restocking',
+  'AC repair coordination — VIP Suite',
+  'Breakfast catering — Morning briefing',
+  'Printer cartridges — Admin office',
+  'Special arrangement for client visit',
+];
+export const CLIENT_REQUESTS: any[] = crTitles.map((title, i) => ({
+  _id: pad('cre', i+1),
+  title,
+  description: `${title}. Please ensure timely fulfillment as per the specifications provided.`,
+  requestType: crTypes[i],
+  priority: crPriorities[i],
+  status: crStatuses[i],
+  project: { _id:PROJECT_IDS[i%3], name:PROJECTS[i%3].name },
+  building: { _id:BUILDING_IDS[i%3], name:BUILDINGS[i%3].name },
+  floor: { _id:FLOORS[i%6]._id, name:FLOORS[i%6].name },
+  requestedBy: { _id:USERS[8]._id, fullName:USERS[8].fullName, role:'client' },
+  assignedTo: crStatuses[i]!=='submitted' ? { _id:USERS[i%4+2]._id, fullName:USERS[i%4+2].fullName } : undefined,
+  items: i%2===0 ? [
+    { name:ITEMS[i%10].name, quantity:10+i, unit:ITEMS[i%10].unit },
+    { name:ITEMS[(i+1)%10].name, quantity:5+i, unit:ITEMS[(i+1)%10].unit },
+  ] : [],
+  expectedDelivery: dF(i%5+1),
+  deliveredAt: ['delivered','confirmed'].includes(crStatuses[i]) ? d(1) : undefined,
+  confirmedAt: crStatuses[i]==='confirmed' ? d(0) : undefined,
+  createdAt: d(i%7+1), updatedAt: d(i%3),
+}));
+
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 export const DASHBOARD = {
   checks:{ total:FLOOR_CHECKS.length, completed:FLOOR_CHECKS.filter(f=>f.status==='approved').length, pending:FLOOR_CHECKS.filter(f=>['submitted','under_review'].includes(f.status)).length },

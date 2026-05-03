@@ -360,6 +360,54 @@ export interface PurchaseOrder {
   updatedAt: string;
 }
 
+export interface MaintenanceRequest {
+  _id: string;
+  title: string;
+  description: string;
+  project: { _id: string; name: string } | string;
+  building: { _id: string; name: string } | string;
+  floor?: { _id: string; name: string } | string;
+  category: 'electrical' | 'plumbing' | 'hvac' | 'equipment' | 'cleaning' | 'structural' | 'other';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  status: 'open' | 'assigned' | 'in_progress' | 'resolved' | 'closed';
+  reportedBy: { _id: string; fullName: string } | string;
+  assignedTo?: { _id: string; fullName: string } | string;
+  assignedAt?: string;
+  resolvedAt?: string;
+  resolution?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ClientRequestItem {
+  name: string;
+  quantity: number;
+  unit?: string;
+}
+
+export interface ClientRequest {
+  _id: string;
+  title: string;
+  description: string;
+  requestType: 'catering' | 'maintenance' | 'supplies' | 'event' | 'housekeeping' | 'other';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  project: { _id: string; name: string } | string;
+  building?: { _id: string; name: string } | string;
+  floor?: { _id: string; name: string } | string;
+  requestedBy: { _id: string; fullName: string; role?: string } | string;
+  assignedTo?: { _id: string; fullName: string } | string;
+  status: 'submitted' | 'assigned' | 'in_progress' | 'delivered' | 'confirmed' | 'rejected';
+  items: ClientRequestItem[];
+  expectedDelivery?: string;
+  deliveredAt?: string;
+  confirmedAt?: string;
+  rejectionReason?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface TransferLine {
   _id: string;
   item: { _id: string; name: string; unit: string; type: string } | string;

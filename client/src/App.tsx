@@ -39,6 +39,12 @@ import { SpoilageRecordingPage } from './pages/spoilage-records/SpoilageRecordin
 import { TransfersPage } from './pages/transfers/TransfersPage';
 import { ReceivingPage } from './pages/receiving/ReceivingPage';
 import { ReceivingDetailPage } from './pages/receiving/ReceivingDetailPage';
+import { MaintenanceRequestsPage } from './pages/maintenance/MaintenanceRequestsPage';
+import { MaintenanceDetailPage } from './pages/maintenance/MaintenanceDetailPage';
+import { MaintenanceNewPage } from './pages/maintenance/MaintenanceNewPage';
+import { ClientRequestsPage } from './pages/client-requests/ClientRequestsPage';
+import { ClientRequestDetailPage } from './pages/client-requests/ClientRequestDetailPage';
+import { ClientRequestNewPage } from './pages/client-requests/ClientRequestNewPage';
 
 export default function App() {
   return (
@@ -80,6 +86,12 @@ export default function App() {
               <Route path="/transfers" element={<TransfersPage />} />
               <Route path="/receiving" element={<ReceivingPage />} />
               <Route path="/receiving/:id" element={<ReceivingDetailPage />} />
+              <Route path="/maintenance" element={<MaintenanceRequestsPage />} />
+              <Route path="/maintenance/new" element={<MaintenanceNewPage />} />
+              <Route path="/maintenance/:id" element={<MaintenanceDetailPage />} />
+              <Route path="/client-requests" element={<ClientRequestsPage />} />
+              <Route path="/client-requests/new" element={<ClientRequestNewPage />} />
+              <Route path="/client-requests/:id" element={<ClientRequestDetailPage />} />
               <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
               <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
               <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />

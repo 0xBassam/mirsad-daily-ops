@@ -384,6 +384,116 @@ export async function seedDemo(): Promise<void> {
     },
   ]);
 
+  // ── Maintenance Requests ──────────────────────────────────────────────────────
+  const mr1Id = oid(), mr2Id = oid(), mr3Id = oid();
+  await db.collection('maintenancerequests').insertMany([
+    {
+      _id: mr1Id, title: 'AC unit malfunction — 2 Floor server room',
+      description: 'The air conditioning unit in the 2nd floor server room stopped cooling. Temperature rising above safe threshold.',
+      project: projectId, building: buildingId, floor: floor2Id,
+      category: 'hvac', priority: 'critical', status: 'in_progress',
+      reportedBy: supervisorId, assignedTo: assistantId,
+      assignedAt: daysAgo(3), createdAt: daysAgo(4), updatedAt: daysAgo(3),
+    },
+    {
+      _id: mr2Id, title: 'Broken socket outlet — 19 Floor pantry',
+      description: 'Three socket outlets near the pantry counter are not functioning. Electrical inspection required.',
+      project: projectId, building: buildingId, floor: floor19Id,
+      category: 'electrical', priority: 'high', status: 'assigned',
+      reportedBy: supervisorId, assignedTo: assistantId,
+      assignedAt: daysAgo(1), createdAt: daysAgo(2), updatedAt: daysAgo(1),
+    },
+    {
+      _id: mr3Id, title: 'Water leak — MAKASSB floor bathroom',
+      description: 'Slow water leak detected under bathroom sink. Minor but needs attention before it worsens.',
+      project: projectId, building: buildingId, floor: floorMakId,
+      category: 'plumbing', priority: 'medium', status: 'open',
+      reportedBy: supervisorId, createdAt: daysAgo(1), updatedAt: daysAgo(1),
+    },
+    {
+      _id: oid(), title: 'Elevator inspection certificate renewal',
+      description: 'Annual elevator inspection certificate due for renewal. Coordination with facilities management needed.',
+      project: projectId, building: buildingId,
+      category: 'equipment', priority: 'high', status: 'resolved',
+      reportedBy: managerId, assignedTo: assistantId,
+      assignedAt: daysAgo(10), resolvedAt: daysAgo(3),
+      resolution: 'Certificate renewed by licensed inspector. Copy filed with facilities department.',
+      createdAt: daysAgo(12), updatedAt: daysAgo(3),
+    },
+    {
+      _id: oid(), title: 'Deep cleaning required — 3 Floor kitchen',
+      description: 'Monthly deep clean of the 3rd floor kitchen area. Grease build-up detected on exhaust hoods.',
+      project: projectId, building: buildingId, floor: floor3Id,
+      category: 'cleaning', priority: 'medium', status: 'closed',
+      reportedBy: supervisorId, assignedTo: assistantId,
+      assignedAt: daysAgo(15), resolvedAt: daysAgo(8),
+      resolution: 'Deep cleaning completed by specialized team. All surfaces sanitized.',
+      createdAt: daysAgo(16), updatedAt: daysAgo(8),
+    },
+  ]);
+
+  // ── Client Requests ───────────────────────────────────────────────────────────
+  await db.collection('clientrequests').insertMany([
+    {
+      _id: oid(), title: 'VIP meeting catering — Board Room A',
+      description: 'Catering required for executive board meeting on Thursday. 15 attendees.',
+      requestType: 'catering', priority: 'high',
+      project: projectId, building: buildingId, floor: floor19Id,
+      requestedBy: clientId, assignedTo: supervisorId, status: 'delivered',
+      items: [
+        { name: 'Arabic Coffee', quantity: 20, unit: 'cups' },
+        { name: 'Dates Platter',  quantity: 3,  unit: 'plates' },
+        { name: 'Water Bottles',  quantity: 30, unit: 'bottles' },
+        { name: 'Fruit Platter',  quantity: 2,  unit: 'plates' },
+      ],
+      expectedDelivery: daysAgo(2), deliveredAt: daysAgo(2),
+      notes: 'All items delivered 30 mins early as requested.',
+      createdAt: daysAgo(5), updatedAt: daysAgo(2),
+    },
+    {
+      _id: oid(), title: 'Office supplies replenishment — Floor 4',
+      description: 'Running low on printer paper, pens, and staples. Urgent for weekly reports.',
+      requestType: 'supplies', priority: 'medium',
+      project: projectId, building: buildingId, floor: floor4Id,
+      requestedBy: clientId, assignedTo: assistantId, status: 'confirmed',
+      items: [
+        { name: 'A4 Paper',  quantity: 5, unit: 'reams' },
+        { name: 'Ballpoint Pens', quantity: 20, unit: 'pcs' },
+        { name: 'Staples',   quantity: 3, unit: 'boxes' },
+      ],
+      expectedDelivery: daysAgo(4), deliveredAt: daysAgo(4), confirmedAt: daysAgo(3),
+      createdAt: daysAgo(7), updatedAt: daysAgo(3),
+    },
+    {
+      _id: oid(), title: 'Daily coffee station restocking',
+      description: 'Coffee station on MAKASSB floor needs restocking — coffee capsules, sugar, and stirrers.',
+      requestType: 'housekeeping', priority: 'low',
+      project: projectId, building: buildingId, floor: floorMakId,
+      requestedBy: clientId, status: 'submitted',
+      items: [
+        { name: 'Coffee Capsules', quantity: 50, unit: 'pcs' },
+        { name: 'Sugar Sachets',   quantity: 100, unit: 'pcs' },
+        { name: 'Stirrers',        quantity: 200, unit: 'pcs' },
+      ],
+      createdAt: daysAgo(1), updatedAt: daysAgo(1),
+    },
+    {
+      _id: oid(), title: 'Quarterly staff celebration event',
+      description: 'Team celebration event for Q2 results. Need setup, food, and decorations for 40 people.',
+      requestType: 'event', priority: 'medium',
+      project: projectId, building: buildingId,
+      requestedBy: clientId, assignedTo: managerId, status: 'in_progress',
+      items: [
+        { name: 'Sandwiches',   quantity: 60,  unit: 'pcs' },
+        { name: 'Juice Boxes',  quantity: 80,  unit: 'pcs' },
+        { name: 'Cake',         quantity: 2,   unit: 'pcs' },
+        { name: 'Decorations',  quantity: 1,   unit: 'set' },
+      ],
+      expectedDelivery: daysAhead(3),
+      createdAt: daysAgo(3), updatedAt: daysAgo(2),
+    },
+  ]);
+
   // ── Audit logs ─────────────────────────────────────────────────────────────────
   await db.collection('auditlogs').insertMany([
     { _id: oid(), user: adminId,      action: 'login',  entityType: 'user',           entityId: adminId,      createdAt: daysAgo(7) },
@@ -407,5 +517,5 @@ export async function seedDemo(): Promise<void> {
     { _id: oid(), user: managerId,    action: 'confirm', entityType: 'receiving',  entityId: rec1Id, createdAt: daysAgo(10) },
   ]);
 
-  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage · 2 POs · 3 transfers · 2 receivings');
+  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage · 2 POs · 3 transfers · 2 receivings · 5 maintenance · 4 client requests');
 }
