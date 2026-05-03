@@ -296,6 +296,17 @@ export function setupDemoMocks() {
     const c = CORRECTIVE_ACTIONS.find(x => x._id === id);
     return c ? [200, { success: true, data: c }] : [404, { success: false, message: 'Not found' }];
   });
+  mock.onPost('/corrective-actions').reply(config => {
+    const body = JSON.parse(config.data);
+    const item = {
+      _id: `cac_${Date.now()}`, status: 'open', createdAt: new Date().toISOString(),
+      assignedTo: { _id: body.assignedTo, fullName: 'Assigned User' },
+      createdBy: { _id: 'usr000000000000000000001', fullName: 'Ahmed Al-Rashidi' },
+      ...body,
+    };
+    CORRECTIVE_ACTIONS.unshift(item as any);
+    return [201, { success: true, data: item }];
+  });
   mock.onPut(/\/corrective-actions\/.+/).reply(config => {
     const id = config.url!.split('/').pop()!;
     const idx = CORRECTIVE_ACTIONS.findIndex(x => x._id === id);

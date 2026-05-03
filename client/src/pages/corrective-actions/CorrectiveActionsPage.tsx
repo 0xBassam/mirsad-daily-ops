@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Eye, ShieldCheck } from 'lucide-react';
+import { Eye, ShieldCheck, Plus } from 'lucide-react';
 import apiClient from '../../api/client';
 import { CorrectiveAction } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
@@ -31,9 +31,14 @@ export function CorrectiveActionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <ShieldCheck className="h-6 w-6 text-indigo-500" />
-        <h1 className="text-2xl font-bold text-slate-900">{t('nav.correctiveActions')}</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <ShieldCheck className="h-6 w-6 text-indigo-500" />
+          <h1 className="text-2xl font-bold text-slate-900">{t('nav.correctiveActions')}</h1>
+        </div>
+        <button onClick={() => navigate('/corrective-actions/new')} className="btn-primary flex items-center gap-2">
+          <Plus className="h-4 w-4" /> {t('correctiveActions.new')}
+        </button>
       </div>
 
       <div className="card p-4 flex flex-wrap gap-3">

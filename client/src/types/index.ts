@@ -194,6 +194,10 @@ export interface DashboardStats {
   activeSpoilageAlerts?: number;
   topConsumedItems?: { name: string; consumed: number }[];
   checksByFloor?: { name: string; count: number }[];
+  openPurchaseOrders?: number;
+  pendingTransfers?: number;
+  openMaintenanceRequests?: number;
+  pendingClientRequests?: number;
 }
 
 export type ReportType = 'daily_floor_check' | 'daily_project_summary' | 'weekly_warehouse' | 'monthly_food_inventory' | 'monthly_materials' | 'approval_summary';

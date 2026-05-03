@@ -8,7 +8,7 @@ import { StatusBadge } from '../../components/ui/Badge';
 import {
   CheckSquare, FileText, AlertTriangle, Clock, ThumbsUp, XCircle,
   Package, Warehouse, TrendingDown, Thermometer, ShieldCheck, Bell,
-  BarChart2, TrendingUp, GitBranch,
+  BarChart2, TrendingUp, GitBranch, ShoppingCart, ArrowRightLeft, Wrench, MessageSquare,
 } from 'lucide-react';
 
 function getInitials(name = '') {
@@ -205,7 +205,52 @@ export function DashboardPage() {
         </div>
       </div>
 
-      {/* ── Row 4: Food Safety Alerts ── */}
+      {/* ── Row 4: Operations Overview ── */}
+      {(data.openPurchaseOrders !== undefined || data.pendingTransfers !== undefined) && (
+        <div>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('dashboard.operations')}</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {data.openPurchaseOrders !== undefined && (
+              <div className="alert-card border-indigo-400">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShoppingCart className="h-4 w-4 text-indigo-500" />
+                  <p className="text-xs text-slate-500 font-medium">{t('dashboard.openPurchaseOrders')}</p>
+                </div>
+                <p className="text-2xl font-bold text-indigo-600">{data.openPurchaseOrders}</p>
+              </div>
+            )}
+            {data.pendingTransfers !== undefined && (
+              <div className="alert-card border-sky-400">
+                <div className="flex items-center gap-2 mb-2">
+                  <ArrowRightLeft className="h-4 w-4 text-sky-500" />
+                  <p className="text-xs text-slate-500 font-medium">{t('dashboard.pendingTransfers')}</p>
+                </div>
+                <p className="text-2xl font-bold text-sky-600">{data.pendingTransfers}</p>
+              </div>
+            )}
+            {data.openMaintenanceRequests !== undefined && (
+              <div className="alert-card border-yellow-400">
+                <div className="flex items-center gap-2 mb-2">
+                  <Wrench className="h-4 w-4 text-yellow-500" />
+                  <p className="text-xs text-slate-500 font-medium">{t('dashboard.openMaintenanceRequests')}</p>
+                </div>
+                <p className="text-2xl font-bold text-yellow-600">{data.openMaintenanceRequests}</p>
+              </div>
+            )}
+            {data.pendingClientRequests !== undefined && (
+              <div className="alert-card border-purple-400">
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="h-4 w-4 text-purple-500" />
+                  <p className="text-xs text-slate-500 font-medium">{t('dashboard.pendingClientRequests')}</p>
+                </div>
+                <p className="text-2xl font-bold text-purple-600">{data.pendingClientRequests}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Row 5: Food Safety Alerts ── */}
       {(data.expiringIn3Days !== undefined || data.activeCorrectiveActions !== undefined) && (
         <div>
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">{t('nav.foodSafety')}</h2>
@@ -250,7 +295,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      {/* ── Row 5: Analytics ── */}
+      {/* ── Row 6: Analytics ── */}
       {(data.topConsumedItems?.length || data.checksByFloor?.length) ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {data.topConsumedItems?.length ? (
@@ -311,7 +356,7 @@ export function DashboardPage() {
         </div>
       ) : null}
 
-      {/* ── Row 6: Recent Activity ── */}
+      {/* ── Row 7: Recent Activity ── */}
       {data.recentActivity.length > 0 && (
         <div className="card overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">

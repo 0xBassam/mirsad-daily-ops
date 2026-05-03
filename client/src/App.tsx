@@ -26,10 +26,12 @@ import { BatchesPage } from './pages/batches/BatchesPage';
 import { BatchDetailPage } from './pages/batches/BatchDetailPage';
 import { FridgeChecksPage } from './pages/fridge-checks/FridgeChecksPage';
 import { FridgeCheckDetailPage } from './pages/fridge-checks/FridgeCheckDetailPage';
+import { FridgeCheckNewPage } from './pages/fridge-checks/FridgeCheckNewPage';
 import { ExpiryTrackingPage } from './pages/expiry/ExpiryTrackingPage';
 import { SpoilageAlertsPage } from './pages/spoilage/SpoilageAlertsPage';
 import { CorrectiveActionsPage } from './pages/corrective-actions/CorrectiveActionsPage';
 import { CorrectiveActionDetailPage } from './pages/corrective-actions/CorrectiveActionDetailPage';
+import { CorrectiveActionNewPage } from './pages/corrective-actions/CorrectiveActionNewPage';
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
 import { ReportDetailPage } from './pages/reports/ReportDetailPage';
 import { InventoryItemDetailPage } from './pages/inventory/InventoryItemDetailPage';
@@ -79,6 +81,7 @@ export default function App() {
               <Route path="/batches" element={<BatchesPage />} />
               <Route path="/batches/:id" element={<BatchDetailPage />} />
               <Route path="/fridge-checks" element={<FridgeChecksPage />} />
+              <Route path="/fridge-checks/new" element={<FridgeCheckNewPage />} />
               <Route path="/fridge-checks/:id" element={<FridgeCheckDetailPage />} />
               <Route path="/expiry-tracking" element={<ExpiryTrackingPage />} />
               <Route path="/spoilage-alerts" element={<SpoilageAlertsPage />} />
@@ -95,6 +98,7 @@ export default function App() {
               <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
               <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
               <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
+              <Route path="/corrective-actions/new" element={<CorrectiveActionNewPage />} />
               <Route path="/corrective-actions/:id" element={<CorrectiveActionDetailPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />
               <Route path="/reports" element={<ReportsPage />} />

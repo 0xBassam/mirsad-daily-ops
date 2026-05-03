@@ -543,4 +543,8 @@ export const DASHBOARD = {
     FLOOR_CHECKS.forEach(fc=>{ const fl=fc.floor as any; if(fl?._id){ counts[fl._id]=counts[fl._id]||{name:fl.name,count:0}; counts[fl._id].count++; } });
     return Object.values(counts).sort((a,b)=>b.count-a.count).slice(0,5);
   })(),
+  openPurchaseOrders: PURCHASE_ORDERS.filter(p=>!['fully_received','closed'].includes(p.status)).length,
+  pendingTransfers: TRANSFERS.filter(t=>t.status==='draft').length,
+  openMaintenanceRequests: MAINTENANCE_REQUESTS.filter(m=>['open','assigned'].includes(m.status)).length,
+  pendingClientRequests: CLIENT_REQUESTS.filter(c=>['submitted','assigned','in_progress'].includes(c.status)).length,
 };

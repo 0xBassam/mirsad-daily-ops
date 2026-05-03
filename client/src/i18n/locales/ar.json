@@ -1,5 +1,9 @@
 {
-  "app": { "name": "مرصاد", "subtitle": "منصة العمليات اليومية", "tagline": "رصد. تتبع. اعتماد." },
+  "app": {
+    "name": "مرصاد",
+    "subtitle": "منصة العمليات اليومية",
+    "tagline": "رصد. تتبع. اعتماد."
+  },
   "nav": {
     "dashboard": "لوحة التحكم",
     "users": "المستخدمون",
@@ -250,7 +254,12 @@
     "reportsApprovals": "التقارير والاعتمادات",
     "topConsumedItems": "أكثر الأصناف استهلاكاً",
     "checksByFloor": "الفحوصات حسب الطابق",
-    "checks": "الفحوصات"
+    "checks": "الفحوصات",
+    "openPurchaseOrders": "أوامر شراء مفتوحة",
+    "pendingTransfers": "تحويلات معلقة",
+    "openMaintenanceRequests": "طلبات الصيانة المفتوحة",
+    "pendingClientRequests": "طلبات العملاء المعلقة",
+    "operations": "نظرة عامة على العمليات"
   },
   "floorChecks": {
     "title": "فحوصات الطوابق",
@@ -305,16 +314,18 @@
     "traceability": "سلسلة التتبع"
   },
   "fridgeChecks": {
-    "title": "فحص الثلاجات",
-    "new": "فحص جديد",
-    "detail": "تفاصيل فحص الثلاجة",
-    "temperature": "درجة الحرارة (°م)",
-    "expectedRange": "النطاق المتوقع",
-    "cleanlinessOk": "النظافة مقبولة",
-    "itemsChecked": "الأصناف المفحوصة",
-    "isExpired": "منتهي الصلاحية",
-    "isNearExpiry": "قريب من الانتهاء",
-    "nameTagPresent": "بطاقة الاسم موجودة"
+    "newCheck": "فحص ثلاجة جديد",
+    "storageZone": "منطقة التخزين",
+    "actualTemp": "درجة الحرارة الفعلية",
+    "minTemp": "الحد الأدنى المتوقع",
+    "maxTemp": "الحد الأقصى المتوقع",
+    "cleanlinessOk": "النظافة مرضية",
+    "cleanlinessNotes": "ملاحظات النظافة",
+    "cleanlinessNotesPlaceholder": "وصف مشكلة النظافة...",
+    "itemsChecked": "العناصر المفحوصة",
+    "noItemsAdded": "لم يتم إضافة عناصر بعد.",
+    "nameTagPresent": "بطاقة الاسم موجودة",
+    "submitCheck": "إرسال الفحص"
   },
   "expiry": {
     "title": "تتبع الصلاحية",
@@ -325,63 +336,6 @@
     "daysLeft": "أيام متبقية",
     "noExpired": "لا توجد أصناف منتهية الصلاحية",
     "noNearExpiry": "لا توجد أصناف قريبة من الانتهاء"
-  },
-  "spoilage": {
-    "title": "تنبيهات التلف",
-    "alertType": "نوع التنبيه",
-    "detectedAt": "وقت الاكتشاف",
-    "resolveAlert": "حل التنبيه"
-  },
-  "correctiveActions": {
-    "title": "الإجراءات التصحيحية",
-    "new": "إجراء جديد",
-    "detail": "تفاصيل الإجراء التصحيحي",
-    "resolveAction": "وضع علامة محلول",
-    "sourceRef": "المرجع المصدر"
-  },
-  "users": { "title": "المستخدمون", "new": "إضافة مستخدم", "role": "الدور", "lastLogin": "آخر تسجيل دخول" },
-  "projects": { "title": "المشاريع", "new": "إضافة مشروع", "clientName": "العميل", "locationCode": "رمز الموقع", "recentChecks": "الفحوصات الأخيرة", "activeUsers": "المستخدمون النشطون" },
-  "dailyPlans": { "title": "الخطط اليومية", "new": "خطة جديدة", "copy": "نسخ الخطة", "lines": "بنود الخطة", "copiedMessage": "تم نسخ الخطة لليوم التالي", "plannedQty": "الكمية المخططة" },
-  "approvals": { "title": "قائمة الاعتمادات", "pendingAction": "فحوصات الطوابق في انتظار إجراءاتك" },
-  "reports": {
-    "title": "التقارير",
-    "reportType": "نوع التقرير",
-    "dateRange": "نطاق التاريخ",
-    "generatedBy": "أنشأ بواسطة",
-    "viewReport": "عرض التقرير",
-    "exportPdf": "تصدير PDF",
-    "exportExcel": "تصدير Excel",
-    "preview": "معاينة التقرير",
-    "daily_floor_check": "فحص الطابق اليومي",
-    "daily_project_summary": "ملخص المشروع اليومي",
-    "weekly_warehouse": "التقرير الأسبوعي للمستودع",
-    "monthly_food_inventory": "مخزون الغذاء الشهري",
-    "monthly_materials": "المواد الشهرية",
-    "approval_summary": "ملخص الاعتمادات"
-  },
-  "auditLogs": { "title": "سجل الأحداث", "action": "الإجراء", "entity": "الكيان", "subtitle": "سجل نشاط النظام" },
-  "purchaseOrders": {
-    "title": "أوامر الشراء",
-    "subtitle": "تتبع التخصيص والاستهلاك بناءً على أوامر الشراء",
-    "new": "أمر شراء جديد",
-    "poNumber": "رقم أمر الشراء",
-    "month": "الشهر",
-    "period": "الفترة",
-    "lines": "البنود",
-    "items": "أصناف",
-    "lineItems": "بنود أمر الشراء",
-    "totalBalance": "الرصيد المتبقي",
-    "of": "من",
-    "approved": "معتمد",
-    "received": "مستلم",
-    "distributed": "موزَّع",
-    "consumed": "مستهلك",
-    "remaining": "متبقٍّ",
-    "overConsumed": "تجاوز الكمية",
-    "nearDepletion": "قارب على النفاد",
-    "linesOverConsumed": "بند(بنود) تجاوزت الكمية المعتمدة",
-    "linesNearDepletion": "بند(بنود) قاربت على النفاد (أقل من 15%)",
-    "allStatuses": "جميع الحالات"
   },
   "spoilage": {
     "title": "تنبيهات الهدر",
@@ -406,6 +360,84 @@
       "spoiled": "فاسد",
       "other": "أخرى"
     }
+  },
+  "correctiveActions": {
+    "new": "إجراء تصحيحي جديد",
+    "title": "عنوان الإجراء",
+    "titlePlaceholder": "وصف موجز للمشكلة...",
+    "descPlaceholder": "وصف تفصيلي للإجراء التصحيحي المطلوب...",
+    "sourceType": "نوع المصدر"
+  },
+  "users": {
+    "title": "المستخدمون",
+    "new": "إضافة مستخدم",
+    "role": "الدور",
+    "lastLogin": "آخر تسجيل دخول"
+  },
+  "projects": {
+    "title": "المشاريع",
+    "new": "إضافة مشروع",
+    "clientName": "العميل",
+    "locationCode": "رمز الموقع",
+    "recentChecks": "الفحوصات الأخيرة",
+    "activeUsers": "المستخدمون النشطون"
+  },
+  "dailyPlans": {
+    "title": "الخطط اليومية",
+    "new": "خطة جديدة",
+    "copy": "نسخ الخطة",
+    "lines": "بنود الخطة",
+    "copiedMessage": "تم نسخ الخطة لليوم التالي",
+    "plannedQty": "الكمية المخططة"
+  },
+  "approvals": {
+    "title": "قائمة الاعتمادات",
+    "pendingAction": "فحوصات الطوابق في انتظار إجراءاتك"
+  },
+  "reports": {
+    "title": "التقارير",
+    "reportType": "نوع التقرير",
+    "dateRange": "نطاق التاريخ",
+    "generatedBy": "أنشأ بواسطة",
+    "viewReport": "عرض التقرير",
+    "exportPdf": "تصدير PDF",
+    "exportExcel": "تصدير Excel",
+    "preview": "معاينة التقرير",
+    "daily_floor_check": "فحص الطابق اليومي",
+    "daily_project_summary": "ملخص المشروع اليومي",
+    "weekly_warehouse": "التقرير الأسبوعي للمستودع",
+    "monthly_food_inventory": "مخزون الغذاء الشهري",
+    "monthly_materials": "المواد الشهرية",
+    "approval_summary": "ملخص الاعتمادات"
+  },
+  "auditLogs": {
+    "title": "سجل الأحداث",
+    "action": "الإجراء",
+    "entity": "الكيان",
+    "subtitle": "سجل نشاط النظام"
+  },
+  "purchaseOrders": {
+    "title": "أوامر الشراء",
+    "subtitle": "تتبع التخصيص والاستهلاك بناءً على أوامر الشراء",
+    "new": "أمر شراء جديد",
+    "poNumber": "رقم أمر الشراء",
+    "month": "الشهر",
+    "period": "الفترة",
+    "lines": "البنود",
+    "items": "أصناف",
+    "lineItems": "بنود أمر الشراء",
+    "totalBalance": "الرصيد المتبقي",
+    "of": "من",
+    "approved": "معتمد",
+    "received": "مستلم",
+    "distributed": "موزَّع",
+    "consumed": "مستهلك",
+    "remaining": "متبقٍّ",
+    "overConsumed": "تجاوز الكمية",
+    "nearDepletion": "قارب على النفاد",
+    "linesOverConsumed": "بند(بنود) تجاوزت الكمية المعتمدة",
+    "linesNearDepletion": "بند(بنود) قاربت على النفاد (أقل من 15%)",
+    "allStatuses": "جميع الحالات"
   },
   "transfers": {
     "title": "تحويلات المستودع",

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Eye, Thermometer } from 'lucide-react';
+import { Eye, Thermometer, Plus } from 'lucide-react';
 import apiClient from '../../api/client';
 import { FridgeCheck } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
@@ -33,7 +33,12 @@ export function FridgeChecksPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-slate-900">{t('nav.fridgeChecks')}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-slate-900">{t('nav.fridgeChecks')}</h1>
+        <button onClick={() => navigate('/fridge-checks/new')} className="btn-primary flex items-center gap-2">
+          <Plus className="h-4 w-4" /> {t('fridgeChecks.newCheck')}
+        </button>
+      </div>
 
       <div className="card p-4 flex flex-wrap gap-3">
         <select className="input w-auto" value={status} onChange={e => setStatus(e.target.value)}>
