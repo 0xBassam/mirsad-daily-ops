@@ -296,7 +296,7 @@ export interface CorrectiveAction {
 
 export interface SpoilageAlert {
   _id: string;
-  batch: { _id: string; batchNumber: string };
+  batch?: { _id: string; batchNumber: string };
   item: { _id: string; name: string; unit: string };
   alertType: 'expired' | 'near_expiry' | 'temperature_breach' | 'damaged' | 'spoiled';
   daysUntilExpiry?: number;
@@ -304,5 +304,58 @@ export interface SpoilageAlert {
   storageZone: StorageZoneType;
   status: 'active' | 'resolved' | 'dismissed';
   detectedAt: string;
+  createdBy?: { _id: string; fullName: string };
   resolvedBy?: { _id: string; fullName: string };
+}
+
+export type SpoilageReason = 'expired' | 'damaged' | 'temperature_issue' | 'packaging_issue' | 'quality_issue' | 'spoiled' | 'other';
+
+export interface SpoilageRecord {
+  _id: string;
+  item: { _id: string; name: string; unit: string; type: string };
+  batch?: { _id: string; batchNumber: string };
+  project: { _id: string; name: string } | string;
+  quantity: number;
+  reason: SpoilageReason;
+  alertType: 'expired' | 'near_expiry' | 'temperature_breach' | 'damaged' | 'spoiled';
+  location: string;
+  storageZone?: string;
+  date: string;
+  notes?: string;
+  status: 'active' | 'resolved' | 'dismissed';
+  detectedAt: string;
+  createdBy: { _id: string; fullName: string };
+  resolvedBy?: { _id: string; fullName: string };
+  resolvedAt?: string;
+  createdAt: string;
+}
+
+export type POStatus = 'active' | 'partially_received' | 'fully_received' | 'near_depletion' | 'over_consumed' | 'closed';
+
+export interface POLine {
+  _id: string;
+  item: { _id: string; name: string; unit: string; type: string } | string;
+  approvedQty: number;
+  receivedQty: number;
+  distributedQty: number;
+  consumedQty: number;
+  remainingQty: number;
+  variance: number;
+  unit: string;
+}
+
+export interface PurchaseOrder {
+  _id: string;
+  poNumber: string;
+  supplier: { _id: string; name: string; category: string } | string;
+  project: { _id: string; name: string } | string;
+  month: string;
+  startDate: string;
+  endDate: string;
+  status: POStatus;
+  lines: POLine[];
+  notes?: string;
+  createdBy?: { _id: string; fullName: string };
+  createdAt: string;
+  updatedAt: string;
 }

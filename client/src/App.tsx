@@ -33,6 +33,9 @@ import { CorrectiveActionDetailPage } from './pages/corrective-actions/Correctiv
 import { ProjectDetailPage } from './pages/projects/ProjectDetailPage';
 import { ReportDetailPage } from './pages/reports/ReportDetailPage';
 import { InventoryItemDetailPage } from './pages/inventory/InventoryItemDetailPage';
+import { PurchaseOrdersPage } from './pages/purchase-orders/PurchaseOrdersPage';
+import { PurchaseOrderDetailPage } from './pages/purchase-orders/PurchaseOrderDetailPage';
+import { SpoilageRecordingPage } from './pages/spoilage-records/SpoilageRecordingPage';
 
 export default function App() {
   return (
@@ -70,6 +73,9 @@ export default function App() {
               <Route path="/fridge-checks/:id" element={<FridgeCheckDetailPage />} />
               <Route path="/expiry-tracking" element={<ExpiryTrackingPage />} />
               <Route path="/spoilage-alerts" element={<SpoilageAlertsPage />} />
+              <Route path="/spoilage" element={<SpoilageRecordingPage />} />
+              <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
+              <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
               <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
               <Route path="/corrective-actions/:id" element={<CorrectiveActionDetailPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />

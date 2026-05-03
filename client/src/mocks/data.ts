@@ -293,6 +293,110 @@ export const REPORTS = [
   { _id:pad('rpt',6), title:'Approval Summary Report',                                reportType:'approval_summary',        project:PROJECTS[0], building:null,         floor:null,        dateFrom:d(30),dateTo:d(0), status:'ready',      generatedBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:d(0) },
 ];
 
+// ── SPOILAGE RECORDS (manual recordings) ─────────────────────────────────────
+const spoilageReasons = ['expired','damaged','temperature_issue','packaging_issue','quality_issue','spoiled','other'] as const;
+const spoilageLocations = ['2 Floor Cold Store','3 Floor Dry Storage','Kitchen Freezer','Fridge Zone A','Main Warehouse','Reception Pantry','Prep Kitchen'];
+export const SPOILAGE_RECORDS = Array.from({length:15},(_,i)=>({
+  _id:pad('spr',i+1),
+  item:{ _id:ITEMS[i%10]._id, name:ITEMS[i%10].name, unit:ITEMS[i%10].unit, type:ITEMS[i%10].type },
+  project:{ _id:PROJECT_IDS[i%3], name:PROJECTS[i%3].name },
+  quantity:2+i%8*3,
+  reason:spoilageReasons[i%spoilageReasons.length],
+  alertType:(['expired','near_expiry','temperature_breach','damaged','spoiled'] as const)[i%5],
+  location:spoilageLocations[i%spoilageLocations.length],
+  date:d(i%14),
+  notes:i%3===0?'Discovered during routine inspection':'',
+  status:'active' as const,
+  detectedAt:d(i%14),
+  createdBy:{ _id:USERS[i%4+2]._id, fullName:USERS[i%4+2].fullName },
+  createdAt:d(i%14),
+}));
+
+// ── PURCHASE ORDERS ───────────────────────────────────────────────────────────
+const poMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0,7);
+const poStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+const poEnd   = new Date(now.getFullYear(), now.getMonth()+1, 0).toISOString();
+function poLine(idx: number, itemIdx: number, approved: number, received: number, distributed: number, consumed: number) {
+  const item = ITEMS[itemIdx];
+  const remaining = approved - distributed - consumed;
+  return {
+    _id: pad('pol', idx),
+    item: { _id: item._id, name: item.name, unit: item.unit, type: item.type },
+    unit: item.unit,
+    approvedQty: approved, receivedQty: received,
+    distributedQty: distributed, consumedQty: consumed,
+    remainingQty: remaining, variance: remaining - (approved - received),
+  };
+}
+export const PURCHASE_ORDERS = [
+  {
+    _id:pad('po',1), poNumber:`PO-${poMonth}-001`,
+    supplier:{ _id:SUPPLIERS[0]._id, name:SUPPLIERS[0].name, category:'food' },
+    project:{ _id:PROJECT_IDS[0], name:PROJECTS[0].name },
+    month:poMonth, startDate:poStart, endDate:poEnd, status:'active' as const,
+    notes:'Monthly food supply for CDMDNA building operations.',
+    lines:[
+      poLine(1,  0, 500, 500, 200, 250),
+      poLine(2,  1, 300, 300, 100, 180),
+      poLine(3,  2, 400, 350,  80, 200),
+      poLine(4,  3, 200, 200,  60,  90),
+      poLine(5,  4, 150, 100,  30,  60),
+    ],
+    createdBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:d(25), updatedAt:d(2),
+  },
+  {
+    _id:pad('po',2), poNumber:`PO-${poMonth}-002`,
+    supplier:{ _id:SUPPLIERS[3]._id, name:SUPPLIERS[3].name, category:'material' },
+    project:{ _id:PROJECT_IDS[0], name:PROJECTS[0].name },
+    month:poMonth, startDate:poStart, endDate:poEnd, status:'near_depletion' as const,
+    notes:'Cleaning and sanitisation materials.',
+    lines:[
+      poLine(6,  20, 200, 200, 120, 65),
+      poLine(7,  21, 100, 100,  80, 15),
+      poLine(8,  22,  50,  50,  40,  8),
+    ],
+    createdBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:d(24), updatedAt:d(3),
+  },
+  {
+    _id:pad('po',3), poNumber:`PO-${poMonth}-003`,
+    supplier:{ _id:SUPPLIERS[1]._id, name:SUPPLIERS[1].name, category:'food' },
+    project:{ _id:PROJECT_IDS[1], name:PROJECTS[1].name },
+    month:poMonth, startDate:poStart, endDate:poEnd, status:'over_consumed' as const,
+    notes:'Fresh produce supply for Ministry Hospitality.',
+    lines:[
+      poLine(9,  5, 120, 120,  50,  80),
+      poLine(10, 6, 180, 180, 100, 100),
+      poLine(11, 7,  80,  80,  20,  65),
+    ],
+    createdBy:{ _id:USERS[7]._id, fullName:USERS[7].fullName }, createdAt:d(22), updatedAt:d(1),
+  },
+  {
+    _id:pad('po',4), poNumber:`PO-${poMonth}-004`,
+    supplier:{ _id:SUPPLIERS[4]._id, name:SUPPLIERS[4].name, category:'material' },
+    project:{ _id:PROJECT_IDS[1], name:PROJECTS[1].name },
+    month:poMonth, startDate:poStart, endDate:poEnd, status:'fully_received' as const,
+    notes:'Safety equipment and PPE.',
+    lines:[
+      poLine(12, 23, 60, 60, 30, 20),
+      poLine(13, 24, 40, 40, 15, 15),
+    ],
+    createdBy:{ _id:USERS[7]._id, fullName:USERS[7].fullName }, createdAt:d(20), updatedAt:d(5),
+  },
+  {
+    _id:pad('po',5), poNumber:`PO-${poMonth}-005`,
+    supplier:{ _id:SUPPLIERS[6]._id, name:SUPPLIERS[6].name, category:'both' },
+    project:{ _id:PROJECT_IDS[2], name:PROJECTS[2].name },
+    month:poMonth, startDate:poStart, endDate:poEnd, status:'partially_received' as const,
+    notes:'Coffee station supplies and light catering.',
+    lines:[
+      poLine(14,  8, 300, 150,  40,  80),
+      poLine(15,  9, 200, 100,  30,  50),
+      poLine(16, 25, 100,  50,  10,  20),
+    ],
+    createdBy:{ _id:USERS[7]._id, fullName:USERS[7].fullName }, createdAt:d(18), updatedAt:d(4),
+  },
+];
+
 // ── DASHBOARD ─────────────────────────────────────────────────────────────────
 export const DASHBOARD = {
   checks:{ total:FLOOR_CHECKS.length, completed:FLOOR_CHECKS.filter(f=>f.status==='approved').length, pending:FLOOR_CHECKS.filter(f=>['submitted','under_review'].includes(f.status)).length },

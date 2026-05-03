@@ -28,6 +28,8 @@
     "correctiveActions": "Corrective Actions",
     "foodSafety": "Food Safety",
     "traceability": "Traceability",
+    "purchaseOrders": "Purchase Orders",
+    "spoilageRecording": "Spoilage Recording",
     "projectsLocations": "Projects & Locations",
     "itemsMaster": "Items Master",
     "section": {
@@ -146,7 +148,15 @@
     "password": "Password",
     "keepBlank": "(leave blank to keep)",
     "nextStep": "Next Step",
-    "period": "Period"
+    "period": "Period",
+    "notFound": "Not found",
+    "allStatuses": "All Statuses",
+    "searchItems": "Search items…",
+    "noResults": "No results",
+    "select": "Select…",
+    "saving": "Saving…",
+    "item": "Item",
+    "recordedBy": "Recorded By"
   },
   "status": {
     "draft": "Draft",
@@ -194,6 +204,10 @@
     "high": "High",
     "critical": "Critical",
     "dismissed": "Dismissed",
+    "partially_received": "Partially Received",
+    "fully_received": "Fully Received",
+    "near_depletion": "Near Depletion",
+    "allStatuses": "All Statuses",
     "temperature_breach": "Temp Breach",
     "cold": "Cold Storage",
     "chilled": "Chilled",
@@ -337,5 +351,52 @@
     "monthly_materials": "Monthly Materials",
     "approval_summary": "Approval Summary"
   },
-  "auditLogs": { "title": "Audit Logs", "action": "Action", "entity": "Entity", "subtitle": "System activity trail" }
+  "auditLogs": { "title": "Audit Logs", "action": "Action", "entity": "Entity", "subtitle": "System activity trail" },
+  "purchaseOrders": {
+    "title": "Purchase Orders",
+    "subtitle": "PO-based allocation and consumption tracking",
+    "new": "New Purchase Order",
+    "poNumber": "PO Number",
+    "month": "Month",
+    "period": "Period",
+    "lines": "Lines",
+    "items": "items",
+    "lineItems": "PO Line Items",
+    "totalBalance": "Total Remaining",
+    "of": "of",
+    "approved": "approved",
+    "received": "Received",
+    "distributed": "Distributed",
+    "consumed": "Consumed",
+    "remaining": "Remaining",
+    "overConsumed": "Over Consumed",
+    "nearDepletion": "Near Depletion",
+    "linesOverConsumed": "line(s) are over consumed",
+    "linesNearDepletion": "line(s) are near depletion (< 15% remaining)",
+    "allStatuses": "All Statuses"
+  },
+  "spoilage": {
+    "title": "Spoilage Alerts",
+    "alertType": "Alert Type",
+    "detectedAt": "Detected At",
+    "resolveAlert": "Resolve Alert",
+    "recordingTitle": "Spoilage Recording",
+    "recordingSubtitle": "Record spoiled, damaged, or expired items",
+    "record": "Record Spoilage",
+    "newRecord": "New Spoilage Record",
+    "recordedSuccess": "Spoilage record saved. Stock movement created automatically.",
+    "reason": "Reason",
+    "location": "Location",
+    "locationPlaceholder": "e.g. 2 Floor Cold Store",
+    "notesPlaceholder": "Additional details about the spoilage…",
+    "reasons": {
+      "expired": "Expired",
+      "damaged": "Damaged",
+      "temperature_issue": "Temperature Issue",
+      "packaging_issue": "Packaging Issue",
+      "quality_issue": "Quality Issue",
+      "spoiled": "Spoiled",
+      "other": "Other"
+    }
+  }
 }

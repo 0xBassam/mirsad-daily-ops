@@ -5,7 +5,7 @@ import {
   CATEGORIES, ITEMS, DAILY_PLANS, FLOOR_CHECKS,
   INVENTORY_FOOD, INVENTORY_MATERIALS, MOVEMENTS, AUDIT_LOGS, DASHBOARD,
   SUPPLIERS, BATCHES, FRIDGE_CHECKS, CORRECTIVE_ACTIONS, SPOILAGE_ALERTS,
-  REPORTS,
+  REPORTS, PURCHASE_ORDERS, SPOILAGE_RECORDS,
 } from '../mocks/data';
 
 function makeToken(user: typeof USERS[0]) {
@@ -315,6 +315,56 @@ export function setupDemoMocks() {
     const idx = SPOILAGE_ALERTS.findIndex(x => x._id === id);
     if (idx !== -1) SPOILAGE_ALERTS[idx] = { ...SPOILAGE_ALERTS[idx], status: 'resolved', resolvedBy: { _id: USERS[4]._id, fullName: USERS[4].fullName } };
     return [200, { success: true, data: SPOILAGE_ALERTS[idx] }];
+  });
+
+  // Purchase Orders
+  mock.onGet('/purchase-orders').reply(config => {
+    const p = config.params || {};
+    let list = [...PURCHASE_ORDERS];
+    if (p.status) list = list.filter(po => po.status === p.status);
+    if (p.month)  list = list.filter(po => po.month === p.month);
+    if (p.project) list = list.filter(po => (po.project as any)._id === p.project);
+    return [200, paginated(list, p)];
+  });
+  mock.onGet(/\/purchase-orders\/.+/).reply(config => {
+    const id = config.url!.split('/').pop()!;
+    const po = PURCHASE_ORDERS.find(x => x._id === id);
+    return po ? [200, { success: true, data: po }] : [404, { success: false, message: 'Not found' }];
+  });
+  mock.onPost('/purchase-orders').reply(config => {
+    const body = JSON.parse(config.data);
+    const po = { _id: `po_${Date.now()}`, status: 'active', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), ...body };
+    PURCHASE_ORDERS.push(po as any);
+    return [201, { success: true, data: po }];
+  });
+
+  // Spoilage recording
+  mock.onGet('/spoilage').reply(config => {
+    const p = config.params || {};
+    let list = [...SPOILAGE_RECORDS];
+    if (p.reason) list = list.filter(s => s.reason === p.reason);
+    return [200, paginated(list, p)];
+  });
+  mock.onPost('/spoilage').reply(config => {
+    const body = JSON.parse(config.data);
+    const item = ITEMS.find(i => i._id === body.item) || ITEMS[0];
+    const record = {
+      _id: `spr_${Date.now()}`,
+      item: { _id: item._id, name: item.name, unit: item.unit, type: item.type },
+      project: PROJECTS.find(p => p._id === body.project) || PROJECTS[0],
+      quantity: body.quantity,
+      reason: body.reason,
+      alertType: body.alertType || 'spoiled',
+      location: body.location,
+      date: body.date || new Date().toISOString(),
+      notes: body.notes || '',
+      status: 'active' as const,
+      detectedAt: new Date().toISOString(),
+      createdBy: { _id: USERS[0]._id, fullName: USERS[0].fullName },
+      createdAt: new Date().toISOString(),
+    };
+    SPOILAGE_RECORDS.unshift(record as any);
+    return [201, { success: true, data: record }];
   });
 
   // Project detail

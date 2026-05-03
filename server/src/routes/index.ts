@@ -16,6 +16,10 @@ import attachmentRoutes from './attachmentRoutes';
 import reportRoutes from './reportRoutes';
 import auditLogRoutes from './auditLogRoutes';
 import dashboardRoutes from './dashboardRoutes';
+import supplierRoutes from './supplierRoutes';
+import batchRoutes, { getExpiryTracking } from './batchRoutes';
+import spoilageRoutes, { getSpoilageAlerts, resolveSpoilageAlert } from './spoilageRoutes';
+import purchaseOrderRoutes from './purchaseOrderRoutes';
 
 const router = Router();
 
@@ -36,5 +40,14 @@ router.use('/attachments', verifyJWT, attachmentRoutes);
 router.use('/reports', verifyJWT, reportRoutes);
 router.use('/audit-logs', verifyJWT, auditLogRoutes);
 router.use('/dashboard', verifyJWT, dashboardRoutes);
+
+// ── Phase 1: Starter features ─────────────────────────────────────────────────
+router.use('/suppliers', verifyJWT, supplierRoutes);
+router.use('/batches', verifyJWT, batchRoutes);
+router.get('/expiry-tracking', verifyJWT, getExpiryTracking);
+router.use('/spoilage', verifyJWT, spoilageRoutes);
+router.get('/spoilage-alerts', verifyJWT, getSpoilageAlerts);
+router.put('/spoilage-alerts/:id/resolve', verifyJWT, resolveSpoilageAlert);
+router.use('/purchase-orders', verifyJWT, purchaseOrderRoutes);
 
 export default router;

@@ -28,6 +28,8 @@
     "correctiveActions": "الإجراءات التصحيحية",
     "foodSafety": "سلامة الغذاء",
     "traceability": "قابلية التتبع",
+    "purchaseOrders": "أوامر الشراء",
+    "spoilageRecording": "تسجيل الهدر",
     "projectsLocations": "المشاريع والمواقع",
     "itemsMaster": "قائمة الأصناف",
     "section": {
@@ -146,7 +148,15 @@
     "password": "كلمة المرور",
     "keepBlank": "(اتركه فارغاً للإبقاء)",
     "nextStep": "الخطوة التالية",
-    "period": "الفترة"
+    "period": "الفترة",
+    "notFound": "غير موجود",
+    "allStatuses": "جميع الحالات",
+    "searchItems": "ابحث عن صنف…",
+    "noResults": "لا توجد نتائج",
+    "select": "اختر…",
+    "saving": "جارٍ الحفظ…",
+    "item": "الصنف",
+    "recordedBy": "سُجِّل بواسطة"
   },
   "status": {
     "draft": "مسودة",
@@ -194,6 +204,10 @@
     "high": "عالية",
     "critical": "حرجة",
     "dismissed": "مُرفَض",
+    "partially_received": "مستلم جزئياً",
+    "fully_received": "مستلم بالكامل",
+    "near_depletion": "قارب على النفاد",
+    "allStatuses": "جميع الحالات",
     "temperature_breach": "خرق درجة الحرارة",
     "cold": "تبريد",
     "chilled": "مبرد",
@@ -337,5 +351,52 @@
     "monthly_materials": "المواد الشهرية",
     "approval_summary": "ملخص الاعتمادات"
   },
-  "auditLogs": { "title": "سجل الأحداث", "action": "الإجراء", "entity": "الكيان", "subtitle": "سجل نشاط النظام" }
+  "auditLogs": { "title": "سجل الأحداث", "action": "الإجراء", "entity": "الكيان", "subtitle": "سجل نشاط النظام" },
+  "purchaseOrders": {
+    "title": "أوامر الشراء",
+    "subtitle": "تتبع التخصيص والاستهلاك بناءً على أوامر الشراء",
+    "new": "أمر شراء جديد",
+    "poNumber": "رقم أمر الشراء",
+    "month": "الشهر",
+    "period": "الفترة",
+    "lines": "البنود",
+    "items": "أصناف",
+    "lineItems": "بنود أمر الشراء",
+    "totalBalance": "الرصيد المتبقي",
+    "of": "من",
+    "approved": "معتمد",
+    "received": "مستلم",
+    "distributed": "موزَّع",
+    "consumed": "مستهلك",
+    "remaining": "متبقٍّ",
+    "overConsumed": "تجاوز الكمية",
+    "nearDepletion": "قارب على النفاد",
+    "linesOverConsumed": "بند(بنود) تجاوزت الكمية المعتمدة",
+    "linesNearDepletion": "بند(بنود) قاربت على النفاد (أقل من 15%)",
+    "allStatuses": "جميع الحالات"
+  },
+  "spoilage": {
+    "title": "تنبيهات الهدر",
+    "alertType": "نوع التنبيه",
+    "detectedAt": "اكتُشف في",
+    "resolveAlert": "حل التنبيه",
+    "recordingTitle": "تسجيل الهدر",
+    "recordingSubtitle": "تسجيل الأصناف الفاسدة أو التالفة أو منتهية الصلاحية",
+    "record": "تسجيل هدر",
+    "newRecord": "سجل هدر جديد",
+    "recordedSuccess": "تم حفظ سجل الهدر. تم إنشاء حركة المخزون تلقائياً.",
+    "reason": "السبب",
+    "location": "الموقع",
+    "locationPlaceholder": "مثال: مخزن بارد - الطابق الثاني",
+    "notesPlaceholder": "تفاصيل إضافية حول الهدر…",
+    "reasons": {
+      "expired": "منتهي الصلاحية",
+      "damaged": "تالف",
+      "temperature_issue": "مشكلة في درجة الحرارة",
+      "packaging_issue": "مشكلة في التغليف",
+      "quality_issue": "مشكلة في الجودة",
+      "spoiled": "فاسد",
+      "other": "أخرى"
+    }
+  }
 }

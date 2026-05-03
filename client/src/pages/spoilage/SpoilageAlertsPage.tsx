@@ -75,7 +75,7 @@ export function SpoilageAlertsPage() {
                   <StatusBadge status={alert.status} />
                 </div>
                 <div className="flex flex-wrap gap-3 text-xs text-slate-500">
-                  <span>Batch: <span className="font-mono">{alert.batch.batchNumber}</span></span>
+                  {alert.batch && <span>Batch: <span className="font-mono">{alert.batch.batchNumber}</span></span>}
                   <span>Zone: <StatusBadge status={alert.storageZone} /></span>
                   <span>Qty: {alert.quantity} {alert.item.unit}</span>
                   {alert.daysUntilExpiry !== undefined && (

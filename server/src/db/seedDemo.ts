@@ -232,21 +232,106 @@ export async function seedDemo(): Promise<void> {
   const receives = [...foodItemIds.slice(0, 5), ...matItemIds.slice(0, 5)].map(iid => ({ _id: oid(), project: projectId, item: iid, movementType: 'RECEIVE', quantity: 300, movementDate: daysAgo(10), sourceType: 'manual', notes: 'Monthly stock replenishment', createdBy: managerId, createdAt: daysAgo(10) }));
   await db.collection('stockmovements').insertMany([...receives, ...stockMovementDocs]);
 
-  // ── Audit logs ─────────────────────────────────────────────────────────────────
-  await db.collection('auditlogs').insertMany([
-    { _id: oid(), user: adminId,      action: 'login',  entityType: 'user',        entityId: adminId,      createdAt: daysAgo(7) },
-    { _id: oid(), user: adminId,      action: 'create', entityType: 'project',     entityId: projectId,    createdAt: daysAgo(7) },
-    { _id: oid(), user: adminId,      action: 'create', entityType: 'building',    entityId: buildingId,   createdAt: daysAgo(7) },
-    { _id: oid(), user: supervisorId, action: 'login',  entityType: 'user',        entityId: supervisorId, createdAt: daysAgo(6) },
-    { _id: oid(), user: supervisorId, action: 'submit', entityType: 'floor_check', entityId: floorCheckDocs[0]._id, createdAt: daysAgo(6) },
-    { _id: oid(), user: assistantId,  action: 'review', entityType: 'floor_check', entityId: floorCheckDocs[0]._id, createdAt: daysAgo(5) },
-    { _id: oid(), user: managerId,    action: 'approve',entityType: 'floor_check', entityId: floorCheckDocs[0]._id, createdAt: daysAgo(5) },
-    { _id: oid(), user: managerId,    action: 'export', entityType: 'floor_check', entityId: floorCheckDocs[0]._id, createdAt: daysAgo(4) },
-    { _id: oid(), user: managerId,    action: 'login',  entityType: 'user',        entityId: managerId,    createdAt: daysAgo(2) },
-    { _id: oid(), user: clientId,     action: 'login',  entityType: 'user',        entityId: clientId,     createdAt: daysAgo(1) },
-    { _id: oid(), user: adminId,      action: 'create', entityType: 'item',        entityId: iBs1,         createdAt: daysAgo(7) },
-    { _id: oid(), user: assistantId,  action: 'login',  entityType: 'user',        entityId: assistantId,  createdAt: daysAgo(3) },
+  // ── Suppliers ─────────────────────────────────────────────────────────────────
+  const sup1Id = oid(), sup2Id = oid(), sup3Id = oid(), sup4Id = oid(), sup5Id = oid();
+  await db.collection('suppliers').insertMany([
+    { _id: sup1Id, name: 'Al-Mawrid Food Trading',        nameAr: 'شركة المورد للتجارة الغذائية',        category: 'food',     contactName: 'Faisal Al-Amri',    phone: '+966512345678', email: 'contact@almawrid.sa',    rating: 4.5, status: 'active',   licenseNumber: 'SA-F-2023-001', address: 'Riyadh Industrial City', createdAt: daysAgo(90), updatedAt: now },
+    { _id: sup2Id, name: 'Arabian Fresh Produce Co.',     nameAr: 'شركة الجزيرة للمنتجات الطازجة',      category: 'food',     contactName: 'Nasser Al-Qahtani', phone: '+966523456789', email: 'info@arabianfresh.sa',   rating: 4.2, status: 'active',   licenseNumber: 'SA-F-2022-045', address: 'Jeddah Food Market',     createdAt: daysAgo(85), updatedAt: now },
+    { _id: sup3Id, name: 'Gulf Dairy Supplies',           nameAr: 'مستلزمات الخليج للألبان',            category: 'food',     contactName: 'Hana Al-Otaibi',    phone: '+966534567890', email: 'supply@gulfdairy.sa',    rating: 3.8, status: 'active',   licenseNumber: 'SA-F-2021-112', address: 'Dammam',                 createdAt: daysAgo(80), updatedAt: now },
+    { _id: sup4Id, name: 'Saudi Cleaning Solutions',      nameAr: 'الحلول السعودية للنظافة',            category: 'material', contactName: 'Mansour Al-Ghamdi', phone: '+966545678901', email: 'orders@scsclean.sa',     rating: 4.0, status: 'active',   licenseNumber: 'SA-M-2023-078', address: 'Riyadh',                 createdAt: daysAgo(75), updatedAt: now },
+    { _id: sup5Id, name: 'Kingdom Hospitality Supplies',  nameAr: 'مستلزمات الضيافة للمملكة',           category: 'both',     contactName: 'Reem Al-Harbi',     phone: '+966578901234', email: 'contact@khsupplies.sa',  rating: 4.3, status: 'active',   licenseNumber: 'SA-B-2022-089', address: 'Mecca Road, Jeddah',     createdAt: daysAgo(60), updatedAt: now },
   ]);
 
-  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · inventory balances');
+  // ── Batches (FIFO/FEFO) ───────────────────────────────────────────────────────
+  function daysAhead(n: number): Date {
+    const d = new Date(); d.setDate(d.getDate() + n); return d;
+  }
+  const batchDefs = [
+    { item: iJc1,    supplier: sup1Id, qty: 3000, recv: 20, expiry: daysAhead(25),  zone: 'cold',        status: 'active'  },
+    { item: iFr1,    supplier: sup2Id, qty: 600,  recv: 18, expiry: daysAhead(5),   zone: 'cold',        status: 'active'  },
+    { item: iFr2,    supplier: sup2Id, qty: 500,  recv: 15, expiry: daysAhead(3),   zone: 'cold',        status: 'active'  },
+    { item: iYog1,   supplier: sup3Id, qty: 400,  recv: 10, expiry: daysAhead(8),   zone: 'chilled',     status: 'active'  },
+    { item: iSb1,    supplier: sup1Id, qty: 400,  recv: 8,  expiry: daysAhead(2),   zone: 'ambient',     status: 'active'  },
+    { item: iBs1,    supplier: sup1Id, qty: 500,  recv: 5,  expiry: daysAhead(1),   zone: 'ambient',     status: 'active'  },
+    { item: iLm1,    supplier: sup2Id, qty: 250,  recv: 3,  expiry: daysAhead(-2),  zone: 'cold',        status: 'expired' },
+    { item: iJc2,    supplier: sup1Id, qty: 400,  recv: 25, expiry: daysAhead(45),  zone: 'cold',        status: 'active'  },
+    { item: iWater1, supplier: sup4Id, qty: 2000, recv: 30, expiry: daysAhead(365), zone: 'dry_storage', status: 'active'  },
+    { item: iPCup1,  supplier: sup5Id, qty: 3000, recv: 28, expiry: daysAhead(180), zone: 'dry_storage', status: 'active'  },
+  ];
+  const batchIds = batchDefs.map(() => oid());
+  await db.collection('batches').insertMany(batchDefs.map(({ item, supplier, qty, recv, expiry, zone, status }, i) => ({
+    _id: batchIds[i],
+    batchNumber: `BAT-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(i + 1).padStart(3, '0')}`,
+    item, supplier, project: projectId,
+    quantity: qty, remainingQty: Math.floor(qty * 0.75),
+    receivedDate: daysAgo(recv), expiryDate: expiry,
+    storageZone: zone, status,
+    createdBy: adminId, createdAt: daysAgo(recv), updatedAt: now,
+  })));
+
+  // ── Spoilage records ──────────────────────────────────────────────────────────
+  await db.collection('spoilages').insertMany([
+    { _id: oid(), item: iLm1, batch: batchIds[6], project: projectId, quantity: 12, reason: 'expired', alertType: 'expired', location: '2 Floor Cold Store', storageZone: 'cold', date: daysAgo(2), status: 'active', detectedAt: daysAgo(2), createdBy: supervisorId, createdAt: daysAgo(2), updatedAt: now },
+    { _id: oid(), item: iFr2, batch: batchIds[2], project: projectId, quantity: 8,  reason: 'temperature_issue', alertType: 'temperature_breach', location: 'SECURITY Floor Fridge', storageZone: 'cold', date: daysAgo(3), daysUntilExpiry: 3, status: 'active', detectedAt: daysAgo(3), createdBy: supervisorId, createdAt: daysAgo(3), updatedAt: now },
+    { _id: oid(), item: iYog1, project: projectId, quantity: 5, reason: 'damaged', alertType: 'damaged', location: 'KAFAA-1 Station', storageZone: 'chilled', date: daysAgo(5), status: 'resolved', detectedAt: daysAgo(5), createdBy: supervisorId, resolvedBy: managerId, resolvedAt: daysAgo(4), createdAt: daysAgo(5), updatedAt: daysAgo(4) },
+    { _id: oid(), item: iSb1,  batch: batchIds[4], project: projectId, quantity: 20, reason: 'expired',  alertType: 'near_expiry', location: '19 Floor Pantry', storageZone: 'ambient', date: daysAgo(1), daysUntilExpiry: 2, status: 'active', detectedAt: daysAgo(1), createdBy: supervisorId, createdAt: daysAgo(1), updatedAt: now },
+    { _id: oid(), item: iBs1,  batch: batchIds[5], project: projectId, quantity: 15, reason: 'quality_issue', alertType: 'spoiled', location: '3 Floor Service', storageZone: 'ambient', date: daysAgo(4), status: 'dismissed', detectedAt: daysAgo(4), createdBy: supervisorId, createdAt: daysAgo(4), updatedAt: daysAgo(4) },
+  ]);
+
+  // ── Purchase Orders ───────────────────────────────────────────────────────────
+  const currentMonth = monthPeriod(0);
+  const po1Id = oid(), po2Id = oid();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth   = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  await db.collection('purchaseorders').insertMany([
+    {
+      _id: po1Id,
+      poNumber: `PO-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-001`,
+      supplier: sup1Id, project: projectId, month: currentMonth,
+      startDate: startOfMonth, endDate: endOfMonth, status: 'partially_received',
+      notes: 'Monthly food allocation — CDMDNA Building Operations',
+      lines: [
+        { _id: oid(), item: iJc1,  unit: 'bottle', approvedQty: 3000, receivedQty: 1500, distributedQty: 800, consumedQty: 0, remainingQty: 2200, variance: 0 },
+        { _id: oid(), item: iFr1,  unit: 'pcs',    approvedQty: 600,  receivedQty: 600,  distributedQty: 280, consumedQty: 0, remainingQty: 320,  variance: 0 },
+        { _id: oid(), item: iSb1,  unit: 'pcs',    approvedQty: 400,  receivedQty: 400,  distributedQty: 380, consumedQty: 0, remainingQty: 20,   variance: 0 },
+        { _id: oid(), item: iBs1,  unit: 'pcs',    approvedQty: 500,  receivedQty: 500,  distributedQty: 320, consumedQty: 0, remainingQty: 180,  variance: 0 },
+      ],
+      createdBy: adminId, createdAt: daysAgo(25), updatedAt: now,
+    },
+    {
+      _id: po2Id,
+      poNumber: `PO-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-002`,
+      supplier: sup4Id, project: projectId, month: currentMonth,
+      startDate: startOfMonth, endDate: endOfMonth, status: 'active',
+      notes: 'Monthly materials — paper cups, water, napkins',
+      lines: [
+        { _id: oid(), item: iWater1, unit: 'bottle', approvedQty: 2000, receivedQty: 0,    distributedQty: 0,   consumedQty: 0, remainingQty: 2000, variance: 0 },
+        { _id: oid(), item: iPCup1,  unit: 'pcs',    approvedQty: 3000, receivedQty: 1500, distributedQty: 600, consumedQty: 0, remainingQty: 2400, variance: 0 },
+        { _id: oid(), item: iSup1,   unit: 'pack',   approvedQty: 500,  receivedQty: 500,  distributedQty: 480, consumedQty: 0, remainingQty: 20,   variance: 0 },
+      ],
+      createdBy: adminId, createdAt: daysAgo(25), updatedAt: now,
+    },
+  ]);
+
+  // ── Audit logs ─────────────────────────────────────────────────────────────────
+  await db.collection('auditlogs').insertMany([
+    { _id: oid(), user: adminId,      action: 'login',  entityType: 'user',           entityId: adminId,      createdAt: daysAgo(7) },
+    { _id: oid(), user: adminId,      action: 'create', entityType: 'project',        entityId: projectId,    createdAt: daysAgo(7) },
+    { _id: oid(), user: adminId,      action: 'create', entityType: 'building',       entityId: buildingId,   createdAt: daysAgo(7) },
+    { _id: oid(), user: supervisorId, action: 'login',  entityType: 'user',           entityId: supervisorId, createdAt: daysAgo(6) },
+    { _id: oid(), user: supervisorId, action: 'submit', entityType: 'floor_check',    entityId: floorCheckDocs[0]._id, createdAt: daysAgo(6) },
+    { _id: oid(), user: assistantId,  action: 'review', entityType: 'floor_check',    entityId: floorCheckDocs[0]._id, createdAt: daysAgo(5) },
+    { _id: oid(), user: managerId,    action: 'approve',entityType: 'floor_check',    entityId: floorCheckDocs[0]._id, createdAt: daysAgo(5) },
+    { _id: oid(), user: managerId,    action: 'export', entityType: 'floor_check',    entityId: floorCheckDocs[0]._id, createdAt: daysAgo(4) },
+    { _id: oid(), user: managerId,    action: 'login',  entityType: 'user',           entityId: managerId,    createdAt: daysAgo(2) },
+    { _id: oid(), user: clientId,     action: 'login',  entityType: 'user',           entityId: clientId,     createdAt: daysAgo(1) },
+    { _id: oid(), user: adminId,      action: 'create', entityType: 'item',           entityId: iBs1,         createdAt: daysAgo(7) },
+    { _id: oid(), user: assistantId,  action: 'login',  entityType: 'user',           entityId: assistantId,  createdAt: daysAgo(3) },
+    { _id: oid(), user: adminId,      action: 'create', entityType: 'purchase_order', entityId: po1Id,        createdAt: daysAgo(25) },
+    { _id: oid(), user: adminId,      action: 'create', entityType: 'purchase_order', entityId: po2Id,        createdAt: daysAgo(25) },
+    { _id: oid(), user: supervisorId, action: 'create', entityType: 'spoilage',       createdAt: daysAgo(2) },
+  ]);
+
+  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage records · 2 purchase orders');
 }
