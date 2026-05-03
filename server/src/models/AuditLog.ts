@@ -11,7 +11,12 @@ export type AuditAction =
   | 'approve'
   | 'reject'
   | 'return'
-  | 'export';
+  | 'export'
+  | 'confirm'
+  | 'cancel'
+  | 'assign'
+  | 'resolve'
+  | 'deliver';
 
 export interface IAuditLog extends Document {
   user?: mongoose.Types.ObjectId;

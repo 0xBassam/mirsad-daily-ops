@@ -494,6 +494,133 @@ export async function seedDemo(): Promise<void> {
     },
   ]);
 
+  // ── Corrective Actions ────────────────────────────────────────────────────────
+  const ca1Id = oid(), ca2Id = oid(), ca3Id = oid(), ca4Id = oid(), ca5Id = oid();
+  await db.collection('correctiveactions').insertMany([
+    {
+      _id: ca1Id,
+      title: 'Temperature breach in cold storage — 2 Floor',
+      description: 'Cold storage temperature reached 9°C during night shift. All perishables at risk. Root cause: compressor fault. Immediate rectification required.',
+      sourceType: 'fridge_check', project: projectId,
+      assignedTo: assistantId, dueDate: daysAhead(2),
+      priority: 'critical', status: 'in_progress',
+      createdBy: supervisorId, createdAt: daysAgo(3), updatedAt: daysAgo(1),
+    },
+    {
+      _id: ca2Id,
+      title: 'Expired items found during fridge check — 3 Floor',
+      description: 'Two batches past expiry date found in 3 Floor cold zone during routine check. Items discarded. FIFO compliance review required.',
+      sourceType: 'fridge_check', project: projectId,
+      assignedTo: assistantId, dueDate: daysAhead(5),
+      priority: 'high', status: 'open',
+      createdBy: supervisorId, createdAt: daysAgo(2), updatedAt: daysAgo(2),
+    },
+    {
+      _id: ca3Id,
+      title: 'Missing name tags on fridge items — KAFAA-1',
+      description: 'Multiple items in KAFAA-1 station missing name tags and date labels. Traceability compromised. Staff retraining required.',
+      sourceType: 'fridge_check', project: projectId,
+      assignedTo: supervisorId, dueDate: daysAhead(3),
+      priority: 'medium', status: 'open',
+      createdBy: assistantId, createdAt: daysAgo(1), updatedAt: daysAgo(1),
+    },
+    {
+      _id: ca4Id,
+      title: 'Cleanliness issue in freezer zone — 19 Floor',
+      description: 'Ice build-up and residue found on freezer shelves. Scheduled deep clean overdue. Hygiene compliance failure.',
+      sourceType: 'floor_check', project: projectId,
+      assignedTo: supervisorId, dueDate: daysAgo(1),
+      priority: 'high', status: 'resolved',
+      resolution: 'Freezer zone deep cleaned by maintenance team. Anti-ice coating applied. Scheduled bi-weekly checks activated.',
+      resolvedAt: daysAgo(1),
+      createdBy: managerId, createdAt: daysAgo(6), updatedAt: daysAgo(1),
+    },
+    {
+      _id: ca5Id,
+      title: 'FIFO order not followed for juice stock',
+      description: 'Newer juice batches being consumed before older ones. Risk of expiry for older stock. Process retraining needed.',
+      sourceType: 'inventory', project: projectId,
+      assignedTo: assistantId, dueDate: daysAgo(3),
+      priority: 'medium', status: 'closed',
+      resolution: 'Staff retrained on FIFO protocol. Storage areas relabelled with clear date indicators. Supervisor spot-check schedule added.',
+      resolvedAt: daysAgo(5),
+      createdBy: managerId, createdAt: daysAgo(10), updatedAt: daysAgo(5),
+    },
+  ]);
+
+  // ── Fridge Checks ─────────────────────────────────────────────────────────────
+  await db.collection('fridgechecks').insertMany([
+    {
+      _id: oid(),
+      date: daysAgo(0), floor: floor2Id, building: buildingId, project: projectId,
+      storageZone: 'cold', checkedBy: supervisorId,
+      temperature: 3.2, expectedTempMin: 1, expectedTempMax: 5,
+      cleanlinessOk: true,
+      itemsChecked: [
+        { batch: batchIds[0], item: iJc1,  expiryDate: daysAhead(25), isExpired: false, isNearExpiry: false, quantity: 2250, condition: 'good',    nameTagPresent: true  },
+        { batch: batchIds[1], item: iFr1,  expiryDate: daysAhead(5),  isExpired: false, isNearExpiry: false, quantity: 450,  condition: 'good',    nameTagPresent: true  },
+        { batch: batchIds[2], item: iFr2,  expiryDate: daysAhead(3),  isExpired: false, isNearExpiry: true,  quantity: 375,  condition: 'near_expiry', nameTagPresent: true },
+      ],
+      status: 'issue_found',
+      createdAt: daysAgo(0), updatedAt: daysAgo(0),
+    },
+    {
+      _id: oid(),
+      date: daysAgo(1), floor: floor3Id, building: buildingId, project: projectId,
+      storageZone: 'cold', checkedBy: supervisorId,
+      temperature: 9.1, expectedTempMin: 1, expectedTempMax: 5,
+      cleanlinessOk: true,
+      itemsChecked: [
+        { batch: batchIds[6], item: iLm1,  expiryDate: daysAhead(-2), isExpired: true,  isNearExpiry: false, quantity: 188, condition: 'expired', nameTagPresent: true },
+        { batch: batchIds[3], item: iYog1, expiryDate: daysAhead(8),  isExpired: false, isNearExpiry: false, quantity: 300, condition: 'good',    nameTagPresent: false },
+      ],
+      status: 'corrective_action_required',
+      correctiveActionId: ca1Id,
+      createdAt: daysAgo(1), updatedAt: daysAgo(1),
+    },
+    {
+      _id: oid(),
+      date: daysAgo(2), floor: floor19Id, building: buildingId, project: projectId,
+      storageZone: 'chilled', checkedBy: assistantId,
+      temperature: 4.8, expectedTempMin: 2, expectedTempMax: 6,
+      cleanlinessOk: true,
+      itemsChecked: [
+        { batch: batchIds[3], item: iYog1, expiryDate: daysAhead(8),  isExpired: false, isNearExpiry: false, quantity: 300, condition: 'good', nameTagPresent: true },
+        { batch: batchIds[4], item: iSb1,  expiryDate: daysAhead(2),  isExpired: false, isNearExpiry: true,  quantity: 300, condition: 'near_expiry', nameTagPresent: true },
+      ],
+      status: 'issue_found',
+      createdAt: daysAgo(2), updatedAt: daysAgo(2),
+    },
+    {
+      _id: oid(),
+      date: daysAgo(3), floor: floorMakId, building: buildingId, project: projectId,
+      storageZone: 'cold', checkedBy: supervisorId,
+      temperature: 2.5, expectedTempMin: 1, expectedTempMax: 5,
+      cleanlinessOk: true,
+      itemsChecked: [
+        { batch: batchIds[0], item: iJc1, expiryDate: daysAhead(25), isExpired: false, isNearExpiry: false, quantity: 2250, condition: 'good', nameTagPresent: true },
+        { batch: batchIds[7], item: iJc2, expiryDate: daysAhead(45), isExpired: false, isNearExpiry: false, quantity: 300,  condition: 'good', nameTagPresent: true },
+      ],
+      status: 'ok',
+      createdAt: daysAgo(3), updatedAt: daysAgo(3),
+    },
+    {
+      _id: oid(),
+      date: daysAgo(4), floor: floorKafaa1Id, building: buildingId, project: projectId,
+      storageZone: 'dry_storage', checkedBy: assistantId,
+      temperature: 20.1, expectedTempMin: 15, expectedTempMax: 25,
+      cleanlinessOk: false, cleanlinessNotes: 'Shelves dusty, bread crumbs accumulation on bottom shelf.',
+      itemsChecked: [
+        { batch: batchIds[8],  item: iWater1, expiryDate: daysAhead(365), isExpired: false, isNearExpiry: false, quantity: 1500, condition: 'good', nameTagPresent: true },
+        { batch: batchIds[9],  item: iPCup1,  expiryDate: daysAhead(180), isExpired: false, isNearExpiry: false, quantity: 2250, condition: 'good', nameTagPresent: true },
+        { batch: batchIds[5],  item: iBs1,    expiryDate: daysAhead(1),   isExpired: false, isNearExpiry: true,  quantity: 375,  condition: 'near_expiry', nameTagPresent: false },
+      ],
+      status: 'corrective_action_required',
+      correctiveActionId: ca3Id,
+      createdAt: daysAgo(4), updatedAt: daysAgo(4),
+    },
+  ]);
+
   // ── Audit logs ─────────────────────────────────────────────────────────────────
   await db.collection('auditlogs').insertMany([
     { _id: oid(), user: adminId,      action: 'login',  entityType: 'user',           entityId: adminId,      createdAt: daysAgo(7) },
@@ -514,8 +641,12 @@ export async function seedDemo(): Promise<void> {
     { _id: oid(), user: supervisorId, action: 'create', entityType: 'transfer',    entityId: tr1Id, createdAt: daysAgo(5) },
     { _id: oid(), user: managerId,    action: 'confirm', entityType: 'transfer',   entityId: tr1Id, createdAt: daysAgo(5) },
     { _id: oid(), user: assistantId,  action: 'create', entityType: 'receiving',   entityId: rec1Id, createdAt: daysAgo(10) },
-    { _id: oid(), user: managerId,    action: 'confirm', entityType: 'receiving',  entityId: rec1Id, createdAt: daysAgo(10) },
+    { _id: oid(), user: managerId,    action: 'confirm', entityType: 'receiving',      entityId: rec1Id, createdAt: daysAgo(10) },
+    { _id: oid(), user: supervisorId, action: 'create', entityType: 'fridge_check',    createdAt: daysAgo(1) },
+    { _id: oid(), user: assistantId,  action: 'create', entityType: 'fridge_check',    createdAt: daysAgo(2) },
+    { _id: oid(), user: managerId,    action: 'create', entityType: 'corrective_action', entityId: ca1Id, createdAt: daysAgo(3) },
+    { _id: oid(), user: managerId,    action: 'update', entityType: 'corrective_action', entityId: ca4Id, createdAt: daysAgo(1) },
   ]);
 
-  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage · 2 POs · 3 transfers · 2 receivings · 5 maintenance · 4 client requests');
+  console.log('Demo data seeded: 5 users · 56 floor checks · 38 items · 5 suppliers · 10 batches · 5 spoilage · 2 POs · 3 transfers · 2 receivings · 5 maintenance · 4 client requests · 5 fridge checks · 5 corrective actions');
 }

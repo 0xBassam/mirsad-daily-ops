@@ -24,6 +24,8 @@ import transferRoutes from './transferRoutes';
 import receivingRoutes from './receivingRoutes';
 import maintenanceRoutes from './maintenanceRoutes';
 import clientRequestRoutes from './clientRequestRoutes';
+import fridgeCheckRoutes from './fridgeCheckRoutes';
+import correctiveActionRoutes from './correctiveActionRoutes';
 
 const router = Router();
 
@@ -55,7 +57,9 @@ router.put('/spoilage-alerts/:id/resolve', verifyJWT, resolveSpoilageAlert);
 router.use('/purchase-orders', verifyJWT, purchaseOrderRoutes);
 router.use('/transfers',        verifyJWT, transferRoutes);
 router.use('/receiving',        verifyJWT, receivingRoutes);
-router.use('/maintenance',      verifyJWT, maintenanceRoutes);
-router.use('/client-requests',  verifyJWT, clientRequestRoutes);
+router.use('/maintenance',         verifyJWT, maintenanceRoutes);
+router.use('/client-requests',     verifyJWT, clientRequestRoutes);
+router.use('/fridge-checks',       verifyJWT, fridgeCheckRoutes);
+router.use('/corrective-actions',  verifyJWT, correctiveActionRoutes);
 
 export default router;
