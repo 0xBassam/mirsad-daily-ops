@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "deploy": "GITHUB_PAGES=true VITE_DEMO_MODE=true vite build && cp dist/index.html dist/404.html && gh-pages -d dist"
+    "deploy": "VITE_DEMO_MODE=true vite build && cp dist/index.html dist/404.html && gh-pages -d dist"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.6.0",
