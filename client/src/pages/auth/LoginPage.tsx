@@ -5,14 +5,6 @@ import apiClient from '../../api/client';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 
-const DEMO_ACCOUNTS = [
-  { role: 'Admin',            email: 'admin@mirsad.demo',      color: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100' },
-  { role: 'Project Manager',  email: 'manager@mirsad.demo',    color: 'bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-100' },
-  { role: 'Asst. Supervisor', email: 'assistant@mirsad.demo',  color: 'bg-purple-50 text-purple-700 hover:bg-purple-100 border-purple-100' },
-  { role: 'Supervisor',       email: 'supervisor@mirsad.demo', color: 'bg-green-50 text-green-700 hover:bg-green-100 border-green-100' },
-  { role: 'Client',           email: 'client@mirsad.demo',     color: 'bg-slate-100 text-slate-600 hover:bg-slate-200 border-slate-200' },
-];
-
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -65,7 +57,7 @@ export function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="input"
-                placeholder="admin@mirsad.demo"
+                placeholder="Enter your email"
                 required
               />
             </div>
@@ -76,7 +68,7 @@ export function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="input"
-                placeholder="Demo@12345"
+                placeholder="Enter your password"
                 required
               />
             </div>
@@ -85,26 +77,6 @@ export function LoginPage() {
             </button>
           </form>
 
-          {/* Demo access */}
-          <div className="mt-6 p-4 bg-slate-50 rounded-xl border border-slate-200">
-            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-              Quick Demo Access
-            </p>
-            <div className="space-y-1.5">
-              {DEMO_ACCOUNTS.map(({ role, email: demoEmail, color }) => (
-                <button
-                  key={demoEmail}
-                  type="button"
-                  onClick={() => { setEmail(demoEmail); setPassword('Demo@12345'); }}
-                  className={`flex items-center justify-between w-full px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${color}`}
-                >
-                  <span className="font-semibold">{role}</span>
-                  <span className="opacity-60 font-mono">{demoEmail}</span>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-slate-400 text-center mt-2">Password: Demo@12345</p>
-          </div>
         </div>
       </div>
     </div>
