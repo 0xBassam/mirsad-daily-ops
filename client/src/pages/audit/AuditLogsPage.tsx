@@ -7,6 +7,9 @@ import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { Badge } from '../../components/ui/Badge';
 import { Pagination } from '../../components/ui/Pagination';
 import { formatDateTime } from '../../utils/formatDate';
+import { downloadExport } from '../../utils/downloadExport';
+import { Download } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const ACTION_COLORS: Record<string, 'green' | 'red' | 'blue' | 'yellow' | 'gray' | 'indigo'> = {
   login: 'green', logout: 'gray', create: 'blue', update: 'yellow',
@@ -30,9 +33,25 @@ export function AuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">{t('auditLogs.title')}</h1>
-        <p className="text-slate-500 text-sm mt-1">{t('auditLogs.subtitle')}</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">{t('auditLogs.title')}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t('auditLogs.subtitle')}</p>
+        </div>
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={() => downloadExport('/export/audit-logs/pdf', `Mirsad_Audit_Logs_${new Date().toISOString().slice(0,10)}.pdf`).catch(() => toast.error(t('common.error')))}
+            className="btn-secondary text-sm flex items-center gap-1.5"
+          >
+            <Download className="h-4 w-4" /> PDF
+          </button>
+          <button
+            onClick={() => downloadExport('/export/audit-logs/excel', `Mirsad_Audit_Logs_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error(t('common.error')))}
+            className="btn-secondary text-sm flex items-center gap-1.5"
+          >
+            <Download className="h-4 w-4" /> Excel
+          </button>
+        </div>
       </div>
       <div className="flex flex-wrap gap-2">
         {actions.map(a => (

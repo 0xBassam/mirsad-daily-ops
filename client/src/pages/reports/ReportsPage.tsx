@@ -8,6 +8,7 @@ import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { StatusBadge, Badge } from '../../components/ui/Badge';
 import { Pagination } from '../../components/ui/Pagination';
 import { formatDate } from '../../utils/formatDate';
+import { downloadExport } from '../../utils/downloadExport';
 import { Download, Plus, X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -149,9 +150,13 @@ export function ReportsPage() {
                 <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                 <td className="px-4 py-3 text-slate-500">{r.generatedBy?.fullName || '—'}</td>
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
-                  <a href="#" className="text-slate-400 hover:text-red-600" title={t('reports.exportPdf')}>
+                  <button
+                    className="text-slate-400 hover:text-indigo-600"
+                    title={t('reports.exportPdf')}
+                    onClick={() => downloadExport(`/export/reports/${r._id}/pdf`, `Mirsad_Report_${r._id}.pdf`).catch(() => toast.error(t('common.error')))}
+                  >
                     <Download className="h-4 w-4" />
-                  </a>
+                  </button>
                 </td>
               </tr>
             ))}

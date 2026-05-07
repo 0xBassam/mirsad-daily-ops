@@ -26,6 +26,7 @@ import maintenanceRoutes from './maintenanceRoutes';
 import clientRequestRoutes from './clientRequestRoutes';
 import fridgeCheckRoutes from './fridgeCheckRoutes';
 import correctiveActionRoutes from './correctiveActionRoutes';
+import exportRoutes from './exportRoutes';
 
 const router = Router();
 
@@ -61,5 +62,6 @@ router.use('/maintenance',         verifyJWT, maintenanceRoutes);
 router.use('/client-requests',     verifyJWT, clientRequestRoutes);
 router.use('/fridge-checks',       verifyJWT, fridgeCheckRoutes);
 router.use('/corrective-actions',  verifyJWT, correctiveActionRoutes);
+router.use('/export',              verifyJWT, exportRoutes);
 
 export default router;

@@ -4,11 +4,13 @@ import { formatDistanceToNow, parseISO, format } from 'date-fns';
 import apiClient from '../../api/client';
 import { DashboardStats, DashboardRequestRow, DashboardReceivingRow, DashboardPORow, DashboardLowStockRow } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
+import { downloadExport } from '../../utils/downloadExport';
+import toast from 'react-hot-toast';
 import {
   ClipboardList, Coffee, Package, Warehouse, ShoppingCart,
   AlertTriangle, CheckCircle, Clock, TrendingDown,
   ArrowDownToLine, Thermometer, ShieldCheck, Bell,
-  BarChart2, TrendingUp, ArrowRightLeft, Wrench,
+  BarChart2, TrendingUp, ArrowRightLeft, Wrench, Download,
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -318,9 +320,16 @@ export function DashboardPage() {
               <ClipboardList className="h-4 w-4 text-indigo-500" />
               Operation Requests
             </h3>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(data.operationRequestsOpen ?? 0) > 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}`}>
-              {data.operationRequestsOpen ?? 0} open
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(data.operationRequestsOpen ?? 0) > 0 ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-500'}`}>
+                {data.operationRequestsOpen ?? 0} open
+              </span>
+              <button title="Export Excel"
+                onClick={() => downloadExport('/export/operation-requests/excel', `Mirsad_Operation_Requests_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
+                className="text-slate-400 hover:text-indigo-600 transition-colors">
+                <Download className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
           <div className="p-1">
             <RequestTable rows={data.latestOperationRequests ?? []} emptyLabel="No operation requests" />
@@ -333,9 +342,16 @@ export function DashboardPage() {
               <Coffee className="h-4 w-4 text-purple-500" />
               Coffee Break Requests
             </h3>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(data.coffeeBreakRequestsOpen ?? 0) > 0 ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-500'}`}>
-              {data.coffeeBreakRequestsOpen ?? 0} open
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(data.coffeeBreakRequestsOpen ?? 0) > 0 ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-500'}`}>
+                {data.coffeeBreakRequestsOpen ?? 0} open
+              </span>
+              <button title="Export Excel"
+                onClick={() => downloadExport('/export/coffee-break-requests/excel', `Mirsad_Coffee_Break_Requests_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
+                className="text-slate-400 hover:text-purple-600 transition-colors">
+                <Download className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
           <div className="p-1">
             <RequestTable rows={data.latestCoffeeBreakRequests ?? []} emptyLabel="No coffee break requests" />
@@ -352,7 +368,14 @@ export function DashboardPage() {
               <ArrowDownToLine className="h-4 w-4 text-teal-500" />
               Recent Receiving
             </h3>
-            <span className="text-xs text-slate-400">{data.receivingToday ?? 0} today</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">{data.receivingToday ?? 0} today</span>
+              <button title="Export Excel"
+                onClick={() => downloadExport('/export/receiving/excel', `Mirsad_Receiving_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
+                className="text-slate-400 hover:text-teal-600 transition-colors">
+                <Download className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
           <div className="p-1">
             <ReceivingTable rows={data.latestReceiving ?? []} />
@@ -365,7 +388,14 @@ export function DashboardPage() {
               <ShoppingCart className="h-4 w-4 text-blue-500" />
               Purchase Orders
             </h3>
-            <span className="text-xs text-slate-400">{data.openPurchaseOrders ?? 0} active</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">{data.openPurchaseOrders ?? 0} active</span>
+              <button title="Export Excel"
+                onClick={() => downloadExport('/export/purchase-orders/excel', `Mirsad_Purchase_Orders_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
+                className="text-slate-400 hover:text-blue-600 transition-colors">
+                <Download className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
           <div className="p-1">
             <POTable rows={data.recentPurchaseOrders ?? []} />
@@ -383,9 +413,16 @@ export function DashboardPage() {
               <TrendingDown className="h-4 w-4 text-amber-500" />
               Low Stock Items
             </h3>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(data.lowStock + data.outOfStock) > 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
-              {data.lowStock + data.outOfStock} items
-            </span>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${(data.lowStock + data.outOfStock) > 0 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500'}`}>
+                {data.lowStock + data.outOfStock} items
+              </span>
+              <button title="Export Excel"
+                onClick={() => downloadExport('/export/inventory/excel', `Mirsad_Inventory_Report_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
+                className="text-slate-400 hover:text-amber-600 transition-colors">
+                <Download className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
           <div className="p-1">
             <LowStockTable rows={data.lowStockItemsList ?? []} />

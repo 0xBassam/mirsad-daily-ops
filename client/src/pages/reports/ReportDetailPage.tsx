@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -6,7 +7,9 @@ import { Report } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { StatusBadge, Badge } from '../../components/ui/Badge';
 import { formatDate } from '../../utils/formatDate';
-import { ArrowLeft, Download } from 'lucide-react';
+import { downloadExport } from '../../utils/downloadExport';
+import { ArrowLeft, Download, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray'> = {
   daily_floor_check: 'blue',
@@ -20,6 +23,20 @@ const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray
 export function ReportDetailPage() {
   const { id } = useParams();
   const { t } = useTranslation();
+  const [exporting, setExporting] = useState<'pdf' | 'excel' | null>(null);
+
+  async function handleExport(fmt: 'pdf' | 'excel') {
+    if (!id) return;
+    setExporting(fmt);
+    try {
+      const ext = fmt === 'pdf' ? 'pdf' : 'xlsx';
+      await downloadExport(`/export/reports/${id}/${fmt}`, `Mirsad_Report_${id}.${ext}`);
+    } catch {
+      toast.error(t('common.error'));
+    } finally {
+      setExporting(null);
+    }
+  }
 
   const { data: reportData, isLoading: reportLoading } = useQuery({
     queryKey: ['report', id],
@@ -72,12 +89,16 @@ export function ReportDetailPage() {
             {!previewLoading && <span className="ms-2 text-xs text-slate-400 font-normal">({rows.length} {t('common.rows')})</span>}
           </h2>
           <div className="flex gap-3">
-            <a href="#" className="btn-primary text-sm flex items-center gap-1.5">
-              <Download className="h-4 w-4" /> {t('reports.exportPdf')}
-            </a>
-            <a href="#" className="btn-secondary text-sm flex items-center gap-1.5">
-              <Download className="h-4 w-4" /> {t('reports.exportExcel')}
-            </a>
+            <button onClick={() => handleExport('pdf')} disabled={!!exporting}
+              className="btn-primary text-sm flex items-center gap-1.5 disabled:opacity-60">
+              {exporting === 'pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {t('reports.exportPdf')}
+            </button>
+            <button onClick={() => handleExport('excel')} disabled={!!exporting}
+              className="btn-secondary text-sm flex items-center gap-1.5 disabled:opacity-60">
+              {exporting === 'excel' ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              {t('reports.exportExcel')}
+            </button>
           </div>
         </div>
         {previewLoading ? (
