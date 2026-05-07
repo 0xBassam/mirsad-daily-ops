@@ -1238,3 +1238,68 @@ Phase 4 — Enterprise Tier
   Fridge Check readiness
   Supplier and Traceability readiness
 ```
+
+---
+
+## Implemented Request Types (Phase 4 — Live)
+
+Two specialised client request workflows are now live in the current demo under Module 19:
+
+### Operation Requests
+
+Daily operational requests submitted by floor/building staff.
+
+**Examples:** Extra breakfast sandwiches for 5F, additional lunch meals for 15F, fresh fruits for a meeting.
+
+**Request Type:** `operation_request`
+
+**Lifecycle:** Submitted → Assigned → In Progress → Delivered → Confirmed
+
+### Coffee Break Requests
+
+Service requests for coffee breaks, meetings, and VIP hospitality.
+
+**Examples:** Executive meeting coffee break (19F, 20 pax), VIP coffee service (Board Room), department event coffee (KAFAA-2, 25 pax).
+
+**Request Type:** `coffee_break_request`
+
+**Lifecycle:** Submitted → Assigned → In Progress → Delivered → Confirmed
+
+Both request types appear as dedicated KPI cards on the dashboard, with separate tables showing the latest open requests per type.
+
+---
+
+## Ministry of Energy — Demo Data
+
+The demo environment is seeded with real data from the Ministry of Energy cafeteria operation:
+
+**Floor Structure (27 locations):**
+
+- Main Building: 2F, 3F, 4F, 5F, 6F, 7F, 8F, 9F, 10F, 11F, 12F, 13F, 14F, 15F, 16F, 17F, 18F, 19F
+- RD Building: RD 1&2, RD 3&4
+- Kafaa Building: KAFAA-1, KAFAA-2, KAFAA-3, KAFAA-4
+- Service Areas: MAKASSB, OLD, SECURITY
+
+**Food Items (20 items, real monthly limits):**
+
+Breakfast Sandwiches (19,635/month), Lunch Sandwiches (11,235), Gluten Free Breads (2,100),
+Breakfast Meals (3,213), Lunch Meals (17,157), Fresh Fruits (10,500), Soups (5,040),
+Salads (10,080), Sweet Bakery's (8,400), Salted Bakery's (8,400), Yogurts (5,040),
+Nuts / Dates (10,500), Sweets Cakes (3,360), Granola (4,830), Fresh Juices (10,500),
+Waraqnab / Fattah, Samoli, Pizza, Zaatar Bread, Om Ali.
+
+**Material Items (38 items):**
+
+Coffee: Original Blend, House Blend, Camel (Rwanda Cvanza), Siwar (Mananasi Uganda),
+Shovel (Hambela), Bica, Turkish Coffee, Cardamom, Saffron, Saudi Coffee (Dallah).
+
+Milk & Tea: Fresh Milk (Lactose Free), Vegetarian Milk, Black Tea, Green Tea,
+Camomile Tea, Karak Tea.
+
+Water & Drinks: Nova Water (Small), Tania Gallons Water, Soda Water, Soft Drinks, Almarai Juices.
+
+Condiments: White Sugar, Brown Sugar, Diet Sugar, Wooden Stir Sticks,
+Multi-Flavor Syrup, Hot Chocolate Mix, Condensed Milk, Bony Milk.
+
+Snacks & Disposables: Digestive Biscuits, Chips, Paper Cups (Hot), Espresso Cups,
+Paper Plates, Single Spoon, Single Knife, Single Fork, Cutlery Sets.

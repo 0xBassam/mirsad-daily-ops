@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-export type ClientRequestType   = 'catering' | 'maintenance' | 'supplies' | 'event' | 'housekeeping' | 'other';
+export type ClientRequestType   = 'operation_request' | 'coffee_break_request' | 'catering' | 'maintenance' | 'supplies' | 'event' | 'housekeeping' | 'other';
 export type ClientRequestStatus = 'submitted' | 'assigned' | 'in_progress' | 'delivered' | 'confirmed' | 'rejected';
 export type ClientRequestPriority = 'low' | 'medium' | 'high' | 'urgent';
 
@@ -38,7 +38,7 @@ const itemSchema = new Schema<IRequestItem>({
 const clientRequestSchema = new Schema<IClientRequest>({
   title:       { type: String, required: true, trim: true },
   description: { type: String, required: true },
-  requestType: { type: String, enum: ['catering','maintenance','supplies','event','housekeeping','other'], required: true },
+  requestType: { type: String, enum: ['operation_request','coffee_break_request','catering','maintenance','supplies','event','housekeeping','other'], required: true },
   priority:    { type: String, enum: ['low','medium','high','urgent'], default: 'medium' },
   project:     { type: Schema.Types.ObjectId, ref: 'Project',  required: true },
   building:    { type: Schema.Types.ObjectId, ref: 'Building' },

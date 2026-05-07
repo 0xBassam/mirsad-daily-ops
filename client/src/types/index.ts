@@ -178,6 +178,44 @@ export interface ApiResponse<T> {
   message?: string;
 }
 
+export interface DashboardRequestRow {
+  _id: string;
+  title: string;
+  floor: string;
+  priority: string;
+  status: string;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface DashboardReceivingRow {
+  _id: string;
+  supplierName: string;
+  deliveryDate: string;
+  lineCount: number;
+  status: string;
+  invoiceNumber?: string;
+}
+
+export interface DashboardPORow {
+  _id: string;
+  poNumber: string;
+  supplierName: string;
+  month: string;
+  status: string;
+  lineCount: number;
+  receivedPct: number;
+}
+
+export interface DashboardLowStockRow {
+  name: string;
+  type: 'food' | 'material';
+  unit: string;
+  remainingQty: number;
+  monthlyLimit: number;
+  status: 'low_stock' | 'out_of_stock';
+}
+
 export interface DashboardStats {
   checks: { total: number; completed: number; pending: number };
   reports: { submitted: number; approved: number; rejected: number };
@@ -197,7 +235,15 @@ export interface DashboardStats {
   openPurchaseOrders?: number;
   pendingTransfers?: number;
   openMaintenanceRequests?: number;
-  pendingClientRequests?: number;
+  // New operational fields
+  operationRequestsOpen?: number;
+  coffeeBreakRequestsOpen?: number;
+  receivingToday?: number;
+  latestOperationRequests?: DashboardRequestRow[];
+  latestCoffeeBreakRequests?: DashboardRequestRow[];
+  latestReceiving?: DashboardReceivingRow[];
+  recentPurchaseOrders?: DashboardPORow[];
+  lowStockItemsList?: DashboardLowStockRow[];
 }
 
 export type ReportType = 'daily_floor_check' | 'daily_project_summary' | 'weekly_warehouse' | 'monthly_food_inventory' | 'monthly_materials' | 'approval_summary';

@@ -14,6 +14,7 @@ import { MaintenanceRequest } from '../models/MaintenanceRequest';
 import { ClientRequest } from '../models/ClientRequest';
 import { AuditLog } from '../models/AuditLog';
 import { StockMovement } from '../models/StockMovement';
+import { Receiving } from '../models/Receiving';
 
 export async function getDashboardStats() {
   const today = new Date();
@@ -34,7 +35,6 @@ export async function getDashboardStats() {
     lowStockItems,
     pendingApprovals,
     outOfStockItems,
-    // Phase 2–4 operational
     expiringIn3DaysCount,
     activeCorrectiveActionsCount,
     fridgeChecksTodayCount,
@@ -42,7 +42,10 @@ export async function getDashboardStats() {
     openPurchaseOrdersCount,
     pendingTransfersCount,
     openMaintenanceCount,
-    pendingClientRequestsCount,
+    // New: separate request type counts
+    operationRequestsOpen,
+    coffeeBreakRequestsOpen,
+    receivingTodayCount,
   ] = await Promise.all([
     FloorCheck.countDocuments({ date: { $gte: today, $lt: tomorrow } }),
     FloorCheck.countDocuments({ date: { $gte: today, $lt: tomorrow }, status: { $in: ['approved', 'closed'] } }),
@@ -61,10 +64,23 @@ export async function getDashboardStats() {
     PurchaseOrder.countDocuments({ status: { $nin: ['fully_received', 'closed'] } }),
     Transfer.countDocuments({ status: 'draft' }),
     MaintenanceRequest.countDocuments({ status: { $in: ['open', 'assigned'] } }),
-    ClientRequest.countDocuments({ status: { $in: ['submitted', 'assigned', 'in_progress'] } }),
+    ClientRequest.countDocuments({ requestType: 'operation_request', status: { $in: ['submitted', 'assigned', 'in_progress'] } }),
+    ClientRequest.countDocuments({ requestType: 'coffee_break_request', status: { $in: ['submitted', 'assigned', 'in_progress'] } }),
+    Receiving.countDocuments({ deliveryDate: { $gte: today, $lt: tomorrow } }),
   ]);
 
-  const [foodInventory, materialsInventory, topConsumedItems, checksByFloor, recentActivity] = await Promise.all([
+  const [
+    foodInventory,
+    materialsInventory,
+    topConsumedItems,
+    checksByFloor,
+    recentActivity,
+    latestOperationRequests,
+    latestCoffeeBreakRequests,
+    latestReceiving,
+    recentPurchaseOrders,
+    lowStockItemsList,
+  ] = await Promise.all([
     InventoryBalance.aggregate([
       { $match: { period } },
       { $lookup: { from: 'items', localField: 'item', foreignField: '_id', as: 'item' } },
@@ -73,9 +89,9 @@ export async function getDashboardStats() {
       {
         $group: {
           _id: null,
-          available: { $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] } },
-          lowStock: { $sum: { $cond: [{ $eq: ['$status', 'low_stock'] }, 1, 0] } },
-          outOfStock: { $sum: { $cond: [{ $eq: ['$status', 'out_of_stock'] }, 1, 0] } },
+          available:    { $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] } },
+          lowStock:     { $sum: { $cond: [{ $eq: ['$status', 'low_stock'] }, 1, 0] } },
+          outOfStock:   { $sum: { $cond: [{ $eq: ['$status', 'out_of_stock'] }, 1, 0] } },
           overConsumed: { $sum: { $cond: [{ $eq: ['$status', 'over_consumed'] }, 1, 0] } },
         },
       },
@@ -89,14 +105,13 @@ export async function getDashboardStats() {
       {
         $group: {
           _id: null,
-          available: { $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] } },
-          lowStock: { $sum: { $cond: [{ $eq: ['$status', 'low_stock'] }, 1, 0] } },
+          available:  { $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] } },
+          lowStock:   { $sum: { $cond: [{ $eq: ['$status', 'low_stock'] }, 1, 0] } },
           outOfStock: { $sum: { $cond: [{ $eq: ['$status', 'out_of_stock'] }, 1, 0] } },
         },
       },
     ]),
 
-    // Top 5 most-issued items from stock movements
     StockMovement.aggregate([
       { $match: { movementType: 'ISSUE' } },
       { $group: { _id: '$item', consumed: { $sum: '$quantity' } } },
@@ -107,7 +122,6 @@ export async function getDashboardStats() {
       { $project: { _id: 0, name: { $ifNull: ['$item.name', 'Unknown'] }, consumed: 1 } },
     ]),
 
-    // Floor check counts grouped by floor (top 8)
     FloorCheck.aggregate([
       { $group: { _id: '$floor', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
@@ -117,21 +131,111 @@ export async function getDashboardStats() {
       { $project: { _id: 0, name: { $ifNull: ['$floor.name', 'Unknown'] }, count: 1 } },
     ]),
 
-    // Recent activity from audit log (richer than approval records alone)
     AuditLog.find()
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('user', 'fullName role')
       .lean(),
+
+    // Latest operation requests
+    ClientRequest.find({ requestType: 'operation_request' })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .populate('floor', 'name')
+      .populate('requestedBy', 'fullName')
+      .lean(),
+
+    // Latest coffee break requests
+    ClientRequest.find({ requestType: 'coffee_break_request' })
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .populate('floor', 'name')
+      .populate('requestedBy', 'fullName')
+      .lean(),
+
+    // Latest receiving records
+    Receiving.find()
+      .sort({ deliveryDate: -1, createdAt: -1 })
+      .limit(5)
+      .populate('supplier', 'name')
+      .lean(),
+
+    // Recent purchase orders
+    PurchaseOrder.find()
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('supplier', 'name')
+      .lean(),
+
+    // Low stock items list (top 8)
+    InventoryBalance.aggregate([
+      { $match: { period, status: { $in: ['low_stock', 'out_of_stock'] } } },
+      { $lookup: { from: 'items', localField: 'item', foreignField: '_id', as: 'itemData' } },
+      { $unwind: { path: '$itemData', preserveNullAndEmptyArrays: true } },
+      { $sort: { remainingQty: 1 } },
+      { $limit: 8 },
+      {
+        $project: {
+          _id: 0,
+          name: { $ifNull: ['$itemData.name', 'Unknown'] },
+          type: { $ifNull: ['$itemData.type', 'food'] },
+          unit: { $ifNull: ['$itemData.unit', 'pcs'] },
+          remainingQty: 1,
+          monthlyLimit: 1,
+          status: 1,
+        },
+      },
+    ]),
   ]);
 
-  // Shape audit log entries to match the expected recentActivity format
-  const shapedActivity = recentActivity.map((log: any) => ({
+  const shapedActivity = (recentActivity as any[]).map((log: any) => ({
     _id: log._id,
     action: log.action,
     createdAt: log.createdAt,
     actor: log.user || { fullName: 'System' },
     entityType: log.entityType,
+  }));
+
+  const shapedOpRequests = (latestOperationRequests as any[]).map((r: any) => ({
+    _id: r._id,
+    title: r.title,
+    floor: r.floor?.name || '—',
+    priority: r.priority,
+    status: r.status,
+    itemCount: r.items?.length || 0,
+    createdAt: r.createdAt,
+  }));
+
+  const shapedCbRequests = (latestCoffeeBreakRequests as any[]).map((r: any) => ({
+    _id: r._id,
+    title: r.title,
+    floor: r.floor?.name || '—',
+    priority: r.priority,
+    status: r.status,
+    itemCount: r.items?.length || 0,
+    createdAt: r.createdAt,
+  }));
+
+  const shapedReceiving = (latestReceiving as any[]).map((r: any) => ({
+    _id: r._id,
+    supplierName: (r.supplier as any)?.name || '—',
+    deliveryDate: r.deliveryDate,
+    lineCount: r.lines?.length || 0,
+    status: r.status,
+    invoiceNumber: r.invoiceNumber,
+  }));
+
+  const shapedPOs = (recentPurchaseOrders as any[]).map((po: any) => ({
+    _id: po._id,
+    poNumber: po.poNumber,
+    supplierName: (po.supplier as any)?.name || '—',
+    month: po.month,
+    status: po.status,
+    lineCount: po.lines?.length || 0,
+    receivedPct: po.lines?.length
+      ? Math.round((po.lines.reduce((s: number, l: any) => s + (l.receivedQty || 0), 0) /
+          Math.max(1, po.lines.reduce((s: number, l: any) => s + (l.approvedQty || 0), 0))) * 100)
+      : 0,
   }));
 
   return {
@@ -161,6 +265,14 @@ export async function getDashboardStats() {
     openPurchaseOrders: openPurchaseOrdersCount,
     pendingTransfers: pendingTransfersCount,
     openMaintenanceRequests: openMaintenanceCount,
-    pendingClientRequests: pendingClientRequestsCount,
+    // New fields
+    operationRequestsOpen,
+    coffeeBreakRequestsOpen,
+    receivingToday: receivingTodayCount,
+    latestOperationRequests: shapedOpRequests,
+    latestCoffeeBreakRequests: shapedCbRequests,
+    latestReceiving: shapedReceiving,
+    recentPurchaseOrders: shapedPOs,
+    lowStockItemsList,
   };
 }
