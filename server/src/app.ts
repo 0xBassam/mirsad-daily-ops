@@ -11,7 +11,11 @@ import apiRouter from './routes/index';
 const app = express();
 
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(cors({ origin: env.CLIENT_URL, credentials: true }));
+app.use(cors({
+  origin: env.CLIENT_URL || true,
+  credentials: true,
+  exposedHeaders: ['Content-Disposition', 'Content-Type'],
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(requestLogger);
