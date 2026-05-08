@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-family: 'Cairo', 'Inter', sans-serif;
+  }
+
+  [dir="rtl"] {
+    font-family: 'Cairo', sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-white text-slate-700 border border-slate-300 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors disabled:opacity-50;
+  }
+  .input {
+    @apply w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+  }
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 transition-shadow;
+  }
+  .kpi-card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center gap-4
+           hover:shadow-md transition-shadow cursor-default;
+  }
+  .alert-card {
+    @apply bg-white rounded-xl shadow-sm border border-slate-200 p-4 border-s-4;
+  }
+  .nav-section-label {
+    @apply px-3 pt-5 pb-1.5 text-xs font-semibold text-slate-500 uppercase tracking-wider select-none;
+  }
+}

@@ -882,3 +882,424 @@ Daily Plan
 ```
 
 The system should feel like a real product demo, not a static UI.
+
+---
+
+## New Modules — Roadmap Feature Scope
+
+The following modules are planned for progressive implementation after the current stable demo. They do not affect the existing demo build. They are organized by package tier below.
+
+---
+
+### 15. Purchase Order Consumption Tracking
+
+Each month, the operations team receives a Purchase Order with approved quantities for food and materials. The PO defines the approved quantity, and each distribution, delivery, or consumption transaction deducts from the remaining PO balance.
+
+**Example:**
+
+```text
+PO-2026-05-001
+Item: Fresh Juice
+Approved Quantity: 3,000 bottles
+Distributed Today: 120 bottles
+Remaining PO Balance: 2,880 bottles
+```
+
+Required fields:
+
+- PO Number
+- Supplier
+- Project
+- Month
+- Start Date
+- End Date
+- Item
+- Approved Quantity
+- Received Quantity
+- Distributed Quantity
+- Consumed Quantity
+- Remaining Quantity
+- Variance
+- Status
+
+PO status options:
+
+- Active
+- Partially Received
+- Fully Received
+- Near Depletion
+- Over Consumed
+- Closed
+
+Required behavior:
+
+- Purchase Receiving increases available stock
+- Daily Allocation / Floor Distribution deducts from PO balance
+- Consumption deducts from remaining PO balance
+- Returns increase available stock
+- Damage / Spoilage deducts from stock and is reflected in movement history
+- System shows remaining PO balance by item
+- System alerts when PO balance is low or exceeded
+
+---
+
+### 16. Warehouse-to-Floor Transfers
+
+Workflow for transferring items from the warehouse to floors, coffee stations, executive lounges, and hospitality areas.
+
+**Workflow:**
+
+```text
+Warehouse
+→ Floor / Area
+→ Received by Supervisor
+→ Used / Returned / Damaged
+```
+
+Required fields:
+
+- Source location
+- Destination location
+- Item
+- Quantity
+- Delivered by
+- Received by
+- Date / Time
+- Notes
+- Signature
+- Status
+
+Transfer status options:
+
+- Pending
+- In Transit
+- Received
+- Partially Received
+- Returned
+- Cancelled
+
+---
+
+### 17. Receiving and Delivery Workflow
+
+Receiving and delivery process for food and materials across all operational stages.
+
+**Required scenarios:**
+
+- Supplier delivers to warehouse
+- Warehouse receives items
+- Warehouse delivers to floor or service area
+- Supervisor confirms receiving
+- Items are consumed, returned, or marked damaged
+
+Required fields:
+
+- Supplier
+- Item
+- Quantity
+- Source
+- Destination
+- Received by
+- Delivered by
+- Date / Time
+- Notes
+- Photo attachment
+- Signature
+
+---
+
+### 18. Maintenance Requests
+
+Maintenance request module for hospitality and food service assets.
+
+**Examples:**
+
+- Fridge issue
+- Coffee machine issue
+- Freezer issue
+- Counter / service area issue
+- Shelf or storage issue
+- Cleaning or facility issue
+
+**Maintenance lifecycle:**
+
+```text
+New
+→ Assigned
+→ In Progress
+→ Waiting Approval
+→ Completed
+→ Closed
+```
+
+Required fields:
+
+- Request title
+- Asset / area
+- Location
+- Priority
+- Issue description
+- Photo
+- Assigned to
+- Status
+- Created by
+- Closed by
+- Completion notes
+
+Priority options:
+
+- Low
+- Medium
+- High
+- Critical
+
+---
+
+### 19. Client Request Lifecycle
+
+Client request workflow for hospitality service requests.
+
+**Example:** A client requests hospitality service for a meeting. The system tracks the request from creation to delivery and closure.
+
+**Lifecycle:**
+
+```text
+New Request
+→ Received
+→ Assigned
+→ In Progress
+→ Prepared
+→ Delivered
+→ Confirmed
+→ Closed
+```
+
+Required fields:
+
+- Request title
+- Client / requester
+- Project
+- Location
+- Date / Time needed
+- Requested items
+- Quantity
+- Assigned team
+- Status
+- Delivery confirmation
+- Notes
+- Signature if needed
+
+---
+
+### 20. FIFO / FEFO Logic
+
+Basic inventory rotation logic for food and material items.
+
+**For food items:**
+
+FEFO — First Expired, First Out.
+
+Items with an earlier expiry date must be consumed first. Expiry date is required on receiving for food items.
+
+**For non-food materials:**
+
+FIFO — First In, First Out.
+
+Items received earliest are issued first. Based on receiving date.
+
+In the first version, this is basic logic and does not require advanced automation. The system records expiry dates and receiving dates to support correct rotation on issue and distribution.
+
+---
+
+### 21. Spoilage Recording
+
+Recording of spoiled, damaged, or expired items.
+
+Required fields:
+
+- Item
+- Quantity
+- Reason
+- Location
+- Date / Time
+- Notes
+- Photo attachment
+- Created by
+
+Spoilage reason options:
+
+- Expired
+- Damaged
+- Temperature issue
+- Packaging issue
+- Quality issue
+- Spoiled
+- Other
+
+Spoilage records must be reflected in stock movement history as a DAMAGE movement type and deducted from the available balance.
+
+---
+
+## Package Tiers
+
+Features are structured by package level to support phased delivery and client onboarding.
+
+### Starter
+
+- Basic PO Quantity Tracking
+- Basic FIFO / FEFO
+- Basic Spoilage Recording
+
+### Professional
+
+- PO-Based Allocation and Consumption Tracking
+- Basic Receiving and Delivery Workflow
+- Basic Warehouse-to-Floor Transfer View
+
+### Enterprise
+
+- Advanced PO Lifecycle and Variance Reporting
+- Advanced Warehouse-to-Floor Transfers
+- Maintenance Requests
+- Client Request Lifecycle
+- Advanced Food Safety readiness
+- Fridge Check readiness
+- Supplier and Traceability readiness
+
+---
+
+## New API Routes (Planned)
+
+The following routes correspond to the new modules above and will be added progressively.
+
+```text
+GET    /api/purchase-orders
+POST   /api/purchase-orders
+GET    /api/purchase-orders/:id
+PUT    /api/purchase-orders/:id
+POST   /api/purchase-orders/:id/receive
+POST   /api/purchase-orders/:id/distribute
+
+GET    /api/transfers
+POST   /api/transfers
+GET    /api/transfers/:id
+PUT    /api/transfers/:id
+POST   /api/transfers/:id/confirm
+
+GET    /api/receiving
+POST   /api/receiving
+GET    /api/receiving/:id
+PUT    /api/receiving/:id
+POST   /api/receiving/:id/confirm
+
+GET    /api/maintenance
+POST   /api/maintenance
+GET    /api/maintenance/:id
+PUT    /api/maintenance/:id
+POST   /api/maintenance/:id/assign
+POST   /api/maintenance/:id/complete
+
+GET    /api/client-requests
+POST   /api/client-requests
+GET    /api/client-requests/:id
+PUT    /api/client-requests/:id
+POST   /api/client-requests/:id/assign
+POST   /api/client-requests/:id/deliver
+POST   /api/client-requests/:id/confirm
+
+GET    /api/spoilage
+POST   /api/spoilage
+GET    /api/spoilage/:id
+```
+
+---
+
+## Implementation Roadmap
+
+```text
+Phase 1 — Current (Stable Demo)
+  Modules 1–14
+  Daily plan → floor check → approval → inventory → reports
+
+Phase 2 — Starter Tier
+  Module 20: Basic FIFO / FEFO logic
+  Module 21: Spoilage Recording
+  Module 15: Basic PO Quantity Tracking
+
+Phase 3 — Professional Tier
+  Module 15: Full PO-Based Allocation and Consumption Tracking
+  Module 16: Warehouse-to-Floor Transfers
+  Module 17: Receiving and Delivery Workflow
+
+Phase 4 — Enterprise Tier
+  Module 18: Maintenance Requests
+  Module 19: Client Request Lifecycle
+  Advanced Food Safety readiness
+  Fridge Check readiness
+  Supplier and Traceability readiness
+```
+
+---
+
+## Implemented Request Types (Phase 4 — Live)
+
+Two specialised client request workflows are now live in the current demo under Module 19:
+
+### Operation Requests
+
+Daily operational requests submitted by floor/building staff.
+
+**Examples:** Extra breakfast sandwiches for 5F, additional lunch meals for 15F, fresh fruits for a meeting.
+
+**Request Type:** `operation_request`
+
+**Lifecycle:** Submitted → Assigned → In Progress → Delivered → Confirmed
+
+### Coffee Break Requests
+
+Service requests for coffee breaks, meetings, and VIP hospitality.
+
+**Examples:** Executive meeting coffee break (19F, 20 pax), VIP coffee service (Board Room), department event coffee (KAFAA-2, 25 pax).
+
+**Request Type:** `coffee_break_request`
+
+**Lifecycle:** Submitted → Assigned → In Progress → Delivered → Confirmed
+
+Both request types appear as dedicated KPI cards on the dashboard, with separate tables showing the latest open requests per type.
+
+---
+
+## Ministry of Energy — Demo Data
+
+The demo environment is seeded with real data from the Ministry of Energy cafeteria operation:
+
+**Floor Structure (27 locations):**
+
+- Main Building: 2F, 3F, 4F, 5F, 6F, 7F, 8F, 9F, 10F, 11F, 12F, 13F, 14F, 15F, 16F, 17F, 18F, 19F
+- RD Building: RD 1&2, RD 3&4
+- Kafaa Building: KAFAA-1, KAFAA-2, KAFAA-3, KAFAA-4
+- Service Areas: MAKASSB, OLD, SECURITY
+
+**Food Items (20 items, real monthly limits):**
+
+Breakfast Sandwiches (19,635/month), Lunch Sandwiches (11,235), Gluten Free Breads (2,100),
+Breakfast Meals (3,213), Lunch Meals (17,157), Fresh Fruits (10,500), Soups (5,040),
+Salads (10,080), Sweet Bakery's (8,400), Salted Bakery's (8,400), Yogurts (5,040),
+Nuts / Dates (10,500), Sweets Cakes (3,360), Granola (4,830), Fresh Juices (10,500),
+Waraqnab / Fattah, Samoli, Pizza, Zaatar Bread, Om Ali.
+
+**Material Items (38 items):**
+
+Coffee: Original Blend, House Blend, Camel (Rwanda Cvanza), Siwar (Mananasi Uganda),
+Shovel (Hambela), Bica, Turkish Coffee, Cardamom, Saffron, Saudi Coffee (Dallah).
+
+Milk & Tea: Fresh Milk (Lactose Free), Vegetarian Milk, Black Tea, Green Tea,
+Camomile Tea, Karak Tea.
+
+Water & Drinks: Nova Water (Small), Tania Gallons Water, Soda Water, Soft Drinks, Almarai Juices.
+
+Condiments: White Sugar, Brown Sugar, Diet Sugar, Wooden Stir Sticks,
+Multi-Flavor Syrup, Hot Chocolate Mix, Condensed Milk, Bony Milk.
+
+Snacks & Disposables: Digestive Biscuits, Chips, Paper Cups (Hot), Espresso Cups,
+Paper Plates, Single Spoon, Single Knife, Single Fork, Cutlery Sets.
