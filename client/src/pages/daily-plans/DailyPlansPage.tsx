@@ -8,8 +8,9 @@ import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { StatusBadge } from '../../components/ui/Badge';
 import { Pagination } from '../../components/ui/Pagination';
 import { formatDate } from '../../utils/formatDate';
-import { Plus, Eye, Copy, Trash2 } from 'lucide-react';
+import { Plus, Eye, Copy, Trash2, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { downloadExport } from '../../utils/downloadExport';
 
 export function DailyPlansPage() {
   const { t } = useTranslation();
@@ -44,7 +45,15 @@ export function DailyPlansPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('dailyPlans.title')}</h1>
-        <Link to="/daily-plans/new" className="btn-primary"><Plus className="h-4 w-4" /> {t('common.newPlan')}</Link>
+        <div className="flex items-center gap-2">
+          <button onClick={() => downloadExport('/export/daily-plans/pdf', `Mirsad_Menu_Report_${new Date().toISOString().slice(0,10)}.pdf`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
+            <Download className="h-4 w-4" /> PDF
+          </button>
+          <button onClick={() => downloadExport('/export/daily-plans/excel', `Mirsad_Menu_Report_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
+            <Download className="h-4 w-4" /> Excel
+          </button>
+          <Link to="/daily-plans/new" className="btn-primary"><Plus className="h-4 w-4" /> {t('common.newPlan')}</Link>
+        </div>
       </div>
       <div className="card overflow-hidden">
         <table className="w-full text-sm">

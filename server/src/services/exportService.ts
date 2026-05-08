@@ -18,6 +18,8 @@ import { FloorCheck } from '../models/FloorCheck';
 import { FloorCheckLine } from '../models/FloorCheckLine';
 import { StockMovement } from '../models/StockMovement';
 import { ApprovalRecord } from '../models/ApprovalRecord';
+import { Transfer } from '../models/Transfer';
+import { DailyPlan } from '../models/DailyPlan';
 
 // ── Fonts ─────────────────────────────────────────────────────────────────────
 const FONTS_DIR   = path.resolve(__dirname, '../assets/fonts');
@@ -860,6 +862,210 @@ async function exportGenericReportExcel(report: any, res: Response): Promise<voi
 
   const sheetName = title.slice(0, 31);
   await buildExcel(res, `${safeName(title.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_'))}.xlsx`, sheetName, title, meta, cols, rows);
+}
+
+// ── Transfers (Daily Delivery) ────────────────────────────────────────────────
+const TR_COLS_PDF: PDFCol[] = [
+  { header: 'Transfer Date', key: 'date',      width: 75 },
+  { header: 'Floor',         key: 'floor',     width: 90 },
+  { header: 'Building',      key: 'building',  width: 90 },
+  { header: 'Items',         key: 'lineCount', width: 40, align: 'center' },
+  { header: 'Status',        key: 'status',    width: 65, status: true },
+  { header: 'Created By',    key: 'createdBy', width: 95 },
+  { header: 'Notes',         key: 'notes',     width: 60 },
+];
+const TR_COLS_XL: XLCol[] = [
+  { header: 'Transfer Date', key: 'date',      width: 16 },
+  { header: 'Floor',         key: 'floor',     width: 20 },
+  { header: 'Building',      key: 'building',  width: 20 },
+  { header: 'Line Items',    key: 'lineCount', width: 12 },
+  { header: 'Status',        key: 'status',    width: 18, status: true },
+  { header: 'Created By',    key: 'createdBy', width: 24 },
+  { header: 'Confirmed By',  key: 'confirmedBy',width: 24 },
+  { header: 'Confirmed At',  key: 'confirmedAt',width: 18 },
+  { header: 'Notes',         key: 'notes',     width: 30 },
+];
+
+export async function exportTransfersPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+  const filter: any = {};
+  if (opts.dateFrom || opts.dateTo) { filter.transferDate = {}; if (opts.dateFrom) filter.transferDate.$gte = opts.dateFrom; if (opts.dateTo) filter.transferDate.$lte = opts.dateTo; }
+  const recs = await Transfer.find(filter).sort({ transferDate: -1 })
+    .populate('floor', 'name').populate('building', 'name').populate('createdBy', 'fullName').lean();
+  const rows = recs.map((r: any) => ({
+    date:      format(new Date(r.transferDate), 'dd/MM/yyyy'),
+    floor:     (r.floor as any)?.name || '—',
+    building:  (r.building as any)?.name || '—',
+    lineCount: String(r.lines?.length ?? 0),
+    status:    r.status,
+    createdBy: (r.createdBy as any)?.fullName || '—',
+    notes:     r.notes || '',
+  }));
+  const meta: MetaEntry[] = [
+    { label: 'Report',    value: 'Daily Delivery / Transfers' },
+    { label: 'Period',    value: opts.dateFrom ? `${format(opts.dateFrom,'dd/MM/yyyy')} – ${format(opts.dateTo||new Date(),'dd/MM/yyyy')}` : 'All time' },
+    { label: 'Records',   value: String(rows.length) },
+    { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
+  ];
+  await buildPDF(res, `${safeName('Daily_Delivery_Report')}.pdf`, 'Daily Delivery Report', undefined, meta, TR_COLS_PDF, rows);
+}
+
+export async function exportTransfersExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+  const filter: any = {};
+  if (opts.dateFrom || opts.dateTo) { filter.transferDate = {}; if (opts.dateFrom) filter.transferDate.$gte = opts.dateFrom; if (opts.dateTo) filter.transferDate.$lte = opts.dateTo; }
+  const recs = await Transfer.find(filter).sort({ transferDate: -1 })
+    .populate('floor', 'name').populate('building', 'name')
+    .populate('createdBy', 'fullName').populate('confirmedBy', 'fullName').lean();
+  const rows = recs.map((r: any) => ({
+    date:        format(new Date(r.transferDate), 'dd/MM/yyyy'),
+    floor:       (r.floor as any)?.name || '—',
+    building:    (r.building as any)?.name || '—',
+    lineCount:   r.lines?.length ?? 0,
+    status:      r.status,
+    createdBy:   (r.createdBy as any)?.fullName || '—',
+    confirmedBy: (r.confirmedBy as any)?.fullName || '—',
+    confirmedAt: r.confirmedAt ? format(new Date(r.confirmedAt), 'dd/MM/yyyy HH:mm') : '—',
+    notes:       r.notes || '',
+  }));
+  const meta: MetaEntry[] = [
+    { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom,'dd MMM yyyy')} – ${format(opts.dateTo||new Date(),'dd MMM yyyy')}` : 'All time' },
+    { label: 'Records', value: String(rows.length) },
+  ];
+  await buildExcel(res, `${safeName('Daily_Delivery_Report')}.xlsx`, 'Transfers', 'Daily Delivery Report', meta, TR_COLS_XL, rows);
+}
+
+// ── Daily Plans (Menu Report) ─────────────────────────────────────────────────
+const DP_COLS_PDF: PDFCol[] = [
+  { header: 'Date',          key: 'date',      width: 72 },
+  { header: 'Shift',         key: 'shift',     width: 60 },
+  { header: 'Building',      key: 'building',  width: 110 },
+  { header: 'Plan Lines',    key: 'lineCount', width: 55, align: 'center' },
+  { header: 'Status',        key: 'status',    width: 70, status: true },
+  { header: 'Created By',    key: 'createdBy', width: 90 },
+  { header: 'Notes',         key: 'notes',     width: 58 },
+];
+const DP_COLS_XL: XLCol[] = [
+  { header: 'Date',         key: 'date',      width: 16 },
+  { header: 'Shift',        key: 'shift',     width: 14 },
+  { header: 'Building',     key: 'building',  width: 24 },
+  { header: 'Plan Lines',   key: 'lineCount', width: 12 },
+  { header: 'Status',       key: 'status',    width: 18, status: true },
+  { header: 'Created By',   key: 'createdBy', width: 24 },
+  { header: 'Notes',        key: 'notes',     width: 30 },
+];
+
+export async function exportDailyPlansPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+  const filter: any = {};
+  if (opts.dateFrom || opts.dateTo) { filter.date = {}; if (opts.dateFrom) filter.date.$gte = opts.dateFrom; if (opts.dateTo) filter.date.$lte = opts.dateTo; }
+  const recs = await DailyPlan.find(filter).sort({ date: -1 })
+    .populate('building', 'name').populate('createdBy', 'fullName').lean();
+  const rows = recs.map((r: any) => ({
+    date:      format(new Date(r.date), 'dd/MM/yyyy'),
+    shift:     r.shift,
+    building:  (r.building as any)?.name || '—',
+    lineCount: String(r.lines?.length ?? 0),
+    status:    r.status,
+    createdBy: (r.createdBy as any)?.fullName || '—',
+    notes:     r.notes || '',
+  }));
+  const meta: MetaEntry[] = [
+    { label: 'Report',    value: 'Daily Menu / Plans' },
+    { label: 'Period',    value: opts.dateFrom ? `${format(opts.dateFrom,'dd/MM/yyyy')} – ${format(opts.dateTo||new Date(),'dd/MM/yyyy')}` : 'All time' },
+    { label: 'Records',   value: String(rows.length) },
+    { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
+  ];
+  await buildPDF(res, `${safeName('Menu_Report')}.pdf`, 'Daily Menu Report', undefined, meta, DP_COLS_PDF, rows);
+}
+
+export async function exportDailyPlansExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+  const filter: any = {};
+  if (opts.dateFrom || opts.dateTo) { filter.date = {}; if (opts.dateFrom) filter.date.$gte = opts.dateFrom; if (opts.dateTo) filter.date.$lte = opts.dateTo; }
+  const recs = await DailyPlan.find(filter).sort({ date: -1 })
+    .populate('building', 'name').populate('createdBy', 'fullName').lean();
+  const rows = recs.map((r: any) => ({
+    date:      format(new Date(r.date), 'dd/MM/yyyy'),
+    shift:     r.shift,
+    building:  (r.building as any)?.name || '—',
+    lineCount: r.lines?.length ?? 0,
+    status:    r.status,
+    createdBy: (r.createdBy as any)?.fullName || '—',
+    notes:     r.notes || '',
+  }));
+  const meta: MetaEntry[] = [
+    { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom,'dd MMM yyyy')} – ${format(opts.dateTo||new Date(),'dd MMM yyyy')}` : 'All time' },
+    { label: 'Records', value: String(rows.length) },
+  ];
+  await buildExcel(res, `${safeName('Menu_Report')}.xlsx`, 'Daily Plans', 'Daily Menu Report', meta, DP_COLS_XL, rows);
+}
+
+// ── Food Inventory (separate typed export) ────────────────────────────────────
+export async function exportFoodInventoryPDF(res: Response, opts: { period?: string } = {}) {
+  const period = opts.period || format(new Date(), 'yyyy-MM');
+  const balances = await InventoryBalance.find({ period })
+    .populate({ path: 'item', match: { type: 'food' }, populate: { path: 'category', select: 'name' } }).lean();
+  const rows = balances.filter((b: any) => b.item).map((b: any) => ({
+    itemName:  b.item?.name || '—',
+    category:  b.item?.category?.name || '—',
+    unit:      b.item?.unit || '—',
+    limit:     String(b.monthlyLimit),
+    opening:   String(b.openingBalance),
+    received:  String(b.receivedQty),
+    consumed:  String(b.consumedQty ?? b.issuedQty ?? 0),
+    remaining: String(b.remainingQty),
+    status:    b.status,
+  }));
+  const cols: PDFCol[] = [
+    { header: 'Item Name',    key: 'itemName',  width: 150 },
+    { header: 'Category',     key: 'category',  width: 85 },
+    { header: 'Unit',         key: 'unit',      width: 35 },
+    { header: 'Limit',        key: 'limit',     width: 45, align: 'center' },
+    { header: 'Opening',      key: 'opening',   width: 45, align: 'center' },
+    { header: 'Received',     key: 'received',  width: 45, align: 'center' },
+    { header: 'Consumed',     key: 'consumed',  width: 45, align: 'center' },
+    { header: 'Remaining',    key: 'remaining', width: 50, align: 'center' },
+    { header: 'Status',       key: 'status',    width: 55, status: true },
+  ];
+  const meta: MetaEntry[] = [
+    { label: 'Report',    value: 'Food Inventory' },
+    { label: 'Period',    value: period },
+    { label: 'Records',   value: String(rows.length) },
+    { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
+  ];
+  await buildPDF(res, `${safeName('Food_Inventory_Report')}.pdf`, 'Food Inventory Report', period, meta, cols, rows);
+}
+
+export async function exportMaterialsInventoryPDF(res: Response, opts: { period?: string } = {}) {
+  const period = opts.period || format(new Date(), 'yyyy-MM');
+  const balances = await InventoryBalance.find({ period })
+    .populate({ path: 'item', match: { type: 'material' }, populate: { path: 'category', select: 'name' } }).lean();
+  const rows = balances.filter((b: any) => b.item).map((b: any) => ({
+    itemName:  b.item?.name || '—',
+    category:  b.item?.category?.name || '—',
+    unit:      b.item?.unit || '—',
+    limit:     String(b.monthlyLimit),
+    opening:   String(b.openingBalance),
+    received:  String(b.receivedQty),
+    issued:    String(b.issuedQty ?? 0),
+    remaining: String(b.remainingQty),
+    status:    b.status,
+  }));
+  const cols: PDFCol[] = [
+    { header: 'Item Name',    key: 'itemName',  width: 150 },
+    { header: 'Category',     key: 'category',  width: 85 },
+    { header: 'Unit',         key: 'unit',      width: 35 },
+    { header: 'Limit',        key: 'limit',     width: 45, align: 'center' },
+    { header: 'Opening',      key: 'opening',   width: 45, align: 'center' },
+    { header: 'Received',     key: 'received',  width: 45, align: 'center' },
+    { header: 'Issued',       key: 'issued',    width: 45, align: 'center' },
+    { header: 'Remaining',    key: 'remaining', width: 50, align: 'center' },
+    { header: 'Status',       key: 'status',    width: 55, status: true },
+  ];
+  const meta: MetaEntry[] = [
+    { label: 'Report',    value: 'Materials Inventory' },
+    { label: 'Period',    value: period },
+    { label: 'Records',   value: String(rows.length) },
+    { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
+  ];
+  await buildPDF(res, `${safeName('Materials_Inventory_Report')}.pdf`, 'Materials Inventory Report', period, meta, cols, rows);
 }
 
 // ── Re-export improved floor check exporters ──────────────────────────────────

@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { Plus, X, CheckCircle2, ArrowRightLeft, Layers } from 'lucide-react';
+import { Plus, X, CheckCircle2, ArrowRightLeft, Layers, Download } from 'lucide-react';
 import apiClient from '../../api/client';
+import { downloadExport } from '../../utils/downloadExport';
+import toast from 'react-hot-toast';
 import { Transfer } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
@@ -129,9 +131,17 @@ export function TransfersPage() {
           <h1 className="text-2xl font-bold text-slate-900">{t('transfers.title')}</h1>
           <p className="text-slate-500 text-sm mt-1">{t('transfers.subtitle')}</p>
         </div>
-        <button onClick={() => setShowForm(f => !f)} className="btn-primary flex items-center gap-2">
-          {showForm ? <><X className="h-4 w-4" />{t('common.cancel')}</> : <><Plus className="h-4 w-4" />{t('transfers.new')}</>}
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => downloadExport('/export/transfers/pdf', `Mirsad_Daily_Delivery_${new Date().toISOString().slice(0,10)}.pdf`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
+            <Download className="h-4 w-4" /> PDF
+          </button>
+          <button onClick={() => downloadExport('/export/transfers/excel', `Mirsad_Daily_Delivery_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
+            <Download className="h-4 w-4" /> Excel
+          </button>
+          <button onClick={() => setShowForm(f => !f)} className="btn-primary flex items-center gap-2">
+            {showForm ? <><X className="h-4 w-4" />{t('common.cancel')}</> : <><Plus className="h-4 w-4" />{t('transfers.new')}</>}
+          </button>
+        </div>
       </div>
 
       {success && (

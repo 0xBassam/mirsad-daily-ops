@@ -9,6 +9,8 @@ import { StatusBadge } from '../../components/ui/Badge';
 import { Pagination } from '../../components/ui/Pagination';
 import { format } from 'date-fns';
 import { Download } from 'lucide-react';
+import { downloadExport } from '../../utils/downloadExport';
+import toast from 'react-hot-toast';
 
 export function FoodInventoryPage() {
   const { t } = useTranslation();
@@ -33,9 +35,14 @@ export function FoodInventoryPage() {
         </div>
         <div className="flex items-center gap-3">
           <input type="month" className="input w-40" value={period} onChange={e => setPeriod(e.target.value)} />
-          <a href={`/api/reports/inventory/food/excel?period=${period}`} target="_blank" rel="noreferrer" className="btn-secondary">
-            <Download className="h-4 w-4" /> {t('common.export')}
-          </a>
+          <div className="flex gap-2">
+            <button onClick={() => downloadExport(`/export/food-inventory/pdf?period=${period}`, `Mirsad_Food_Inventory_${period}.pdf`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
+              <Download className="h-4 w-4" /> PDF
+            </button>
+            <button onClick={() => downloadExport(`/export/inventory/excel?type=food&period=${period}`, `Mirsad_Food_Inventory_${period}.xlsx`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
+              <Download className="h-4 w-4" /> Excel
+            </button>
+          </div>
         </div>
       </div>
       <div className="card overflow-hidden">

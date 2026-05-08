@@ -14,6 +14,12 @@ import {
   exportAuditLogListExcel,
   exportReportPDF,
   exportReportExcel,
+  exportTransfersListPDF,
+  exportTransfersListExcel,
+  exportDailyPlansListPDF,
+  exportDailyPlansListExcel,
+  exportFoodInventoryListPDF,
+  exportMaterialsInventoryListPDF,
 } from '../controllers/exportController';
 
 const router = Router();
@@ -32,5 +38,11 @@ router.get('/audit-logs/pdf',   exportAuditLogListPDF);
 router.get('/audit-logs/excel', exportAuditLogListExcel);
 router.get('/reports/:id/pdf',   exportReportPDF);
 router.get('/reports/:id/excel', exportReportExcel);
+router.get('/transfers/pdf',   exportTransfersListPDF);
+router.get('/transfers/excel', exportTransfersListExcel);
+router.get('/daily-plans/pdf',   exportDailyPlansListPDF);
+router.get('/daily-plans/excel', exportDailyPlansListExcel);
+router.get('/food-inventory/pdf',      exportFoodInventoryListPDF);
+router.get('/materials-inventory/pdf', exportMaterialsInventoryListPDF);
 
 export default router;

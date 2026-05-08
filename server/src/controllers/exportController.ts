@@ -16,6 +16,12 @@ import {
   exportAuditLogsExcel,
   exportSavedReportPDF,
   exportSavedReportExcel,
+  exportTransfersPDF,
+  exportTransfersExcel,
+  exportDailyPlansPDF,
+  exportDailyPlansExcel,
+  exportFoodInventoryPDF,
+  exportMaterialsInventoryPDF,
 } from '../services/exportService';
 
 function parseDateOpts(req: Request) {
@@ -95,4 +101,36 @@ export const exportReportPDF = asyncHandler(async (req: Request, res: Response) 
 export const exportReportExcel = asyncHandler(async (req: Request, res: Response) => {
   await exportSavedReportExcel(req.params.id, res);
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'report', entityId: req.params.id, req });
+});
+
+export const exportTransfersListPDF = asyncHandler(async (req: Request, res: Response) => {
+  await exportTransfersPDF(res, parseDateOpts(req));
+  await logAction({ userId: req.user?.userId, action: 'export', entityType: 'transfer', req });
+});
+
+export const exportTransfersListExcel = asyncHandler(async (req: Request, res: Response) => {
+  await exportTransfersExcel(res, parseDateOpts(req));
+  await logAction({ userId: req.user?.userId, action: 'export', entityType: 'transfer', req });
+});
+
+export const exportDailyPlansListPDF = asyncHandler(async (req: Request, res: Response) => {
+  await exportDailyPlansPDF(res, parseDateOpts(req));
+  await logAction({ userId: req.user?.userId, action: 'export', entityType: 'daily_plan', req });
+});
+
+export const exportDailyPlansListExcel = asyncHandler(async (req: Request, res: Response) => {
+  await exportDailyPlansExcel(res, parseDateOpts(req));
+  await logAction({ userId: req.user?.userId, action: 'export', entityType: 'daily_plan', req });
+});
+
+export const exportFoodInventoryListPDF = asyncHandler(async (req: Request, res: Response) => {
+  const period = req.query.period as string | undefined;
+  await exportFoodInventoryPDF(res, { period });
+  await logAction({ userId: req.user?.userId, action: 'export', entityType: 'inventory', req });
+});
+
+export const exportMaterialsInventoryListPDF = asyncHandler(async (req: Request, res: Response) => {
+  const period = req.query.period as string | undefined;
+  await exportMaterialsInventoryPDF(res, { period });
+  await logAction({ userId: req.user?.userId, action: 'export', entityType: 'inventory', req });
 });
