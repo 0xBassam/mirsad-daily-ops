@@ -416,9 +416,11 @@ export async function seedDemo(): Promise<void> {
 
   // ── Purchase Orders ───────────────────────────────────────────────────────────
   const currentMonth = monthPeriod(0);
-  const po1Id = oid(), po2Id = oid(), po3Id = oid();
+  const po1Id = oid(), po2Id = oid(), po3Id = oid(), po4Id = oid(), po5Id = oid();
   const soMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const eoMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const soNov24 = new Date(2024, 10, 1);
+  const eoNov24 = new Date(2024, 10, 30);
 
   await db.collection('purchaseorders').insertMany([
     {
@@ -468,6 +470,57 @@ export async function seedDemo(): Promise<void> {
         { _id: oid(), item: iSingleSpoon, unit: 'pcs',    approvedQty: 15000,receivedQty: 8000, distributedQty: 6000, consumedQty: 0, remainingQty: 9000, variance: 0 },
       ],
       createdBy: adminId, createdAt: daysAgo(18), updatedAt: now,
+    },
+    {
+      _id: po4Id,
+      poNumber: 'PO-2024-11-001',
+      supplier: sup1Id, project: projectId, month: '2024-11',
+      startDate: soNov24, endDate: eoNov24, status: 'fully_received',
+      notes: 'Monthly food allocation — November 2024 — Ministry of Energy Cafeteria',
+      lines: [
+        { _id: oid(), item: iBrSand,  unit: 'pcs',  approvedQty: 20570, receivedQty: 20570, distributedQty: 20200, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iLuSand,  unit: 'pcs',  approvedQty: 11770, receivedQty: 11770, distributedQty: 11500, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iGluFree, unit: 'pcs',  approvedQty: 2200,  receivedQty: 2200,  distributedQty: 2100,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iBrMeal,  unit: 'pcs',  approvedQty: 3366,  receivedQty: 3366,  distributedQty: 3300,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iLuMeal,  unit: 'box',  approvedQty: 17974, receivedQty: 17974, distributedQty: 17800, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iSalad,   unit: 'bowl', approvedQty: 10560, receivedQty: 10560, distributedQty: 10400, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iFruit,   unit: 'pcs',  approvedQty: 11000, receivedQty: 11000, distributedQty: 10800, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iSwBake,  unit: 'pcs',  approvedQty: 8800,  receivedQty: 8800,  distributedQty: 8600,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iYogurt,  unit: 'cup',  approvedQty: 5280,  receivedQty: 5280,  distributedQty: 5200,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iNuts,    unit: 'pack', approvedQty: 11000, receivedQty: 11000, distributedQty: 10900, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iGranola, unit: 'bar',  approvedQty: 5060,  receivedQty: 5060,  distributedQty: 5000,  consumedQty: 0, remainingQty: 0, variance: 0 },
+      ],
+      createdBy: managerId, createdAt: new Date('2024-10-28'), updatedAt: new Date('2024-11-30'),
+    },
+    {
+      _id: po5Id,
+      poNumber: 'PO-2024-11-002',
+      supplier: sup3Id, project: projectId, month: '2024-11',
+      startDate: soNov24, endDate: eoNov24, status: 'fully_received',
+      notes: 'Monthly beverages & materials — November 2024 — Ministry of Energy Cafeteria',
+      lines: [
+        { _id: oid(), item: iOrigBlend,   unit: 'kg',     approvedQty: 200,  receivedQty: 200,  distributedQty: 195,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iHouseBlend,  unit: 'kg',     approvedQty: 300,  receivedQty: 300,  distributedQty: 295,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iTurkish,     unit: 'kg',     approvedQty: 20,   receivedQty: 20,   distributedQty: 20,   consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iCardamom,    unit: 'kg',     approvedQty: 10,   receivedQty: 10,   distributedQty: 10,   consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iSaffron,     unit: 'gr',     approvedQty: 250,  receivedQty: 250,  distributedQty: 248,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iSaudiCoffee, unit: 'kg',     approvedQty: 90,   receivedQty: 90,   distributedQty: 88,   consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iFreshMilk,   unit: 'L',      approvedQty: 3082, receivedQty: 3082, distributedQty: 3050, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iVegMilk,     unit: 'L',      approvedQty: 251,  receivedQty: 251,  distributedQty: 250,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iBlackTea,    unit: 'carton', approvedQty: 319,  receivedQty: 319,  distributedQty: 315,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iGreenTea,    unit: 'carton', approvedQty: 50,   receivedQty: 50,   distributedQty: 50,   consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iKarakTea,    unit: 'carton', approvedQty: 230,  receivedQty: 230,  distributedQty: 228,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iNovaWater,   unit: 'carton', approvedQty: 5016, receivedQty: 5016, distributedQty: 5000, consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iWhiteSugar,  unit: 'kg',     approvedQty: 120,  receivedQty: 120,  distributedQty: 118,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iDietSugar,   unit: 'carton', approvedQty: 58,   receivedQty: 58,   distributedQty: 57,   consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iWoodenStick, unit: 'carton', approvedQty: 6,    receivedQty: 6,    distributedQty: 6,    consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iSyrup,       unit: 'pcs',    approvedQty: 40,   receivedQty: 40,   distributedQty: 38,   consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iHotChoc,     unit: 'kg',     approvedQty: 198,  receivedQty: 198,  distributedQty: 195,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iCondMilk,    unit: 'pcs',    approvedQty: 418,  receivedQty: 418,  distributedQty: 415,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iBonyMilk,    unit: 'pcs',    approvedQty: 472,  receivedQty: 472,  distributedQty: 470,  consumedQty: 0, remainingQty: 0, variance: 0 },
+        { _id: oid(), item: iChips,       unit: 'pack',   approvedQty: 4510, receivedQty: 4510, distributedQty: 4500, consumedQty: 0, remainingQty: 0, variance: 0 },
+      ],
+      createdBy: managerId, createdAt: new Date('2024-10-28'), updatedAt: new Date('2024-11-30'),
     },
   ]);
 
@@ -799,5 +852,5 @@ export async function seedDemo(): Promise<void> {
     { _id: oid(), user: supervisorId, action: 'update', entityType: 'client_request',    createdAt: now },
   ]);
 
-  console.log('Demo seeded: Ministry of Energy | 5 users · 27 floors · 20 food items · 38 material items · 5 suppliers · 6 operation requests · 6 coffee break requests · 3 POs · 3 receivings · 4 maintenance · 4 fridge checks · 4 corrective actions · 7 reports');
+  console.log('Demo seeded: Ministry of Energy | 5 users · 27 floors · 20 food items · 38 material items · 5 suppliers · 6 operation requests · 6 coffee break requests · 5 POs (incl. Nov 2024 historical) · 3 receivings · 4 maintenance · 4 fridge checks · 4 corrective actions · 7 reports');
 }

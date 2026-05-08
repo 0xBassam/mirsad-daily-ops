@@ -395,6 +395,40 @@ export const PURCHASE_ORDERS = [
     ],
     createdBy:{ _id:USERS[7]._id, fullName:USERS[7].fullName }, createdAt:d(18), updatedAt:d(4),
   },
+  {
+    _id:pad('po',6), poNumber:'PO-2024-11-001',
+    supplier:{ _id:SUPPLIERS[0]._id, name:SUPPLIERS[0].name, category:'food' },
+    project:{ _id:PROJECT_IDS[0], name:PROJECTS[0].name },
+    month:'2024-11', startDate:'2024-11-01', endDate:'2024-11-30', status:'fully_received' as const,
+    notes:'Monthly food allocation — November 2024 — Ministry of Energy Cafeteria',
+    lines:[
+      poLine(1,  0, 20570, 20570, 20200, 0),
+      poLine(2,  1, 11770, 11770, 11500, 0),
+      poLine(3,  2, 17974, 17974, 17800, 0),
+      poLine(4,  3, 10560, 10560, 10400, 0),
+      poLine(5,  4, 11000, 11000, 10800, 0),
+      poLine(6,  5,  8800,  8800,  8600, 0),
+      poLine(7,  6,  5280,  5280,  5200, 0),
+      poLine(8,  7, 11000, 11000, 10900, 0),
+    ],
+    createdBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:'2024-10-28T08:00:00.000Z', updatedAt:'2024-11-30T18:00:00.000Z',
+  },
+  {
+    _id:pad('po',7), poNumber:'PO-2024-11-002',
+    supplier:{ _id:SUPPLIERS[2]._id, name:SUPPLIERS[2].name, category:'material' },
+    project:{ _id:PROJECT_IDS[0], name:PROJECTS[0].name },
+    month:'2024-11', startDate:'2024-11-01', endDate:'2024-11-30', status:'fully_received' as const,
+    notes:'Monthly beverages & materials — November 2024 — Ministry of Energy Cafeteria',
+    lines:[
+      poLine(9,  20,  200,  200, 195, 0),
+      poLine(10, 21,  300,  300, 295, 0),
+      poLine(11, 22, 3082, 3082,3050, 0),
+      poLine(12, 23,  319,  319, 315, 0),
+      poLine(13, 24,   90,   90,  88, 0),
+      poLine(14, 25, 5016, 5016,5000, 0),
+    ],
+    createdBy:{ _id:USERS[6]._id, fullName:USERS[6].fullName }, createdAt:'2024-10-28T08:00:00.000Z', updatedAt:'2024-11-30T18:00:00.000Z',
+  },
 ];
 
 // ── TRANSFERS ─────────────────────────────────────────────────────────────────
