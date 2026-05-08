@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { MessageSquare, Plus } from 'lucide-react';
+import { MessageSquare, Plus, Clock, Play, Truck, CheckCircle2, User, CalendarDays, Package } from 'lucide-react';
 import { clsx } from 'clsx';
 import apiClient from '../../api/client';
 import { ClientRequest } from '../../types';
@@ -12,10 +12,17 @@ import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { Pagination } from '../../components/ui/Pagination';
 
 const PRIORITY_RING: Record<string, string> = {
-  urgent: 'border-s-4 border-s-red-600',
+  urgent: 'border-s-4 border-s-red-500',
   high:   'border-s-4 border-s-orange-500',
   medium: 'border-s-4 border-s-amber-400',
   low:    'border-s-4 border-s-slate-300',
+};
+
+const PRIORITY_DOT: Record<string, string> = {
+  urgent: 'bg-red-500',
+  high:   'bg-orange-400',
+  medium: 'bg-amber-400',
+  low:    'bg-slate-300',
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -52,6 +59,7 @@ export function ClientRequestsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
@@ -60,26 +68,34 @@ export function ClientRequestsPage() {
           </h1>
           <p className="text-slate-500 text-sm mt-1">{t('clientRequests.subtitle')}</p>
         </div>
-        <button onClick={() => navigate('/client-requests/new')} className="btn-primary flex items-center gap-2">
+        <button onClick={() => navigate('/client-requests/new')} className="btn-primary">
           <Plus className="h-4 w-4" />{t('clientRequests.new')}
         </button>
       </div>
 
+      {/* Status Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: t('status.submitted'),   value: statusCounts.submitted,   color: 'bg-amber-50  border-amber-200  text-amber-700'  },
-          { label: t('status.in_progress'), value: statusCounts.in_progress, color: 'bg-blue-50   border-blue-200   text-blue-700'   },
-          { label: t('status.delivered'),   value: statusCounts.delivered,   color: 'bg-purple-50 border-purple-200 text-purple-700' },
-          { label: t('status.confirmed'),   value: statusCounts.confirmed,   color: 'bg-green-50  border-green-200  text-green-700'  },
+          { label: t('status.submitted'),   value: statusCounts.submitted,   Icon: Clock,        bg: 'bg-amber-500',   color: 'text-amber-600',   border: 'border-amber-200',   light: 'bg-amber-50' },
+          { label: t('status.in_progress'), value: statusCounts.in_progress, Icon: Play,         bg: 'bg-blue-500',    color: 'text-blue-600',    border: 'border-blue-200',    light: 'bg-blue-50' },
+          { label: t('status.delivered'),   value: statusCounts.delivered,   Icon: Truck,        bg: 'bg-violet-500',  color: 'text-violet-600',  border: 'border-violet-200',  light: 'bg-violet-50' },
+          { label: t('status.confirmed'),   value: statusCounts.confirmed,   Icon: CheckCircle2, bg: 'bg-emerald-500', color: 'text-emerald-600', border: 'border-emerald-200', light: 'bg-emerald-50' },
         ].map(c => (
-          <div key={c.label} className={`rounded-xl border p-4 ${c.color}`}>
-            <p className="text-2xl font-bold">{c.value}</p>
-            <p className="text-xs font-medium mt-1">{c.label}</p>
+          <div key={c.label} className={`${c.light} border ${c.border} rounded-2xl p-4 flex items-center gap-3`}>
+            <div className={`p-2.5 rounded-xl ${c.bg} flex-shrink-0`}>
+              <c.Icon className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <p className={`text-2xl font-extrabold tabular-nums ${c.color}`}>{c.value}</p>
+              <p className="text-xs font-semibold text-slate-600 mt-0.5">{c.label}</p>
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Filter Bar */}
+      <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3 shadow-sm">
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Filter</span>
         <select className="input w-44" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">{t('common.allStatuses')}</option>
           {['submitted','assigned','in_progress','delivered','confirmed','rejected'].map(s => (
@@ -92,37 +108,76 @@ export function ClientRequestsPage() {
             <option key={t2} value={t2}>{t(`clientRequests.types.${t2}`)}</option>
           ))}
         </select>
+        {(statusFilter || typeFilter) && (
+          <button
+            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            onClick={() => { setStatusFilter(''); setTypeFilter(''); setPage(1); }}
+          >
+            Clear
+          </button>
+        )}
+        <span className="ms-auto text-xs text-slate-400 font-medium">
+          {requests.length} request{requests.length !== 1 ? 's' : ''}
+        </span>
       </div>
 
-      <div className="space-y-2">
+      {/* Request Cards */}
+      <div className="space-y-2.5">
         {requests.length === 0 && (
-          <div className="card p-8 text-center text-slate-400">{t('common.noData')}</div>
+          <div className="bg-white rounded-2xl border border-slate-200 p-10 text-center shadow-sm">
+            <MessageSquare className="h-8 w-8 text-slate-200 mx-auto mb-2" />
+            <p className="text-slate-400 text-sm">{t('common.noData')}</p>
+          </div>
         )}
         {requests.map(req => (
           <div
             key={req._id}
             onClick={() => navigate(`/client-requests/${req._id}`)}
-            className={clsx('card p-4 cursor-pointer hover:shadow-md transition-shadow', PRIORITY_RING[req.priority])}
+            className={clsx(
+              'bg-white rounded-2xl border border-slate-200 p-4 cursor-pointer hover:shadow-md hover:border-indigo-200 transition-all',
+              PRIORITY_RING[req.priority],
+            )}
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[req.requestType]}`}>
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                  <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${TYPE_COLORS[req.requestType]}`}>
                     {t(`clientRequests.types.${req.requestType}`)}
                   </span>
-                  <h3 className="font-semibold text-slate-900 truncate">{req.title}</h3>
+                  <h3 className="font-semibold text-slate-900 text-sm">{req.title}</h3>
                 </div>
-                <p className="text-sm text-slate-500 line-clamp-1">{req.description}</p>
-                <div className="flex flex-wrap gap-3 mt-2 text-xs text-slate-400">
-                  <span>{(req.requestedBy as any)?.fullName}</span>
-                  {req.expectedDelivery && <span>· {t('common.dueDate')}: {format(new Date(req.expectedDelivery), 'dd MMM')}</span>}
-                  {req.items?.length > 0 && <span>· {req.items.length} {t('clientRequests.items')}</span>}
-                  <span>· {format(new Date(req.createdAt), 'dd MMM')}</span>
+                {req.description && (
+                  <p className="text-xs text-slate-500 line-clamp-1 mb-2">{req.description}</p>
+                )}
+                <div className="flex flex-wrap gap-4 text-xs text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <User className="h-3 w-3" />
+                    {(req.requestedBy as any)?.fullName || '—'}
+                  </span>
+                  {req.expectedDelivery && (
+                    <span className="flex items-center gap-1">
+                      <CalendarDays className="h-3 w-3" />
+                      Due {format(new Date(req.expectedDelivery), 'dd MMM')}
+                    </span>
+                  )}
+                  {req.items?.length > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Package className="h-3 w-3" />
+                      {req.items.length} {t('clientRequests.items')}
+                    </span>
+                  )}
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {format(new Date(req.createdAt), 'dd MMM')}
+                  </span>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                <StatusBadge status={req.priority} />
+              <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
                 <StatusBadge status={req.status} />
+                <div className="flex items-center gap-1.5">
+                  <div className={`h-2 w-2 rounded-full ${PRIORITY_DOT[req.priority] ?? 'bg-slate-300'}`} />
+                  <span className="text-xs text-slate-500 capitalize">{req.priority}</span>
+                </div>
               </div>
             </div>
           </div>
