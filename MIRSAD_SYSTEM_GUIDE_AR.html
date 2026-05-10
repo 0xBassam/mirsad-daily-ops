@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>دليل نظام مرصاد - التشغيل والإجراءات</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Naskh Arabic', 'Arial', 'Tahoma', 'Segoe UI', sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+    color: #1e293b;
+    direction: rtl;
+    background: #f8fafc;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  @media print {
+    body { background: white; }
+    .page { box-shadow: none !important; margin: 0 !important; }
+  }
+
+  /* ── Page Shell ── */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 0 auto 8mm;
+    background: white;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    page-break-after: always;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .page:last-child { page-break-after: avoid; }
+
+  .page-body {
+    flex: 1;
+    padding: 14mm 16mm 6mm;
+  }
+
+  .page-footer {
+    padding: 4mm 16mm;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 8pt;
+    color: #94a3b8;
+    margin-top: auto;
+  }
+
+  .footer-brand {
+    font-size: 7.5pt;
+    color: #6366f1;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Cover Page ── */
+  .cover {
+    background: linear-gradient(160deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20mm;
+    text-align: center;
+    min-height: 297mm;
+    page-break-after: always;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .cover-emblem {
+    width: 72px; height: 72px;
+    background: rgba(255,255,255,0.12);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+    font-size: 32px;
+  }
+
+  .cover-ministry {
+    font-size: 11pt;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .cover-divider {
+    width: 60px; height: 1px;
+    background: rgba(255,255,255,0.3);
+    margin: 14px auto;
+  }
+
+  .cover-title {
+    font-size: 30pt;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1.2;
+    margin-bottom: 10px;
+  }
+
+  .cover-subtitle {
+    font-size: 13pt;
+    color: rgba(165,180,252,0.9);
+    margin-bottom: 28px;
+  }
+
+  .cover-meta {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 14px 28px;
+    display: inline-block;
+  }
+
+  .cover-meta p {
+    font-size: 9pt;
+    color: rgba(255,255,255,0.65);
+    margin: 3px 0;
+  }
+
+  .cover-meta strong { color: rgba(255,255,255,0.9); }
+
+  .cover-footer {
+    position: absolute;
+    bottom: 18mm;
+    left: 0; right: 0;
+    text-align: center;
+    font-size: 8pt;
+    color: rgba(255,255,255,0.4);
+  }
+
+  .cover-powered {
+    font-size: 8pt;
+    color: rgba(165,180,252,0.7);
+    margin-top: 20px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Section Headers ── */
+  .section-header {
+    margin-bottom: 12px;
+  }
+
+  .section-num {
+    display: inline-block;
+    background: #4f46e5;
+    color: white;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+  }
+
+  .section-group {
+    font-size: 8pt;
+    color: #6366f1;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 4px;
+  }
+
+  h1.section-title {
+    font-size: 18pt;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .section-desc {
+    font-size: 9.5pt;
+    color: #64748b;
+    margin-bottom: 10px;
+  }
+
+  .divider {
+    height: 3px;
+    background: linear-gradient(to left, #4f46e5, #818cf8, transparent);
+    border-radius: 2px;
+    margin-bottom: 14px;
+  }
+
+  /* ── TOC ── */
+  .toc-group-label {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #6366f1;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 14px 0 6px;
+    padding-right: 4px;
+    border-right: 3px solid #6366f1;
+  }
+
+  .toc-row {
+    display: flex;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 6px;
+    margin-bottom: 2px;
+    font-size: 10pt;
+  }
+
+  .toc-row:hover { background: #f1f5f9; }
+
+  .toc-num {
+    width: 26px; height: 26px;
+    background: #4f46e5;
+    color: white;
+    border-radius: 6px;
+    font-size: 8pt;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    margin-left: 10px;
+    flex-shrink: 0;
+  }
+
+  .toc-name { flex: 1; color: #1e293b; font-weight: 500; }
+  .toc-dots { flex: 1; border-bottom: 1px dotted #cbd5e1; margin: 0 8px; }
+  .toc-page { color: #64748b; font-size: 9pt; font-weight: 600; }
+
+  /* ── Purpose Box ── */
+  .purpose-box {
+    background: linear-gradient(135deg, #eef2ff, #e0e7ff);
+    border: 1px solid #c7d2fe;
+    border-right: 4px solid #4f46e5;
+    border-radius: 10px;
+    padding: 11px 14px;
+    margin-bottom: 12px;
+    break-inside: avoid;
+  }
+
+  .purpose-box .purpose-label {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #4f46e5;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+  }
+
+  .purpose-box p { font-size: 10pt; color: #374151; }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5pt;
+    margin-bottom: 12px;
+    break-inside: avoid;
+  }
+
+  thead { display: table-header-group; }
+
+  th {
+    background: #1e3a8a;
+    color: white;
+    padding: 7px 10px;
+    text-align: right;
+    font-weight: 600;
+    font-size: 9pt;
+  }
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: top;
+    color: #374151;
+    text-align: right;
+  }
+
+  tr:nth-child(even) td { background: #f8fafc; }
+  tr:hover td { background: #f1f5f9; }
+
+  /* ── Steps ── */
+  .steps { margin-bottom: 12px; }
+
+  .step {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 8px;
+    break-inside: avoid;
+  }
+
+  .step-num {
+    width: 24px; height: 24px;
+    background: #4f46e5;
+    color: white;
+    border-radius: 50%;
+    font-size: 9pt;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .step-content { flex: 1; }
+  .step-content strong { color: #1e293b; font-weight: 600; }
+  .step-content p { font-size: 9.5pt; color: #4b5563; margin-top: 2px; }
+
+  /* ── Status Flow ── */
+  .status-flow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    break-inside: avoid;
+    direction: ltr;
+  }
+
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 8.5pt;
+    font-weight: 600;
+    white-space: nowrap;
+    direction: rtl;
+  }
+
+  .pill-gray   { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; }
+  .pill-amber  { background: #fef3c7; color: #92400e; border: 1px solid #fcd34d; }
+  .pill-blue   { background: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+  .pill-violet { background: #ede9fe; color: #5b21b6; border: 1px solid #c4b5fd; }
+  .pill-green  { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+  .pill-red    { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
+  .pill-orange { background: #ffedd5; color: #9a3412; border: 1px solid #fdba74; }
+  .pill-indigo { background: #e0e7ff; color: #3730a3; border: 1px solid #a5b4fc; }
+  .pill-teal   { background: #ccfbf1; color: #134e4a; border: 1px solid #5eead4; }
+
+  .flow-arrow { color: #94a3b8; font-size: 12pt; flex-shrink: 0; }
+
+  /* ── Info Box ── */
+  .info-box {
+    border-right: 4px solid #0ea5e9;
+    background: #f0f9ff;
+    border-radius: 8px;
+    padding: 10px 13px;
+    margin-bottom: 10px;
+    break-inside: avoid;
+  }
+
+  .info-box.warning {
+    border-right-color: #f59e0b;
+    background: #fffbeb;
+  }
+
+  .info-box.success {
+    border-right-color: #10b981;
+    background: #f0fdf4;
+  }
+
+  .info-box .info-label {
+    font-size: 8pt;
+    font-weight: 700;
+    color: #0369a1;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .info-box.warning .info-label { color: #b45309; }
+  .info-box.success .info-label { color: #065f46; }
+  .info-box p { font-size: 9.5pt; color: #374151; }
+
+  /* ── Card Boxes (roles / summary) ── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .card-box {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    break-inside: avoid;
+  }
+
+  .card-box h4 {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 5px;
+  }
+
+  .card-box ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card-box ul li {
+    font-size: 9pt;
+    color: #4b5563;
+    padding: 2px 0;
+  }
+
+  .card-box ul li::before {
+    content: '✓ ';
+    color: #4f46e5;
+    font-weight: 700;
+  }
+
+  /* ── Sub-heading ── */
+  h2.sub {
+    font-size: 11pt;
+    font-weight: 700;
+    color: #1e3a8a;
+    margin: 12px 0 6px;
+    padding-right: 8px;
+    border-right: 3px solid #6366f1;
+  }
+
+  h3.sub2 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: #374151;
+    margin: 10px 0 5px;
+  }
+
+  /* ── Bullet list ── */
+  ul.bullets {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 10px;
+  }
+
+  ul.bullets li {
+    padding: 3px 0;
+    font-size: 9.5pt;
+    color: #374151;
+  }
+
+  ul.bullets li::before {
+    content: '• ';
+    color: #4f46e5;
+    font-weight: 700;
+  }
+
+  /* ── Back cover ── */
+  .back-cover {
+    background: linear-gradient(160deg, #0f172a 0%, #1e3a8a 70%, #312e81 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 297mm;
+    text-align: center;
+    padding: 20mm;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .back-cover h2 {
+    font-size: 22pt;
+    color: white;
+    margin-bottom: 12px;
+  }
+
+  .back-cover p {
+    font-size: 11pt;
+    color: rgba(255,255,255,0.65);
+    max-width: 120mm;
+    margin: 0 auto 20px;
+  }
+
+  .back-cover .powered {
+    font-size: 9pt;
+    color: rgba(165,180,252,0.8);
+    font-weight: 600;
+    margin-top: 30px;
+  }
+
+  orphans: 3;
+  widows: 3;
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     COVER PAGE
+══════════════════════════════════════════════════════ -->
+<div class="cover" style="position:relative;">
+  <div class="cover-emblem">🏢</div>
+  <p class="cover-ministry">وزارة الطاقة · المملكة العربية السعودية</p>
+  <div class="cover-divider"></div>
+  <h1 class="cover-title">دليل نظام مرصاد</h1>
+  <p class="cover-subtitle">توثيق شامل لإجراءات التشغيل والسير الوظيفي</p>
+  <div class="cover-meta">
+    <p><strong>الإصدار:</strong> 2.0 · <strong>التاريخ:</strong> مايو 2026</p>
+    <p><strong>التصنيف:</strong> للاستخدام الداخلي</p>
+    <p><strong>المختصون:</strong> الإدارة · المشرفون · مديرو المشاريع</p>
+  </div>
+  <p class="cover-powered">Powered by Security Standards</p>
+  <div class="cover-footer">
+    نظام مرصاد للعمليات اليومية · جميع الحقوق محفوظة © 2026
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <div class="section-group">الملاحة</div>
+      <h1 class="section-title">فهرس المحتويات</h1>
+    </div>
+    <div class="divider"></div>
+
+    <div class="toc-group-label">أساسيات النظام</div>
+    <div class="toc-row"><div class="toc-num">1</div><span class="toc-name">تسجيل الدخول والتحكم في الوصول</span><span class="toc-dots"></span><span class="toc-page">3</span></div>
+    <div class="toc-row"><div class="toc-num">2</div><span class="toc-name">أدوار المستخدمين والصلاحيات</span><span class="toc-dots"></span><span class="toc-page">4</span></div>
+    <div class="toc-row"><div class="toc-num">3</div><span class="toc-name">لوحة التحكم والمتابعة</span><span class="toc-dots"></span><span class="toc-page">5</span></div>
+
+    <div class="toc-group-label">العمليات اليومية</div>
+    <div class="toc-row"><div class="toc-num">4</div><span class="toc-name">دورة حياة طلب العميل</span><span class="toc-dots"></span><span class="toc-page">6</span></div>
+    <div class="toc-row"><div class="toc-num">5</div><span class="toc-name">طلب استراحة القهوة</span><span class="toc-dots"></span><span class="toc-page">7</span></div>
+    <div class="toc-row"><div class="toc-num">6</div><span class="toc-name">الطلب التشغيلي</span><span class="toc-dots"></span><span class="toc-page">8</span></div>
+
+    <div class="toc-group-label">المشتريات والاستلام</div>
+    <div class="toc-row"><div class="toc-num">7</div><span class="toc-name">أمر الشراء</span><span class="toc-dots"></span><span class="toc-page">9</span></div>
+    <div class="toc-row"><div class="toc-num">8</div><span class="toc-name">سير عملية الاستلام</span><span class="toc-dots"></span><span class="toc-page">10</span></div>
+
+    <div class="toc-group-label">إدارة المخزون</div>
+    <div class="toc-row"><div class="toc-num">9</div><span class="toc-name">مخزون الأغذية</span><span class="toc-dots"></span><span class="toc-page">11</span></div>
+    <div class="toc-row"><div class="toc-num">10</div><span class="toc-name">مستودع المواد</span><span class="toc-dots"></span><span class="toc-page">12</span></div>
+
+    <div class="toc-group-label">المنشأة والجودة</div>
+    <div class="toc-row"><div class="toc-num">11</div><span class="toc-name">طلبات الصيانة</span><span class="toc-dots"></span><span class="toc-page">13</span></div>
+    <div class="toc-row"><div class="toc-num">12</div><span class="toc-name">مسار الاعتماد والمراجعة</span><span class="toc-dots"></span><span class="toc-page">14</span></div>
+
+    <div class="toc-group-label">التقارير والامتثال</div>
+    <div class="toc-row"><div class="toc-num">13</div><span class="toc-name">التقارير والتصدير</span><span class="toc-dots"></span><span class="toc-page">15</span></div>
+    <div class="toc-row"><div class="toc-num">14</div><span class="toc-name">سجل المراجعة والمتابعة</span><span class="toc-dots"></span><span class="toc-page">16</span></div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>نظام مرصاد · فهرس المحتويات</span>
+    <span>2</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 1 — LOGIN & ACCESS CONTROL
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 1</span>
+      <div class="section-group">أساسيات النظام</div>
+      <h1 class="section-title">تسجيل الدخول والتحكم في الوصول</h1>
+      <p class="section-desc">بوابة آمنة للدخول إلى النظام مع صلاحيات مبنية على الدور الوظيفي</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يوفر نظام مرصاد بوابة دخول مركزية تتحقق من هوية المستخدم وتحدد صلاحياته تبعاً لدوره الوظيفي. كل مستخدم يصل فقط إلى الأقسام المرتبطة بمهامه.</p>
+    </div>
+
+    <h2 class="sub">حقول تسجيل الدخول</h2>
+    <table>
+      <thead>
+        <tr><th>الحقل</th><th>القيمة</th><th>ملاحظة</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>البريد الإلكتروني</td><td>demo@mirsad.app</td><td>مثال للنسخة التجريبية</td></tr>
+        <tr><td>كلمة المرور</td><td>demo1234</td><td>مشفرة ومحمية</td></tr>
+        <tr><td>الجلسة</td><td>تنتهي تلقائياً بعد عدم النشاط</td><td>لضمان الأمان</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">خطوات تسجيل الدخول</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>افتح صفحة النظام</strong><p>أدخل عنوان النظام في المتصفح</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>أدخل بيانات الدخول</strong><p>اكتب البريد الإلكتروني وكلمة المرور</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>اضغط "تسجيل الدخول"</strong><p>يتحقق النظام من صحة البيانات</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>التوجيه التلقائي</strong><p>يُحوَّل المستخدم إلى لوحة التحكم الخاصة بدوره</p></div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">ملاحظة أمنية</div>
+      <p>في حال فشل تسجيل الدخول 5 مرات متتالية، يُقفل الحساب مؤقتاً. تواصل مع مدير النظام لإعادة الضبط.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 1 · تسجيل الدخول</span>
+    <span>3</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 2 — USER ROLES & PERMISSIONS
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 2</span>
+      <div class="section-group">أساسيات النظام</div>
+      <h1 class="section-title">أدوار المستخدمين والصلاحيات</h1>
+      <p class="section-desc">هيكل الصلاحيات الخماسي الذي يضمن الأمان وفصل المهام</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُنظّم النظام المستخدمين في خمسة أدوار وظيفية، كل دور يملك صلاحيات محددة تضمن وصول كل شخص فقط لما يحتاجه في عمله.</p>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>الدور</th><th>الصلاحيات الرئيسية</th><th>النطاق</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>مدير النظام</strong></td><td>صلاحية كاملة على جميع الوحدات وإدارة المستخدمين</td><td>النظام بأكمله</td></tr>
+        <tr><td><strong>مشرف</strong></td><td>إدارة عمليات المشروع والاعتماد والتقارير</td><td>مشروع محدد</td></tr>
+        <tr><td><strong>مساعد المشرف</strong></td><td>إدخال البيانات وإرسال التقارير للمراجعة</td><td>مشروع محدد</td></tr>
+        <tr><td><strong>مدير المشروع</strong></td><td>مراجعة التقارير ومتابعة الأداء والموافقة</td><td>مشاريع متعددة</td></tr>
+        <tr><td><strong>عميل</strong></td><td>تقديم الطلبات ومتابعة حالتها وتأكيد التسليم</td><td>بوابة العميل</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">مصفوفة الصلاحيات</h2>
+    <div class="card-grid">
+      <div class="card-box">
+        <h4>🔴 مدير النظام</h4>
+        <ul>
+          <li>إنشاء المستخدمين والمشاريع</li>
+          <li>إدارة كل الوحدات</li>
+          <li>الوصول لسجل المراجعة</li>
+          <li>حذف البيانات وأرشفتها</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>🟠 مشرف</h4>
+        <ul>
+          <li>الاعتماد والرفض</li>
+          <li>تعيين المهام</li>
+          <li>إدارة أوامر الشراء</li>
+          <li>استعراض جميع تقارير المشروع</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>🟡 مساعد المشرف</h4>
+        <ul>
+          <li>إدخال فحوصات الطوابق</li>
+          <li>تسجيل الاستلام</li>
+          <li>إرسال التقارير</li>
+          <li>استعراض المخزون</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>🟢 عميل</h4>
+        <ul>
+          <li>تقديم الطلبات</li>
+          <li>متابعة الحالة</li>
+          <li>تأكيد الاستلام</li>
+          <li>عرض التقارير المخصصة</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info-box warning">
+      <div class="info-label">تحذير</div>
+      <p>لا يمكن لأي مستخدم تجاوز صلاحيات دوره. كل محاولة للوصول غير المصرح به تُسجَّل في سجل المراجعة.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 2 · الأدوار والصلاحيات</span>
+    <span>4</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 3 — DASHBOARD
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 3</span>
+      <div class="section-group">أساسيات النظام</div>
+      <h1 class="section-title">لوحة التحكم والمتابعة</h1>
+      <p class="section-desc">نظرة شاملة على أداء المشروع والتنبيهات الفورية</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>لوحة التحكم هي الصفحة الرئيسية التي تعرض مؤشرات الأداء الحيوية والتنبيهات العاجلة وآخر النشاطات بشكل فوري ومباشر عند الدخول.</p>
+    </div>
+
+    <h2 class="sub">المؤشرات الرئيسية</h2>
+    <table>
+      <thead>
+        <tr><th>المؤشر</th><th>الوصف</th><th>الأهمية</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>الفحوصات اليومية</td><td>عدد فحوصات الطوابق المكتملة والمعلقة</td><td>عالية</td></tr>
+        <tr><td>النواقص</td><td>عدد بنود الفرق بين المخطط والفعلي</td><td>عالية</td></tr>
+        <tr><td>المخزون المنخفض</td><td>أصناف قاربت على النفاد أو نفدت</td><td>عالية</td></tr>
+        <tr><td>الاعتمادات المعلقة</td><td>طلبات في انتظار الموافقة أو الرفض</td><td>متوسطة</td></tr>
+        <tr><td>الطلبات المفتوحة</td><td>طلبات العملاء والعمليات الجارية</td><td>متوسطة</td></tr>
+        <tr><td>أوامر الشراء</td><td>أوامر الشراء النشطة والمعلقة</td><td>متوسطة</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">أقسام لوحة التحكم</h2>
+    <div class="card-grid">
+      <div class="card-box">
+        <h4>📊 ملخص الأداء</h4>
+        <ul>
+          <li>نسبة الفحوصات المكتملة</li>
+          <li>إحصائيات التقارير</li>
+          <li>نشاط الاعتمادات</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>⚠️ التنبيهات</h4>
+        <ul>
+          <li>مخزون منخفض أو نافد</li>
+          <li>اقتراب تاريخ انتهاء الصلاحية</li>
+          <li>إجراءات تصحيحية مفتوحة</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>📋 آخر النشاطات</h4>
+        <ul>
+          <li>آخر طلبات العملاء</li>
+          <li>آخر عمليات الاستلام</li>
+          <li>آخر أوامر الشراء</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>📦 حالة المخزون</h4>
+        <ul>
+          <li>مخزون الأغذية (المتاح / المنخفض)</li>
+          <li>مخزون المواد (المتاح / النافد)</li>
+          <li>أصناف زيادة الاستهلاك</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info-box success">
+      <div class="info-label">نصيحة</div>
+      <p>ابدأ يومك دائماً بمراجعة لوحة التحكم للاطلاع على أي تنبيهات عاجلة تستدعي التدخل الفوري.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 3 · لوحة التحكم</span>
+    <span>5</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 4 — CLIENT REQUEST LIFECYCLE
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 4</span>
+      <div class="section-group">العمليات اليومية</div>
+      <h1 class="section-title">دورة حياة طلب العميل</h1>
+      <p class="section-desc">من تقديم الطلب حتى التأكيد النهائي عبر مراحل واضحة ومتتبعة</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُمكِّن العملاء من تقديم طلباتهم (تموين، صيانة، لوازم، فعاليات) ويتيح للفريق التشغيلي إدارتها ومتابعتها حتى التسليم والتأكيد.</p>
+    </div>
+
+    <h2 class="sub">أنواع الطلبات</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-orange">تموين</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-gray">صيانة</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-blue">لوازم</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-violet">فعاليات</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-teal">تنظيف</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-gray">أخرى</span>
+    </div>
+
+    <h2 class="sub">مسار الحالات</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-amber">مُقدَّم</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-blue">مُعيَّن</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-violet">قيد التنفيذ</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-teal">تم التسليم</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">مؤكَّد</span>
+    </div>
+    <div class="status-flow" style="margin-top: -6px;">
+      <span class="status-pill pill-gray">أي مرحلة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-red">مرفوض</span>
+    </div>
+
+    <h2 class="sub">خطوات سير العمل</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>العميل يُقدِّم الطلب</strong><p>يملأ العنوان والنوع والأولوية وقائمة الأصناف</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>المشرف يُعيِّن المسؤول</strong><p>يختار الموظف المناسب ويضغط "تعيين"</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>بدء التنفيذ</strong><p>الموظف المُعيَّن يُحدِّث الحالة إلى "قيد التنفيذ"</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>التسليم</strong><p>عند إتمام الخدمة يُغيَّر الوضع إلى "تم التسليم"</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-content"><strong>تأكيد العميل</strong><p>العميل يضغط "تأكيد الاستلام" لإغلاق الطلب</p></div>
+      </div>
+    </div>
+
+    <table>
+      <thead><tr><th>الحقل</th><th>الوصف</th><th>مطلوب</th></tr></thead>
+      <tbody>
+        <tr><td>عنوان الطلب</td><td>وصف مختصر للطلب</td><td>نعم</td></tr>
+        <tr><td>نوع الطلب</td><td>تموين / صيانة / لوازم / فعاليات / تنظيف / أخرى</td><td>نعم</td></tr>
+        <tr><td>الأولوية</td><td>منخفضة / متوسطة / عالية / عاجلة</td><td>نعم</td></tr>
+        <tr><td>الأصناف المطلوبة</td><td>قائمة الأصناف مع الكمية والوحدة</td><td>اختياري</td></tr>
+        <tr><td>تاريخ التسليم المتوقع</td><td>التاريخ المستهدف للتنفيذ</td><td>اختياري</td></tr>
+        <tr><td>ملاحظات</td><td>تفاصيل إضافية</td><td>اختياري</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 4 · طلبات العملاء</span>
+    <span>6</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 5 — COFFEE BREAK REQUEST
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 5</span>
+      <div class="section-group">العمليات اليومية</div>
+      <h1 class="section-title">طلب استراحة القهوة</h1>
+      <p class="section-desc">إدارة منظمة لطلبات الاستراحة وخدمات الضيافة في المنشأة</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُتيح النظام تقديم طلبات استراحة القهوة والضيافة بشكل رسمي ومتتبع، مما يُمكِّن الفريق من التخطيط والتنفيذ بكفاءة.</p>
+    </div>
+
+    <h2 class="sub">مسار الحالات</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-amber">مُقدَّم</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-blue">مقبول</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-violet">قيد التجهيز</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">تم التسليم</span>
+    </div>
+
+    <h2 class="sub">حقول الطلب</h2>
+    <table>
+      <thead><tr><th>الحقل</th><th>الوصف</th><th>مطلوب</th></tr></thead>
+      <tbody>
+        <tr><td>الطابق / الموقع</td><td>المكان الذي سيتم الخدمة فيه</td><td>نعم</td></tr>
+        <tr><td>وقت الاستراحة</td><td>الوقت المطلوب للتجهيز</td><td>نعم</td></tr>
+        <tr><td>عدد الأشخاص</td><td>لتحديد الكميات المناسبة</td><td>نعم</td></tr>
+        <tr><td>نوع الاستراحة</td><td>قهوة / شاي / عصائر / مشروبات</td><td>نعم</td></tr>
+        <tr><td>أصناف إضافية</td><td>حلويات أو مأكولات خفيفة</td><td>اختياري</td></tr>
+        <tr><td>ملاحظات خاصة</td><td>تعليمات أو تفضيلات محددة</td><td>اختياري</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">خطوات سير العمل</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>تقديم الطلب</strong><p>يُقدِّم الموظف أو العميل طلب الاستراحة مع التفاصيل</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>مراجعة وقبول</strong><p>المشرف يراجع الطلب ويضغط "قبول"</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>التجهيز</strong><p>الفريق يُحضِّر المشروبات والأصناف المطلوبة</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>التسليم والإغلاق</strong><p>يتم تسجيل التسليم وإغلاق الطلب</p></div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">معلومة</div>
+      <p>جميع طلبات الاستراحة تُسجَّل تلقائياً في سجل المخزون ليعكس الاستهلاك الفعلي للمشروبات والأصناف.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 5 · استراحة القهوة</span>
+    <span>7</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 6 — OPERATION REQUEST
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 6</span>
+      <div class="section-group">العمليات اليومية</div>
+      <h1 class="section-title">الطلب التشغيلي</h1>
+      <p class="section-desc">طلبات التشغيل الداخلية بين الطوابق والمباني داخل المشروع</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُمكِّن الفريق التشغيلي من تقديم طلبات نقل الأصناف والمواد والأغذية بين الطوابق والمباني داخل المشروع الواحد بشكل منظم وموثق.</p>
+    </div>
+
+    <h2 class="sub">مسار الحالات</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-gray">مسودة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-amber">مُقدَّم</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-blue">مقبول</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-violet">قيد التنفيذ</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">مكتمل</span>
+    </div>
+
+    <h2 class="sub">حقول الطلب التشغيلي</h2>
+    <table>
+      <thead><tr><th>الحقل</th><th>الوصف</th><th>مطلوب</th></tr></thead>
+      <tbody>
+        <tr><td>عنوان الطلب</td><td>وصف مختصر لطبيعة الطلب</td><td>نعم</td></tr>
+        <tr><td>المبنى / الطابق</td><td>موقع الاستلام أو التنفيذ</td><td>نعم</td></tr>
+        <tr><td>الأصناف المطلوبة</td><td>قائمة الأصناف مع الكمية والوحدة</td><td>نعم</td></tr>
+        <tr><td>الأولوية</td><td>منخفضة / متوسطة / عالية / عاجلة</td><td>نعم</td></tr>
+        <tr><td>التاريخ المستهدف</td><td>وقت التنفيذ المطلوب</td><td>اختياري</td></tr>
+        <tr><td>ملاحظات</td><td>تعليمات تشغيلية إضافية</td><td>اختياري</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">خطوات سير العمل</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>تقديم الطلب</strong><p>مساعد المشرف أو المشرف يُقدِّم الطلب بكامل التفاصيل</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>المراجعة والموافقة</strong><p>المشرف يراجع الطلب ويُوافق أو يُعيد مع ملاحظات</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>تنفيذ الطلب</strong><p>الفريق يُنفِّذ ويُحدِّث الحالة إلى "قيد التنفيذ"</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>إغلاق الطلب</strong><p>عند الاكتمال يُغلَق الطلب ويُسجَّل في سجل الحركات</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 6 · الطلب التشغيلي</span>
+    <span>8</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 7 — PURCHASE ORDER
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 7</span>
+      <div class="section-group">المشتريات والاستلام</div>
+      <h1 class="section-title">أمر الشراء</h1>
+      <p class="section-desc">إدارة عقود الشراء الشهرية مع الموردين ومتابعة الاستلام والتوزيع</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُنظِّم النظام عملية الشراء من خلال أوامر شراء مربوطة بالموردين والمشاريع، مع تتبع دقيق للكميات المعتمدة والمستلمة والموزعة والمستهلكة.</p>
+    </div>
+
+    <h2 class="sub">مسار حالات أمر الشراء</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-blue">نشط</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-amber">استُلم جزئياً</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">استُلم بالكامل</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-gray">مُغلق</span>
+    </div>
+    <div class="status-flow" style="margin-top: -6px;">
+      <span class="status-pill pill-orange">قارب الاستنزاف</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-red">تجاوز الاستهلاك</span>
+    </div>
+
+    <h2 class="sub">حقول أمر الشراء</h2>
+    <table>
+      <thead><tr><th>الحقل</th><th>الوصف</th><th>مطلوب</th></tr></thead>
+      <tbody>
+        <tr><td>رقم الأمر</td><td>رقم تسلسلي فريد يُولَّد تلقائياً</td><td>تلقائي</td></tr>
+        <tr><td>المورِّد</td><td>اسم المورِّد من القائمة المعتمدة</td><td>نعم</td></tr>
+        <tr><td>المشروع</td><td>المشروع المرتبط بالأمر</td><td>نعم</td></tr>
+        <tr><td>الشهر</td><td>الشهر المالي المرتبط بالأمر</td><td>نعم</td></tr>
+        <tr><td>تاريخ البداية/النهاية</td><td>فترة صلاحية الأمر</td><td>نعم</td></tr>
+        <tr><td>بنود الأمر</td><td>الأصناف مع الكميات المعتمدة والوحدات</td><td>نعم</td></tr>
+        <tr><td>ملاحظات</td><td>شروط أو تعليمات خاصة</td><td>اختياري</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">تتبع الكميات في كل بند</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-blue">كمية معتمدة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">مستلمة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-violet">موزعة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-amber">مستهلكة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-teal">المتبقية</span>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 7 · أوامر الشراء</span>
+    <span>9</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 8 — RECEIVING WORKFLOW
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 8</span>
+      <div class="section-group">المشتريات والاستلام</div>
+      <h1 class="section-title">سير عملية الاستلام</h1>
+      <p class="section-desc">توثيق استلام البضائع من الموردين والتحقق من الكميات والجودة</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُوثِّق النظام كل عملية استلام من المورِّد، بما فيها تفاصيل كل صنف من حيث الكمية المطلوبة والمستلمة والحالة، ويُربطها تلقائياً بأمر الشراء المقابل.</p>
+    </div>
+
+    <h2 class="sub">مسار حالات الاستلام</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-amber">معلق</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">مؤكَّد</span>
+    </div>
+    <div class="status-flow" style="margin-top: -6px;">
+      <span class="status-pill pill-blue">جزئي</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-red">مرفوض</span>
+    </div>
+
+    <h2 class="sub">حقول سجل الاستلام</h2>
+    <table>
+      <thead><tr><th>الحقل</th><th>الوصف</th><th>مطلوب</th></tr></thead>
+      <tbody>
+        <tr><td>المورِّد</td><td>الجهة الموردة للبضائع</td><td>نعم</td></tr>
+        <tr><td>أمر الشراء المرتبط</td><td>الأمر الذي ترتبط به هذه الشحنة</td><td>اختياري</td></tr>
+        <tr><td>تاريخ التسليم</td><td>التاريخ الفعلي لوصول البضاعة</td><td>نعم</td></tr>
+        <tr><td>رقم الفاتورة</td><td>رقم فاتورة المورِّد للمطابقة</td><td>اختياري</td></tr>
+        <tr><td>البنود</td><td>الأصناف مع الكمية المطلوبة والمستلمة والحالة</td><td>نعم</td></tr>
+        <tr><td>ملاحظات</td><td>ملاحظات الاستلام أو مشاكل الجودة</td><td>اختياري</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">حالات بنود الاستلام</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-green">جيد</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-orange">تالف</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-red">مرفوض</span>
+    </div>
+
+    <h2 class="sub">خطوات سير العمل</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>إنشاء سجل الاستلام</strong><p>مساعد المشرف يُنشئ سجلاً جديداً عند وصول الشحنة</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>تسجيل الكميات</strong><p>يُسجِّل الكميات المستلمة فعلياً لكل صنف</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>فحص الجودة</strong><p>يُحدِّد حالة كل صنف: جيد / تالف / مرفوض</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>التأكيد والإغلاق</strong><p>المشرف يُراجع ويُؤكِّد، فيُحدَّث المخزون تلقائياً</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 8 · عملية الاستلام</span>
+    <span>10</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 9 — FOOD INVENTORY
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 9</span>
+      <div class="section-group">إدارة المخزون</div>
+      <h1 class="section-title">مخزون الأغذية</h1>
+      <p class="section-desc">متابعة دقيقة لمخزون الأغذية مع تتبع الحدود الشهرية والتنبيهات</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُدير النظام مخزون الأغذية على أساس شهري لكل مشروع، مع مقارنة الاستهلاك الفعلي بالحد المخصص وإصدار تنبيهات عند الاقتراب من النفاد.</p>
+    </div>
+
+    <h2 class="sub">حالات المخزون</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-green">متاح</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-orange">مخزون منخفض</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-red">نفد المخزون</span>
+    </div>
+    <div class="status-flow" style="margin-top: -6px;">
+      <span class="status-pill pill-violet">زيادة الاستهلاك</span>
+    </div>
+
+    <h2 class="sub">مكونات رصيد المخزون</h2>
+    <table>
+      <thead><tr><th>الحقل</th><th>الوصف</th></tr></thead>
+      <tbody>
+        <tr><td>رصيد الافتتاح</td><td>الكمية المتبقية من الشهر السابق</td></tr>
+        <tr><td>الكميات المستلمة</td><td>إجمالي ما استُلم من الموردين هذا الشهر</td></tr>
+        <tr><td>الكميات المستهلكة</td><td>ما تم استخدامه فعلياً في العمليات</td></tr>
+        <tr><td>الكميات الصادرة</td><td>ما تم نقله لمشاريع أو مواقع أخرى</td></tr>
+        <tr><td>الكميات التالفة</td><td>الفاقد والتالف الموثق</td></tr>
+        <tr><td>الكميات المرتجعة</td><td>ما أُعيد للمستودع</td></tr>
+        <tr><td>الرصيد المتبقي</td><td>= الافتتاح + المستلم − المستهلك − الصادر − التالف + المرتجع</td></tr>
+        <tr><td>الحد الشهري</td><td>الكمية القصوى المعتمدة للشهر</td></tr>
+      </tbody>
+    </table>
+
+    <div class="info-box warning">
+      <div class="info-label">تنبيه تلقائي</div>
+      <p>يُصدر النظام تنبيهاً تلقائياً عند وصول الرصيد لأقل من 20% من الحد الشهري، ويُحدِّث حالة المخزون إلى "منخفض" أو "نافد" وفقاً للكمية.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 9 · مخزون الأغذية</span>
+    <span>11</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 10 — MATERIALS WAREHOUSE
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 10</span>
+      <div class="section-group">إدارة المخزون</div>
+      <h1 class="section-title">مستودع المواد</h1>
+      <p class="section-desc">إدارة مخزون المواد غير الغذائية وحركاتها من وإلى الطوابق</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُتابع النظام مخزون المواد (معدات، لوازم تنظيف، مستلزمات مكتبية) بنفس دقة مخزون الأغذية مع توثيق جميع حركات الصادر والوارد.</p>
+    </div>
+
+    <h2 class="sub">حالات مخزون المواد</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-green">متاح</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-orange">منخفض</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-red">نافد</span>
+    </div>
+
+    <h2 class="sub">أنواع حركات المخزون</h2>
+    <table>
+      <thead><tr><th>نوع الحركة</th><th>الوصف</th><th>التأثير على الرصيد</th></tr></thead>
+      <tbody>
+        <tr><td>استلام</td><td>وصول مواد من المورِّد</td><td>زيادة ↑</td></tr>
+        <tr><td>صادر للطابق</td><td>نقل مواد من المستودع للطابق</td><td>نقصان ↓</td></tr>
+        <tr><td>ارتجاع</td><td>إعادة مواد من الطابق للمستودع</td><td>زيادة ↑</td></tr>
+        <tr><td>تالف</td><td>تسجيل مواد تالفة أو مفقودة</td><td>نقصان ↓</td></tr>
+        <tr><td>تحويل</td><td>نقل بين مشاريع أو مباني</td><td>نقصان في المصدر ↓</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">خطوات عملية التحويل</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>إنشاء طلب التحويل</strong><p>تحديد الأصناف والكميات والموقع المستقبل</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>الموافقة على التحويل</strong><p>المشرف يُراجع ويُؤكِّد التحويل</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>تحديث الرصيد</strong><p>يُحدَّث الرصيد تلقائياً في المصدر والمستقبل</p></div>
+      </div>
+    </div>
+
+    <div class="info-box">
+      <div class="info-label">ملاحظة</div>
+      <p>تظهر جميع حركات المواد في سجل الحركات مع التاريخ والمستخدم المسؤول ورقم المرجع.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 10 · مستودع المواد</span>
+    <span>12</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 11 — MAINTENANCE REQUESTS
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 11</span>
+      <div class="section-group">المنشأة والجودة</div>
+      <h1 class="section-title">طلبات الصيانة</h1>
+      <p class="section-desc">الإبلاغ عن أعطال المنشأة ومتابعتها حتى الإصلاح الكامل</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُتيح النظام الإبلاغ الفوري عن أعطال ومشاكل المنشأة وتعيينها للمختصين ومتابعتها حتى الإصلاح، مع توثيق كامل لكل إجراء.</p>
+    </div>
+
+    <h2 class="sub">تصنيفات الصيانة</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-amber">كهرباء</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-blue">سباكة</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-indigo">تكييف</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-gray">معدات</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-teal">تنظيف</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-orange">إنشائية</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-gray">أخرى</span>
+    </div>
+
+    <h2 class="sub">مسار حالات الصيانة</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-amber">مفتوح</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-blue">مُعيَّن</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-violet">قيد التنفيذ</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">تم الحل</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-gray">مُغلق</span>
+    </div>
+
+    <h2 class="sub">حقول طلب الصيانة</h2>
+    <table>
+      <thead><tr><th>الحقل</th><th>الوصف</th><th>مطلوب</th></tr></thead>
+      <tbody>
+        <tr><td>عنوان الطلب</td><td>وصف مختصر للعطل أو المشكلة</td><td>نعم</td></tr>
+        <tr><td>التصنيف</td><td>كهرباء / سباكة / تكييف / معدات / تنظيف / إنشائية / أخرى</td><td>نعم</td></tr>
+        <tr><td>الأولوية</td><td>منخفضة / متوسطة / عالية / حرجة</td><td>نعم</td></tr>
+        <tr><td>الموقع</td><td>المبنى والطابق</td><td>نعم</td></tr>
+        <tr><td>الوصف</td><td>تفاصيل العطل وأعراضه</td><td>نعم</td></tr>
+        <tr><td>المُكلَّف بالإصلاح</td><td>الموظف أو الفريق المسؤول</td><td>عند التعيين</td></tr>
+        <tr><td>الحل المُنجز</td><td>وصف الإجراءات التي تمت</td><td>عند الإغلاق</td></tr>
+      </tbody>
+    </table>
+
+    <div class="info-box warning">
+      <div class="info-label">الأولوية الحرجة</div>
+      <p>تُوجِّه طلبات الأولوية الحرجة تنبيهاً فورياً للمشرف وتظهر في لوحة التحكم بعلامة تحذير بارزة.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 11 · طلبات الصيانة</span>
+    <span>13</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 12 — APPROVAL WORKFLOW
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 12</span>
+      <div class="section-group">المنشأة والجودة</div>
+      <h1 class="section-title">مسار الاعتماد والمراجعة</h1>
+      <p class="section-desc">آلية اعتماد متعددة المراحل تضمن الدقة والرقابة على جميع العمليات</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُطبِّق النظام آلية اعتماد صارمة على التقارير والطلبات والعمليات، حيث تنتقل المستندات من مرحلة إلى أخرى ولا تُغلَق إلا بعد الاعتماد النهائي.</p>
+    </div>
+
+    <h2 class="sub">مسار الاعتماد العام</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-gray">مسودة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-amber">مُقدَّم</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-blue">قيد المراجعة</span>
+      <span class="flow-arrow">→</span>
+      <span class="status-pill pill-green">معتمد</span>
+    </div>
+    <div class="status-flow" style="margin-top: -6px;">
+      <span class="status-pill pill-orange">مُعاد للمراجعة</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-red">مرفوض</span>
+      <span class="flow-arrow">·</span>
+      <span class="status-pill pill-gray">مُغلق</span>
+    </div>
+
+    <h2 class="sub">مراحل الاعتماد حسب الوحدة</h2>
+    <table>
+      <thead><tr><th>الوحدة</th><th>المرحلة 1</th><th>المرحلة 2</th><th>المرحلة النهائية</th></tr></thead>
+      <tbody>
+        <tr><td>فحص الطابق</td><td>مساعد المشرف (إرسال)</td><td>مشرف (مراجعة)</td><td>مدير مشروع (اعتماد)</td></tr>
+        <tr><td>أمر الشراء</td><td>مشرف (إنشاء)</td><td>مدير مشروع (مراجعة)</td><td>مدير النظام (اعتماد)</td></tr>
+        <tr><td>الاستلام</td><td>مساعد المشرف (تسجيل)</td><td>مشرف (تأكيد)</td><td>—</td></tr>
+        <tr><td>طلب العميل</td><td>عميل (تقديم)</td><td>مشرف (تعيين/تنفيذ)</td><td>عميل (تأكيد)</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">خطوات إجراء الاعتماد</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>الإرسال للمراجعة</strong><p>المُنشئ يُرسل المستند عبر زر "إرسال للاعتماد"</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>تنبيه المُعتمِد</strong><p>يظهر تنبيه في لوحة التحكم للمُعتمِد المسؤول</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>المراجعة والقرار</strong><p>الاعتماد أو الرفض أو الإعادة مع تعليق توضيحي</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>تسجيل القرار</strong><p>يُسجَّل كل قرار في سجل الاعتمادات مع التاريخ والمُعتمِد</p></div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 12 · مسار الاعتماد</span>
+    <span>14</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 13 — REPORTS & EXPORT
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 13</span>
+      <div class="section-group">التقارير والامتثال</div>
+      <h1 class="section-title">التقارير والتصدير</h1>
+      <p class="section-desc">توليد تقارير دورية شاملة قابلة للتصدير للمراجعة والأرشفة</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُتيح النظام توليد تقارير مفصلة عن الفحوصات اليومية والمخزون والمشتريات والاعتمادات، قابلة للتصدير بصيغ متعددة للمراجعة والأرشفة الرسمية.</p>
+    </div>
+
+    <h2 class="sub">أنواع التقارير المتاحة</h2>
+    <table>
+      <thead><tr><th>نوع التقرير</th><th>الوصف</th><th>الدورية</th></tr></thead>
+      <tbody>
+        <tr><td>فحص الطابق اليومي</td><td>ملخص فحوصات طابق بعينه مع الفروقات</td><td>يومي</td></tr>
+        <tr><td>ملخص المشروع اليومي</td><td>نظرة شاملة على أداء المشروع خلال يوم</td><td>يومي</td></tr>
+        <tr><td>مستودع أسبوعي</td><td>حركات المخزون والرصيد خلال الأسبوع</td><td>أسبوعي</td></tr>
+        <tr><td>مخزون الأغذية الشهري</td><td>الاستهلاك مقابل الحد الشهري المعتمد</td><td>شهري</td></tr>
+        <tr><td>تقرير المواد الشهري</td><td>حركات مواد المستودع خلال الشهر</td><td>شهري</td></tr>
+        <tr><td>ملخص الاعتمادات</td><td>إحصاء الاعتمادات والرفض والإعادة</td><td>حسب الطلب</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">خطوات توليد التقرير</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content"><strong>اختيار نوع التقرير</strong><p>من قائمة التقارير المتاحة</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content"><strong>تحديد النطاق الزمني والمشروع</strong><p>اختيار التاريخ والمشروع والمبنى إن لزم</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content"><strong>توليد التقرير</strong><p>يُنشئ النظام التقرير تلقائياً خلال ثوانٍ</p></div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content"><strong>التصدير والأرشفة</strong><p>تحميل التقرير بصيغة PDF أو Excel للأرشفة</p></div>
+      </div>
+    </div>
+
+    <div class="info-box success">
+      <div class="info-label">متوفر للأدوار</div>
+      <p>التقارير متاحة لمديري النظام والمشرفين ومديري المشاريع. يمكن للعملاء الاطلاع على تقارير مخصصة تتعلق بطلباتهم فقط.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 13 · التقارير والتصدير</span>
+    <span>15</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     MODULE 14 — AUDIT LOG
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <span class="section-num">الوحدة 14</span>
+      <div class="section-group">التقارير والامتثال</div>
+      <h1 class="section-title">سجل المراجعة والمتابعة</h1>
+      <p class="section-desc">توثيق شامل لجميع الأنشطة والتغييرات في النظام لضمان المساءلة</p>
+    </div>
+    <div class="divider"></div>
+
+    <div class="purpose-box">
+      <div class="purpose-label">الغرض</div>
+      <p>يُسجِّل النظام كل إجراء يُنفَّذ من قِبل أي مستخدم في سجل مفصل لا يمكن تعديله، يضمن المساءلة الكاملة ويُسهِّل التدقيق والمراجعة الداخلية.</p>
+    </div>
+
+    <h2 class="sub">ما يُسجَّل في سجل المراجعة</h2>
+    <table>
+      <thead><tr><th>نوع الإجراء</th><th>أمثلة</th></tr></thead>
+      <tbody>
+        <tr><td>إجراءات تسجيل الدخول</td><td>دخول ناجح، فشل الدخول، انتهاء الجلسة</td></tr>
+        <tr><td>إنشاء السجلات</td><td>طلب جديد، استلام جديد، فحص طابق جديد</td></tr>
+        <tr><td>التعديلات</td><td>تحديث حالة الطلب، تغيير كميات المخزون</td></tr>
+        <tr><td>إجراءات الاعتماد</td><td>اعتماد، رفض، إعادة للمراجعة مع التعليق</td></tr>
+        <tr><td>الحذف والأرشفة</td><td>حذف سجل، تعطيل مستخدم، أرشفة مشروع</td></tr>
+        <tr><td>التصدير</td><td>تنزيل تقرير، تصدير بيانات</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">معلومات كل إدخال في السجل</h2>
+    <div class="card-grid">
+      <div class="card-box">
+        <h4>🕐 التوقيت</h4>
+        <ul>
+          <li>التاريخ والوقت الدقيق</li>
+          <li>المنطقة الزمنية</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>👤 المستخدم</h4>
+        <ul>
+          <li>الاسم الكامل</li>
+          <li>البريد الإلكتروني</li>
+          <li>الدور الوظيفي</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>📋 الإجراء</h4>
+        <ul>
+          <li>نوع الإجراء</li>
+          <li>نوع الكيان المتأثر</li>
+          <li>المعرِّف الفريد</li>
+        </ul>
+      </div>
+      <div class="card-box">
+        <h4>🔍 التفاصيل</h4>
+        <ul>
+          <li>القيمة قبل التغيير</li>
+          <li>القيمة بعد التغيير</li>
+          <li>التعليقات المرفقة</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="info-box warning">
+      <div class="info-label">قيد الوصول</div>
+      <p>سجل المراجعة للقراءة فقط ولا يمكن تعديله أو حذفه. يتاح كاملاً لمدير النظام فقط، بينما يرى المشرفون ومديرو المشاريع سجل مشاريعهم فقط.</p>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>الوحدة 14 · سجل المراجعة</span>
+    <span>16</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     QUICK REFERENCE PAGE
+══════════════════════════════════════════════════════ -->
+<div class="page">
+  <div class="page-body">
+    <div class="section-header">
+      <div class="section-group">ملحق</div>
+      <h1 class="section-title">المرجع السريع</h1>
+      <p class="section-desc">ملخص الحالات والصلاحيات لكل وحدة في النظام</p>
+    </div>
+    <div class="divider"></div>
+
+    <h2 class="sub">جدول الصلاحيات الموجز</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>الوحدة</th>
+          <th>مدير النظام</th>
+          <th>مشرف</th>
+          <th>مساعد المشرف</th>
+          <th>مدير المشروع</th>
+          <th>عميل</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>تسجيل الدخول</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td></tr>
+        <tr><td>لوحة التحكم</td><td>كاملة</td><td>مشروعه</td><td>مشروعه</td><td>كاملة</td><td>محدودة</td></tr>
+        <tr><td>طلبات العملاء</td><td>✓</td><td>✓ إدارة</td><td>✓ عرض</td><td>✓ عرض</td><td>✓ تقديم</td></tr>
+        <tr><td>استراحة القهوة</td><td>✓</td><td>✓</td><td>✓</td><td>✓ عرض</td><td>✓ تقديم</td></tr>
+        <tr><td>الطلب التشغيلي</td><td>✓</td><td>✓</td><td>✓ تقديم</td><td>✓ عرض</td><td>—</td></tr>
+        <tr><td>أوامر الشراء</td><td>✓</td><td>✓ إنشاء</td><td>✓ عرض</td><td>✓ اعتماد</td><td>—</td></tr>
+        <tr><td>الاستلام</td><td>✓</td><td>✓ تأكيد</td><td>✓ إنشاء</td><td>✓ عرض</td><td>—</td></tr>
+        <tr><td>مخزون الأغذية</td><td>✓</td><td>✓</td><td>✓ عرض</td><td>✓ عرض</td><td>—</td></tr>
+        <tr><td>مستودع المواد</td><td>✓</td><td>✓</td><td>✓ عرض</td><td>✓ عرض</td><td>—</td></tr>
+        <tr><td>الصيانة</td><td>✓</td><td>✓ إدارة</td><td>✓ إبلاغ</td><td>✓ عرض</td><td>✓ إبلاغ</td></tr>
+        <tr><td>الاعتماد</td><td>✓</td><td>✓ مشرف</td><td>إرسال فقط</td><td>✓ اعتماد</td><td>تأكيد فقط</td></tr>
+        <tr><td>التقارير</td><td>✓ كاملة</td><td>✓ مشروعه</td><td>عرض</td><td>✓ كاملة</td><td>محدودة</td></tr>
+        <tr><td>سجل المراجعة</td><td>✓ كامل</td><td>مشروعه</td><td>—</td><td>مشروعه</td><td>—</td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sub">مفتاح رموز الحالات</h2>
+    <div class="status-flow">
+      <span class="status-pill pill-gray">مسودة</span>
+      <span class="status-pill pill-amber">مُقدَّم / معلق</span>
+      <span class="status-pill pill-blue">نشط / مُعيَّن</span>
+      <span class="status-pill pill-violet">قيد التنفيذ</span>
+      <span class="status-pill pill-teal">تم التسليم / جزئي</span>
+      <span class="status-pill pill-green">مؤكَّد / مكتمل</span>
+      <span class="status-pill pill-orange">منخفض / قارب الاستنزاف</span>
+      <span class="status-pill pill-red">مرفوض / نافد</span>
+      <span class="status-pill pill-indigo">قيد المراجعة</span>
+    </div>
+  </div>
+  <div class="page-footer">
+    <span class="footer-brand">Powered by Security Standards</span>
+    <span>المرجع السريع · ملخص الصلاحيات</span>
+    <span>17</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     BACK COVER
+══════════════════════════════════════════════════════ -->
+<div class="page back-cover">
+  <div style="font-size: 40px; margin-bottom: 20px;">🏢</div>
+  <h2>نظام مرصاد للعمليات اليومية</h2>
+  <p>منصة متكاملة لإدارة العمليات والمخزون والجودة في منشآت وزارة الطاقة</p>
+  <div style="width: 60px; height: 1px; background: rgba(255,255,255,0.3); margin: 20px auto;"></div>
+  <p style="font-size: 9.5pt; color: rgba(255,255,255,0.5);">
+    الإصدار 2.0 · مايو 2026<br/>
+    وزارة الطاقة · المملكة العربية السعودية<br/>
+    للاستخدام الداخلي فقط
+  </p>
+  <p class="powered">Powered by Security Standards</p>
+</div>
+
+</body>
+</html>
