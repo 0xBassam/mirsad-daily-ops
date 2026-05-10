@@ -7,24 +7,41 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+  /* ── Preserve backgrounds & colors in print ── */
+  html {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   body {
     font-family: 'Segoe UI', Arial, sans-serif;
     font-size: 10.5pt;
     color: #1e293b;
-    background: #fff;
+    background: #f1f5f9;
     line-height: 1.6;
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* ── A4 page rule for PDF export ── */
+  @page {
+    size: A4 portrait;
+    margin: 0;
   }
 
   /* ── Page layout ── */
   .page {
     width: 210mm;
     min-height: 297mm;
-    margin: 0 auto;
-    padding: 18mm 20mm 18mm 20mm;
+    margin: 0 auto 8mm;
+    padding: 16mm 20mm 14mm 20mm;
     background: #fff;
     page-break-after: always;
+    break-after: page;
+    display: flex;
+    flex-direction: column;
   }
-  .page:last-child { page-break-after: auto; }
+  .page:last-child { page-break-after: auto; break-after: auto; margin-bottom: 0; }
 
   @media print {
     body { background: #fff; }
@@ -32,11 +49,11 @@
       width: 210mm;
       min-height: 297mm;
       margin: 0;
-      padding: 18mm 20mm;
+      padding: 16mm 20mm 14mm 20mm;
       page-break-after: always;
+      break-after: page;
     }
-    .no-break { page-break-inside: avoid; }
-    .pb-before { page-break-before: always; }
+    .page:last-child { page-break-after: auto; break-after: auto; }
   }
 
   /* ── Cover page ── */
@@ -172,15 +189,17 @@
     font-style: italic;
   }
 
-  /* ── Subsection ── */
+  /* ── Subsection headings — never orphan a heading ── */
   h3 {
     font-size: 11pt;
     font-weight: 700;
     color: #1e3a8a;
-    margin: 18px 0 8px;
+    margin: 16px 0 7px;
     display: flex;
     align-items: center;
     gap: 6px;
+    page-break-after: avoid;
+    break-after: avoid;
   }
   h3::before {
     content: '';
@@ -196,21 +215,26 @@
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 9.5pt;
-    margin-bottom: 14px;
+    font-size: 9pt;
+    margin-bottom: 12px;
+    page-break-inside: auto;
   }
+  thead { display: table-header-group; } /* repeat header on page break */
   thead tr { background: #1e3a8a; color: #fff; }
   thead th {
-    padding: 8px 10px;
+    padding: 7px 9px;
     text-align: left;
     font-weight: 600;
-    font-size: 9pt;
+    font-size: 8.5pt;
     letter-spacing: 0.04em;
   }
+  tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
   tbody tr:nth-child(even) { background: #f8fafc; }
-  tbody tr:hover { background: #eff6ff; }
   tbody td {
-    padding: 7px 10px;
+    padding: 6px 9px;
     border-bottom: 1px solid #e2e8f0;
     vertical-align: top;
   }
@@ -218,33 +242,35 @@
   .td-access { color: #334155; }
 
   /* ── Step list ── */
-  .steps { list-style: none; counter-reset: step; margin: 0 0 14px; }
+  .steps { list-style: none; counter-reset: step; margin: 0 0 12px; }
   .steps li {
     counter-increment: step;
     display: flex;
-    gap: 12px;
-    margin-bottom: 8px;
+    gap: 11px;
+    margin-bottom: 7px;
     align-items: flex-start;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .steps li::before {
     content: counter(step);
-    min-width: 24px;
-    height: 24px;
+    min-width: 22px;
+    height: 22px;
     background: #1d4ed8;
     color: #fff;
     border-radius: 50%;
-    font-size: 8pt;
+    font-size: 7.5pt;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    margin-top: 1px;
+    margin-top: 2px;
   }
-  .steps li p { font-size: 10pt; color: #334155; }
+  .steps li p { font-size: 9.5pt; color: #334155; }
   .steps li strong { color: #0f172a; }
   .step-note {
-    font-size: 8.5pt;
+    font-size: 8pt;
     color: #64748b;
     background: #f8fafc;
     border-left: 3px solid #cbd5e1;
@@ -253,98 +279,127 @@
     margin-top: 3px;
   }
 
-  /* ── Status flow ── */
+  /* ── Status flow — keep together, wrap gracefully ── */
   .status-flow {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 4px;
-    margin: 10px 0 18px;
+    margin: 8px 0 14px;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .status-pill {
-    padding: 4px 12px;
+    padding: 3px 10px;
     border-radius: 999px;
-    font-size: 8.5pt;
+    font-size: 8pt;
     font-weight: 600;
     white-space: nowrap;
+    border: 1px solid transparent;
   }
-  .sp-blue   { background: #dbeafe; color: #1e40af; }
-  .sp-indigo { background: #e0e7ff; color: #3730a3; }
-  .sp-amber  { background: #fef3c7; color: #92400e; }
-  .sp-violet { background: #ede9fe; color: #5b21b6; }
-  .sp-green  { background: #d1fae5; color: #065f46; }
-  .sp-red    { background: #fee2e2; color: #991b1b; }
-  .sp-slate  { background: #f1f5f9; color: #475569; }
-  .sp-orange { background: #ffedd5; color: #9a3412; }
-  .sp-teal   { background: #ccfbf1; color: #0f766e; }
-  .sp-gray   { background: #f3f4f6; color: #374151; }
-  .arrow {
-    font-size: 11pt;
-    color: #94a3b8;
-    font-weight: 700;
-  }
-  .arrow-branch { font-size: 9pt; color: #94a3b8; }
+  .sp-blue   { background: #dbeafe; color: #1e40af; border-color: #bfdbfe; }
+  .sp-indigo { background: #e0e7ff; color: #3730a3; border-color: #c7d2fe; }
+  .sp-amber  { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+  .sp-violet { background: #ede9fe; color: #5b21b6; border-color: #ddd6fe; }
+  .sp-green  { background: #d1fae5; color: #065f46; border-color: #a7f3d0; }
+  .sp-red    { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
+  .sp-slate  { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+  .sp-orange { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+  .sp-teal   { background: #ccfbf1; color: #0f766e; border-color: #99f6e4; }
+  .sp-gray   { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+  .arrow { font-size: 10pt; color: #94a3b8; font-weight: 700; }
+  .arrow-branch { font-size: 8.5pt; color: #94a3b8; }
 
-  /* ── Info boxes ── */
+  /* ── Info boxes — never split mid-box ── */
   .info-box {
     border-radius: 6px;
-    padding: 10px 14px;
-    margin-bottom: 12px;
-    font-size: 9.5pt;
+    padding: 9px 13px;
+    margin-bottom: 10px;
+    font-size: 9pt;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .info-blue  { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e40af; }
-  .info-green { background: #f0fdf4; border: 1px solid #bbf7d0; color: #14532d; }
+  .info-green { background: #f0fdf4; border: 1px solid #a7f3d0; color: #14532d; }
   .info-amber { background: #fffbeb; border: 1px solid #fde68a; color: #78350f; }
   .info-red   { background: #fef2f2; border: 1px solid #fecaca; color: #7f1d1d; }
   .info-box b { font-weight: 700; }
 
-  /* ── Permission matrix ── */
-  .perm-yes { color: #059669; font-weight: 700; text-align: center; }
-  .perm-no  { color: #dc2626; text-align: center; }
-  .perm-partial { color: #d97706; font-weight: 600; text-align: center; }
+  /* ── Permission matrix — tighter for narrow columns ── */
+  .perm-yes     { color: #059669; font-weight: 700; text-align: center; font-size: 9pt; }
+  .perm-no      { color: #dc2626; text-align: center; font-size: 9pt; }
+  .perm-partial { color: #d97706; font-weight: 600; text-align: center; font-size: 9pt; }
 
-  /* ── Two-column layout ── */
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+  /* ── Two-column layout — keep together ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
 
   /* ── Card box ── */
   .card-box {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 8px;
-    padding: 12px 14px;
+    padding: 11px 13px;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
   .card-box-title {
-    font-size: 9pt;
+    font-size: 8.5pt;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: #475569;
-    margin-bottom: 8px;
+    margin-bottom: 7px;
     padding-bottom: 5px;
     border-bottom: 1px solid #e2e8f0;
   }
-  .card-box ul { list-style: disc; padding-left: 16px; }
-  .card-box ul li { font-size: 9.5pt; color: #334155; margin-bottom: 2px; }
+  .card-box ul { list-style: disc; padding-left: 15px; }
+  .card-box ul li { font-size: 9pt; color: #334155; margin-bottom: 2px; }
 
-  /* ── Footer ── */
+  /* ── Section purpose — keep with section header ── */
+  .section-purpose {
+    background: #f0f9ff;
+    border-left: 4px solid #0ea5e9;
+    padding: 9px 13px;
+    border-radius: 0 6px 6px 0;
+    font-size: 9.5pt;
+    color: #0c4a6e;
+    margin-bottom: 14px;
+    font-style: italic;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* ── Footer — pinned to bottom via flex ── */
   .footer {
     margin-top: auto;
-    padding-top: 12px;
+    padding-top: 10px;
     border-top: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     font-size: 7.5pt;
     color: #94a3b8;
+    page-break-inside: avoid;
+    break-inside: avoid;
   }
 
   /* ── Bullet list ── */
-  ul.plain { list-style: disc; padding-left: 18px; margin-bottom: 12px; }
-  ul.plain li { font-size: 10pt; color: #334155; margin-bottom: 3px; }
+  ul.plain { list-style: disc; padding-left: 18px; margin-bottom: 10px; }
+  ul.plain li { font-size: 9.5pt; color: #334155; margin-bottom: 3px; }
   ul.plain li strong { color: #0f172a; }
 
   /* ── Spacer ── */
-  .mt { margin-top: 14px; }
-  .mb { margin-bottom: 14px; }
+  .mt { margin-top: 12px; }
+  .mb { margin-bottom: 12px; }
 
   /* ── Highlight row ── */
   .hl { background: #fef9c3 !important; }
@@ -370,7 +425,10 @@
       <p><strong>Scope:</strong> Full system workflow — 14 modules</p>
     </div>
     <div class="cover-bottom">
-      <div class="cover-version">Version 1.0 · Confidential · Internal Use</div>
+      <div>
+        <div class="cover-version">Version 1.0 · Confidential · Internal Use</div>
+        <div style="font-size:8pt;color:#60a5fa;margin-top:4px;font-weight:600;letter-spacing:0.06em;">Powered by Security Standards</div>
+      </div>
       <div class="cover-badge">Print-ready · PDF</div>
     </div>
   </div>
@@ -422,6 +480,7 @@
 
   <div class="footer">
     <span>Mirsad — Cafeteria Operations Management · Ministry of Energy, KSA</span>
+    <span style="color:#60a5fa;font-weight:600;">Powered by Security Standards</span>
     <span>Version 1.0 · May 2026 · Confidential</span>
   </div>
 </div>
@@ -490,6 +549,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 01 — Login &amp; Role-Based Access</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 3</span>
   </div>
 </div>
@@ -552,6 +612,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 02 — User Roles &amp; Permissions</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 4</span>
   </div>
 </div>
@@ -602,6 +663,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 03 — Dashboard Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 5</span>
   </div>
 </div>
@@ -683,6 +745,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 04 — Client Request Lifecycle</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 6</span>
   </div>
 </div>
@@ -744,6 +807,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 05 — Coffee Break Request Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 7</span>
   </div>
 </div>
@@ -805,6 +869,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 06 — Operation Request Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 8</span>
   </div>
 </div>
@@ -893,6 +958,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 07 — Purchase Order Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 9</span>
   </div>
 </div>
@@ -962,6 +1028,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 08 — Receiving Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 10</span>
   </div>
 </div>
@@ -1034,6 +1101,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 09 — Food Inventory Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 11</span>
   </div>
 </div>
@@ -1119,6 +1187,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 10 — Materials Warehouse Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 12</span>
   </div>
 </div>
@@ -1199,6 +1268,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 11 — Maintenance Request Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 13</span>
   </div>
 </div>
@@ -1275,6 +1345,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 12 — Approval Process</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 14</span>
   </div>
 </div>
@@ -1341,6 +1412,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 13 — Reports &amp; Exports</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 15</span>
   </div>
 </div>
@@ -1410,6 +1482,7 @@
 
   <div class="footer">
     <span>Mirsad System Guide · Section 14 — Audit Log Workflow</span>
+    <span style="color:#60a5fa;font-weight:600;font-size:7pt;">Powered by Security Standards</span>
     <span>Page 16</span>
   </div>
 </div>
@@ -1472,6 +1545,7 @@
       <div>
         <div style="font-size:8pt;color:#64748b;">Ministry of Energy · Kingdom of Saudi Arabia</div>
         <div style="font-size:8pt;color:#64748b;">Mirsad Cafeteria Operations Management System</div>
+        <div style="font-size:8pt;color:#60a5fa;font-weight:600;margin-top:4px;">Powered by Security Standards</div>
       </div>
       <div style="text-align:right;">
         <div style="font-size:8pt;color:#64748b;">Version 1.0 · May 2026</div>
