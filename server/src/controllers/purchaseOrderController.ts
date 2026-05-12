@@ -5,6 +5,7 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
+import { applyMovementToBalance } from '../services/inventoryService';
 
 export const getPurchaseOrders = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, skip } = getPaginationParams(req);
@@ -77,18 +78,13 @@ export const receivePOLine = asyncHandler(async (req: Request, res: Response) =>
   (po as any).recalculate();
   await po.save();
 
-  // Create RECEIVE stock movement
+  const movDate = new Date();
   await StockMovement.create({
-    project: po.project,
-    item: line.item,
-    movementType: 'RECEIVE',
-    quantity,
-    movementDate: new Date(),
-    sourceType: 'purchase_order',
-    sourceRef: po._id,
-    notes: notes || `PO ${po.poNumber} — receive`,
-    createdBy: req.user?.userId,
+    project: po.project, item: line.item, movementType: 'RECEIVE', quantity,
+    movementDate: movDate, sourceType: 'purchase_order', sourceRef: po._id,
+    notes: notes || `PO ${po.poNumber} — receive`, createdBy: req.user?.userId,
   });
+  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: 'RECEIVE', quantity, date: movDate });
 
   await logAction({ userId: req.user?.userId, action: 'update', entityType: 'purchase_order', entityId: po._id, req });
   res.json({ success: true, data: po });
@@ -111,18 +107,14 @@ export const distributePOLine = asyncHandler(async (req: Request, res: Response)
   (po as any).recalculate();
   await po.save();
 
-  // Create stock movement
+  const movType2 = type === 'consume' ? 'CONSUMPTION' : 'ISSUE';
+  const movDate2 = new Date();
   await StockMovement.create({
-    project: po.project,
-    item: line.item,
-    movementType: type === 'consume' ? 'CONSUMPTION' : 'ISSUE',
-    quantity,
-    movementDate: new Date(),
-    sourceType: 'purchase_order',
-    sourceRef: po._id,
-    notes: notes || `PO ${po.poNumber} — ${type}`,
-    createdBy: req.user?.userId,
+    project: po.project, item: line.item, movementType: movType2, quantity,
+    movementDate: movDate2, sourceType: 'purchase_order', sourceRef: po._id,
+    notes: notes || `PO ${po.poNumber} — ${type}`, createdBy: req.user?.userId,
   });
+  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: movType2 as any, quantity, date: movDate2 });
 
   res.json({ success: true, data: po });
 });

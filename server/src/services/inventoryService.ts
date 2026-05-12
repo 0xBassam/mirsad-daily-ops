@@ -6,6 +6,40 @@ import { InventoryBalance } from '../models/InventoryBalance';
 import { StockMovement } from '../models/StockMovement';
 import { FloorCheck } from '../models/FloorCheck';
 
+type MovementType = 'RECEIVE' | 'ISSUE' | 'CONSUMPTION' | 'RETURN' | 'DAMAGE' | 'ADJUSTMENT' | 'TRANSFER_IN' | 'TRANSFER_OUT';
+
+export async function applyMovementToBalance(params: {
+  project: mongoose.Types.ObjectId | string;
+  item: mongoose.Types.ObjectId | string;
+  movementType: MovementType;
+  quantity: number;
+  date?: Date;
+}): Promise<void> {
+  const { project, item, movementType, quantity, date = new Date() } = params;
+  const period = format(date, 'yyyy-MM');
+
+  const balance = await InventoryBalance.findOneAndUpdate(
+    { project, item, period },
+    { $setOnInsert: { openingBalance: 0, monthlyLimit: 0 } },
+    { upsert: true, new: true }
+  );
+  if (!balance) return;
+
+  switch (movementType) {
+    case 'RECEIVE':      balance.receivedQty += quantity; break;
+    case 'RETURN':       balance.returnedQty += quantity; break;
+    case 'TRANSFER_IN':  balance.receivedQty += quantity; break;
+    case 'ISSUE':        balance.issuedQty   += quantity; break;
+    case 'CONSUMPTION':  balance.consumedQty += quantity; break;
+    case 'TRANSFER_OUT': balance.issuedQty   += quantity; break;
+    case 'DAMAGE':       balance.damagedQty  += quantity; break;
+    case 'ADJUSTMENT':   balance.receivedQty += quantity; break;
+  }
+
+  (balance as any).recalculate();
+  await balance.save();
+}
+
 export async function updateOnApproval(floorCheckId: string): Promise<void> {
   const session = await mongoose.startSession();
   session.startTransaction();

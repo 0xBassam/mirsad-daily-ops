@@ -37,6 +37,7 @@ import { ReportDetailPage } from './pages/reports/ReportDetailPage';
 import { InventoryItemDetailPage } from './pages/inventory/InventoryItemDetailPage';
 import { PurchaseOrdersPage } from './pages/purchase-orders/PurchaseOrdersPage';
 import { PurchaseOrderDetailPage } from './pages/purchase-orders/PurchaseOrderDetailPage';
+import { PurchaseOrderFormPage } from './pages/purchase-orders/PurchaseOrderFormPage';
 import { SpoilageRecordingPage } from './pages/spoilage-records/SpoilageRecordingPage';
 import { TransfersPage } from './pages/transfers/TransfersPage';
 import { ReceivingPage } from './pages/receiving/ReceivingPage';
@@ -96,6 +97,7 @@ export default function App() {
               <Route path="/client-requests/new" element={<ClientRequestNewPage />} />
               <Route path="/client-requests/:id" element={<ClientRequestDetailPage />} />
               <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
+              <Route path="/purchase-orders/new" element={<PurchaseOrderFormPage />} />
               <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
               <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
               <Route path="/corrective-actions/new" element={<CorrectiveActionNewPage />} />
