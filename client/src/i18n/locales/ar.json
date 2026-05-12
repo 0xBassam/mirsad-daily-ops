@@ -528,12 +528,20 @@
     "rejectPlaceholder": "سبب الرفض…",
     "rejectionReason": "سبب الرفض",
     "types": {
-      "catering": "تقديم طعام",
-      "maintenance": "صيانة",
-      "supplies": "مستلزمات",
-      "event": "فعالية",
-      "housekeeping": "خدمات المنازل",
-      "other": "أخرى"
-    }
+      "operation_request":    "طلب تشغيلي",
+      "coffee_break_request": "طلب كوفي بريك",
+      "catering":             "تقديم طعام",
+      "maintenance":          "صيانة",
+      "supplies":             "مستلزمات",
+      "event":                "فعالية",
+      "housekeeping":         "خدمات المنازل",
+      "other":                "أخرى"
+    },
+    "myRequests":          "طلباتي",
+    "awaitingConfirmation":"بانتظار تأكيدي",
+    "newRequest":          "طلب جديد",
+    "noActiveRequests":    "لا توجد طلبات نشطة",
+    "noDelivered":         "لا يوجد شيء بانتظار تأكيدك",
+    "noHistory":           "لا توجد طلبات مكتملة بعد"
   }
 }

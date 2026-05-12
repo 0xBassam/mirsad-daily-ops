@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { MessageSquare, Plus, X } from 'lucide-react';
 import apiClient from '../../api/client';
 
-const REQUEST_TYPES = ['catering','maintenance','supplies','event','housekeeping','other'] as const;
+const REQUEST_TYPES = ['operation_request','coffee_break_request','catering','maintenance','supplies','event','housekeeping','other'] as const;
 const PRIORITIES    = ['low','medium','high','urgent'] as const;
 
 interface CRForm {
@@ -15,7 +15,7 @@ interface CRForm {
   expectedDelivery: string; notes: string;
   items: { name: string; quantity: string; unit: string }[];
 }
-const EMPTY: CRForm = { title:'', description:'', requestType:'catering', priority:'medium', project:'', building:'', floor:'', expectedDelivery:'', notes:'', items:[] };
+const EMPTY: CRForm = { title:'', description:'', requestType:'operation_request', priority:'medium', project:'', building:'', floor:'', expectedDelivery:'', notes:'', items:[] };
 
 export function ClientRequestNewPage() {
   const { t } = useTranslation();

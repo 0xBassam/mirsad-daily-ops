@@ -528,12 +528,20 @@
     "rejectPlaceholder": "Reason for rejection…",
     "rejectionReason": "Rejection Reason",
     "types": {
-      "catering": "Catering",
-      "maintenance": "Maintenance",
-      "supplies": "Supplies",
-      "event": "Event",
-      "housekeeping": "Housekeeping",
-      "other": "Other"
-    }
+      "operation_request":    "Operation Request",
+      "coffee_break_request": "Coffee Break Request",
+      "catering":             "Catering",
+      "maintenance":          "Maintenance",
+      "supplies":             "Supplies",
+      "event":                "Event",
+      "housekeeping":         "Housekeeping",
+      "other":                "Other"
+    },
+    "myRequests":          "My Requests",
+    "awaitingConfirmation":"Awaiting My Confirmation",
+    "newRequest":          "New Request",
+    "noActiveRequests":    "No active requests",
+    "noDelivered":         "Nothing waiting for your confirmation",
+    "noHistory":           "No completed requests yet"
   }
 }
