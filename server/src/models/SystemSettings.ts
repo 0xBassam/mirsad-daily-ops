@@ -16,8 +16,8 @@ export interface IEmailAlerts {
 }
 
 export interface ISystemSettings extends Document {
-  // Provider selection
-  emailProvider:  EmailProvider;
+  // Provider selection — optional so || falls through to env var when not explicitly saved
+  emailProvider?: EmailProvider;
   // Resend
   resendApiKey:   string;
   resendFromEmail: string;
@@ -47,7 +47,7 @@ const defaultAlerts: IEmailAlerts = {
 };
 
 const systemSettingsSchema = new Schema<ISystemSettings>({
-  emailProvider:   { type: String, enum: ['smtp', 'resend'], default: 'smtp' },
+  emailProvider:   { type: String, enum: ['smtp', 'resend'] }, // no default — lets env var work for unset docs
   resendApiKey:    { type: String, default: '' },
   resendFromEmail: { type: String, default: '' },
   resendFromName:  { type: String, default: 'Mirsad Alerts' },

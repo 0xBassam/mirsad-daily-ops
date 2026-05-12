@@ -102,7 +102,10 @@ async function isAlertEnabled(key: AlertKey): Promise<boolean> {
 async function activeProvider(): Promise<'resend' | 'smtp'> {
   try {
     const s = await getSystemSettings();
-    if (s.emailProvider) return s.emailProvider;
+    // emailProvider has no schema default — undefined means "not explicitly saved yet"
+    const resolved = s.emailProvider || env.EMAIL_PROVIDER || 'smtp';
+    console.log('[emailService] provider — db:', s.emailProvider, '| env:', env.EMAIL_PROVIDER, '| resolved:', resolved);
+    return resolved as 'resend' | 'smtp';
   } catch { /* ignore */ }
   return (env.EMAIL_PROVIDER === 'resend') ? 'resend' : 'smtp';
 }
@@ -111,13 +114,19 @@ async function activeProvider(): Promise<'resend' | 'smtp'> {
 
 async function send(to: string, subject: string, html: string) {
   const provider = await activeProvider();
+  console.log('[email] send() using provider:', provider, '| to:', to);
 
   if (provider === 'resend') {
     const client = await getResendClient();
-    if (!client) { console.warn('[email] Resend selected but no API key configured'); return; }
+    if (!client) { console.warn('[email] Resend selected but no API key configured — skipping'); return; }
     const from = await getFromAddress('resend');
+    console.log('[email] Resend send — from:', from);
     const result = await client.emails.send({ from, to, subject, html });
-    if (result.error) console.warn('[email] Resend error:', result.error);
+    if (result.error) {
+      console.warn('[email] Resend error:', result.error);
+    } else {
+      console.log('[email] Resend delivered, id:', result.data?.id);
+    }
     return;
   }
 

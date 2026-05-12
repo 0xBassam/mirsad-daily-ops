@@ -22,13 +22,32 @@ export const getSettings = asyncHandler(async (_req: Request, res: Response) => 
 
 export const updateSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await getSystemSettings();
-  const { smtpPass, resendApiKey, ...rest } = req.body;
+  const body = req.body as Partial<{
+    emailProvider: 'smtp' | 'resend';
+    resendApiKey: string; resendFromEmail: string; resendFromName: string;
+    smtpHost: string; smtpPort: number; smtpUser: string; smtpPass: string;
+    smtpFromEmail: string; smtpFromName: string; smtpTls: boolean;
+    emailAlerts: Record<string, boolean>;
+  }>;
 
-  Object.assign(settings, rest);
-  if (smtpPass    && smtpPass    !== MASK) settings.smtpPass    = smtpPass;
-  if (resendApiKey && resendApiKey !== MASK) settings.resendApiKey = resendApiKey;
+  // Set each field explicitly so Mongoose change-tracking works correctly
+  if (body.emailProvider !== undefined) settings.emailProvider = body.emailProvider;
+  if (body.resendFromEmail !== undefined) settings.resendFromEmail = body.resendFromEmail;
+  if (body.resendFromName  !== undefined) settings.resendFromName  = body.resendFromName;
+  if (body.smtpHost        !== undefined) settings.smtpHost        = body.smtpHost;
+  if (body.smtpPort        !== undefined) settings.smtpPort        = body.smtpPort;
+  if (body.smtpUser        !== undefined) settings.smtpUser        = body.smtpUser;
+  if (body.smtpFromEmail   !== undefined) settings.smtpFromEmail   = body.smtpFromEmail;
+  if (body.smtpFromName    !== undefined) settings.smtpFromName    = body.smtpFromName;
+  if (body.smtpTls         !== undefined) settings.smtpTls         = body.smtpTls;
+  if (body.emailAlerts     !== undefined) settings.emailAlerts     = body.emailAlerts as any;
+  // Only overwrite secrets when a real value is submitted (not the mask)
+  if (body.smtpPass    && body.smtpPass    !== MASK) settings.smtpPass    = body.smtpPass;
+  if (body.resendApiKey && body.resendApiKey !== MASK) settings.resendApiKey = body.resendApiKey;
 
+  console.log('[updateSettings] saving emailProvider:', settings.emailProvider);
   await settings.save();
+  console.log('[updateSettings] saved. emailProvider in DB:', settings.emailProvider);
 
   const { clearTransporterCache } = await import('../services/emailService');
   clearTransporterCache();
@@ -63,8 +82,19 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
   const { to } = req.body;
   if (!to) throw new AppError('Recipient email is required', 400);
 
+  // Always load fresh — no cache
   const settings = await getSystemSettings();
-  const provider  = settings.emailProvider || (env.EMAIL_PROVIDER === 'resend' ? 'resend' : 'smtp');
+
+  // emailProvider has no DB default, so undefined means "not explicitly set"
+  const dbProvider  = settings.emailProvider;         // 'smtp' | 'resend' | undefined
+  const envProvider = env.EMAIL_PROVIDER;             // 'smtp' | 'resend' | undefined
+  const provider    = dbProvider || envProvider || 'smtp';
+
+  console.log('[testEmail] db.emailProvider:', dbProvider);
+  console.log('[testEmail] env.EMAIL_PROVIDER:', envProvider);
+  console.log('[testEmail] resolved provider:', provider);
+  console.log('[testEmail] db.resendApiKey set:', !!settings.resendApiKey);
+  console.log('[testEmail] env.RESEND_API_KEY set:', !!env.RESEND_API_KEY);
 
   // ── Resend path ──────────────────────────────────────────────────────────────
   if (provider === 'resend') {
