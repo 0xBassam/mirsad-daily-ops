@@ -18,6 +18,13 @@ export async function connectDB(): Promise<void> {
   if (isPlaceholder) {
     const { seedDemo } = await import('../db/seedDemo');
     await seedDemo();
+  } else {
+    const userCount = await mongoose.connection.db!.collection('users').countDocuments();
+    if (userCount === 0) {
+      console.log('Empty database detected — running auto-seed...');
+      const { seedLive } = await import('../db/seedLive');
+      await seedLive();
+    }
   }
 }
 
