@@ -40,7 +40,11 @@ export function ClientRequestDetailPage() {
 
   const actionMutation = useMutation({
     mutationFn: ({ url, body }: { url: string; body?: object }) =>
-      apiClient.post(url, body || {}).then(() => qc.invalidateQueries({ queryKey: ['client-request', id] })),
+      apiClient.post(url, body || {}).then(() => {
+        qc.invalidateQueries({ queryKey: ['client-request', id] });
+        qc.invalidateQueries({ queryKey: ['client-requests'] });
+        qc.invalidateQueries({ queryKey: ['dashboard'] });
+      }),
   });
 
   if (isLoading) return <PageLoader />;

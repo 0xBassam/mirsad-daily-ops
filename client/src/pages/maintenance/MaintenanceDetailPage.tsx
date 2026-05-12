@@ -35,7 +35,10 @@ export function MaintenanceDetailPage() {
   });
 
   function mutate(url: string, body?: object) {
-    return apiClient.post(url, body || {}).then(() => qc.invalidateQueries({ queryKey: ['maintenance', id] }));
+    return apiClient.post(url, body || {}).then(() => {
+      qc.invalidateQueries({ queryKey: ['maintenance', id] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    });
   }
 
   const actionMutation = useMutation({ mutationFn: (p: { url: string; body?: object }) => mutate(p.url, p.body) });

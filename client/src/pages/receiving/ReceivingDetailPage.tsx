@@ -27,7 +27,10 @@ export function ReceivingDetailPage() {
 
   const confirmMutation = useMutation({
     mutationFn: () => apiClient.post(`/receiving/${id}/confirm`).then(r => r.data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['receiving', id] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['receiving', id] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 
   if (isLoading) return <PageLoader />;

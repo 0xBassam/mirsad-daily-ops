@@ -28,7 +28,12 @@ export function FloorCheckDetailPage() {
   const approvalMutation = useMutation({
     mutationFn: ({ action }: { action: string }) =>
       apiClient.post(`/approvals/floor_check/${id}/${action}`, { comment }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['floor-check', id] }); toast.success(t('common.save')); setComment(''); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['floor-check', id] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(t('common.save'));
+      setComment('');
+    },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 

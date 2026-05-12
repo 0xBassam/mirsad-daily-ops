@@ -59,6 +59,7 @@ export function PurchaseOrderDetailPage() {
       toast.success('Stock received and inventory updated');
       setReceiveQtys(prev => ({ ...prev, [lineId]: '' }));
       qc.invalidateQueries({ queryKey: ['purchase-order', id] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
     },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Receive failed'),
   });
