@@ -6,6 +6,8 @@ import { DashboardStats, DashboardRequestRow, DashboardReceivingRow, DashboardPO
 import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { downloadExport } from '../../utils/downloadExport';
 import toast from 'react-hot-toast';
+
+const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
 import {
   ClipboardList, Coffee, Package, Warehouse, ShoppingCart,
   CheckCircle, TrendingDown, ArrowDownToLine, Bell,
@@ -101,7 +103,7 @@ function CardHeader({ icon: Icon, title, iconBg, badge, badgeColor, onExport }: 
           </span>
         )}
       </div>
-      {onExport && (
+      {onExport && !IS_DEMO && (
         <button onClick={onExport} title="Export" className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
           <Download className="h-3.5 w-3.5" />
         </button>

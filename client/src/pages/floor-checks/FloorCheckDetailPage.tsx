@@ -9,6 +9,8 @@ import { StatusBadge, Badge } from '../../components/ui/Badge';
 import { formatDate, formatDateTime } from '../../utils/formatDate';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft, Download } from 'lucide-react';
+
+const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
 import toast from 'react-hot-toast';
 
 export function FloorCheckDetailPage() {
@@ -145,7 +147,7 @@ export function FloorCheckDetailPage() {
         </div>
       )}
 
-      {check.status === 'approved' && (
+      {check.status === 'approved' && !IS_DEMO && (
         <div className="card p-5">
           <h2 className="font-semibold text-slate-800 mb-3">{t('reports.title')}</h2>
           <div className="flex gap-3">

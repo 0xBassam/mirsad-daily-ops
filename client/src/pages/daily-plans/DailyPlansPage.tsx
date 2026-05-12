@@ -12,6 +12,8 @@ import { Plus, Eye, Copy, Trash2, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { downloadExport } from '../../utils/downloadExport';
 
+const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
+
 export function DailyPlansPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -46,12 +48,14 @@ export function DailyPlansPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900">{t('dailyPlans.title')}</h1>
         <div className="flex items-center gap-2">
+          {!IS_DEMO && <>
           <button onClick={() => downloadExport('/export/daily-plans/pdf', `Mirsad_Menu_Report_${new Date().toISOString().slice(0,10)}.pdf`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
             <Download className="h-4 w-4" /> PDF
           </button>
           <button onClick={() => downloadExport('/export/daily-plans/excel', `Mirsad_Menu_Report_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error(t('common.error')))} className="btn-secondary flex items-center gap-1.5">
             <Download className="h-4 w-4" /> Excel
           </button>
+          </>}
           <Link to="/daily-plans/new" className="btn-primary"><Plus className="h-4 w-4" /> {t('common.newPlan')}</Link>
         </div>
       </div>
