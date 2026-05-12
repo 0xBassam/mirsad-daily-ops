@@ -12,10 +12,11 @@ interface CRForm {
   title: string; description: string;
   requestType: string; priority: string;
   project: string; building: string; floor: string;
+  room: string; locationNotes: string;
   expectedDelivery: string; notes: string;
   items: { name: string; quantity: string; unit: string }[];
 }
-const EMPTY: CRForm = { title:'', description:'', requestType:'operation_request', priority:'medium', project:'', building:'', floor:'', expectedDelivery:'', notes:'', items:[] };
+const EMPTY: CRForm = { title:'', description:'', requestType:'operation_request', priority:'medium', project:'', building:'', floor:'', room:'', locationNotes:'', expectedDelivery:'', notes:'', items:[] };
 
 export function ClientRequestNewPage() {
   const { t } = useTranslation();
@@ -50,6 +51,8 @@ export function ClientRequestNewPage() {
           ...form,
           building: form.building || undefined,
           floor: form.floor || undefined,
+          room: form.room || undefined,
+          locationNotes: form.locationNotes || undefined,
           expectedDelivery: form.expectedDelivery || undefined,
           items: form.items.map(item => ({ ...item, quantity: Number(item.quantity), unit: item.unit || undefined })),
         });
@@ -85,15 +88,31 @@ export function ClientRequestNewPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.building')}</label>
-            <select className="input w-full" value={form.building} onChange={e => f('building', e.target.value)} disabled={!form.project}>
+            <select className="input w-full" value={form.building} onChange={e => { f('building', e.target.value); f('floor', ''); }} disabled={!form.project}>
               <option value="">{t('common.selectBuilding')}</option>
               {(buildingsData?.data || []).map((b: any) => <option key={b._id} value={b._id}>{b.name}</option>)}
             </select>
           </div>
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.floor')}</label>
+            <select className="input w-full" value={form.floor} onChange={e => f('floor', e.target.value)} disabled={!form.building}>
+              <option value="">—</option>
+              {(floorsData?.data || []).map((fl: any) => <option key={fl._id} value={fl._id}>{fl.name}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.room')}</label>
+            <input className="input w-full" value={form.room} onChange={e => f('room', e.target.value)} placeholder={t('common.room')} />
+          </div>
+          <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.dueDate')}</label>
             <input type="date" className="input w-full" value={form.expectedDelivery} onChange={e => f('expectedDelivery', e.target.value)} />
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.locationNotes')}</label>
+          <input className="input w-full" value={form.locationNotes} onChange={e => f('locationNotes', e.target.value)} placeholder={t('common.locationNotes')} />
         </div>
 
         <div>

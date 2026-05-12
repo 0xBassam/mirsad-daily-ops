@@ -10,6 +10,13 @@ const envSchema = z.object({
   MONGODB_URI: z.string().default('mongodb+srv://username:password@cluster.mongodb.net/mirsad'),
   JWT_SECRET: z.string().min(16, 'JWT_SECRET must be at least 16 characters'),
   CLIENT_URL: z.string().default('http://localhost:5173'),
+  // Optional SMTP — if unset, email sending is silently skipped
+  SMTP_HOST:       z.string().optional(),
+  SMTP_PORT:       z.string().optional(),
+  SMTP_USER:       z.string().optional(),
+  SMTP_PASS:       z.string().optional(),
+  SMTP_FROM_EMAIL: z.string().optional(),
+  SMTP_FROM_NAME:  z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

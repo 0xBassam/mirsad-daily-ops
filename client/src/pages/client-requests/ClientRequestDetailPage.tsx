@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { ArrowLeft, MessageSquare, User, CheckCircle2, Truck, X, Play, CalendarDays, Package, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MessageSquare, User, CheckCircle2, Truck, X, Play, CalendarDays, Package, ChevronRight, MapPin } from 'lucide-react';
 import apiClient from '../../api/client';
 import { ClientRequest } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
@@ -133,13 +133,34 @@ export function ClientRequestDetailPage() {
         </div>
       </div>
 
+      {/* Location Info */}
+      {((cr.floor as any)?.name || cr.room || cr.locationNotes) && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <MapPin className="h-4 w-4 text-slate-400" />
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('common.floor')} / {t('common.room')}</p>
+          </div>
+          <div className="flex flex-wrap gap-4 text-sm text-slate-700">
+            {(cr.floor as any)?.name && (
+              <span><span className="text-slate-400 text-xs">{t('common.floor')}: </span>{(cr.floor as any).name}</span>
+            )}
+            {cr.room && (
+              <span><span className="text-slate-400 text-xs">{t('common.room')}: </span>{cr.room}</span>
+            )}
+            {cr.locationNotes && (
+              <span className="italic text-slate-500">{cr.locationNotes}</span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Description */}
       <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">{t('maintenance.description')}</h2>
         <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{cr.description}</p>
         {cr.notes && (
           <div className="mt-4 pt-3 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">Notes</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1.5">{t('common.notes')}</p>
             <p className="text-sm text-slate-500 italic">{cr.notes}</p>
           </div>
         )}

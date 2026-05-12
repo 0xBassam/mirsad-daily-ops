@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { MessageSquare, Plus, Clock, Play, Truck, CheckCircle2, User, CalendarDays, Package } from 'lucide-react';
+import { MessageSquare, Plus, Clock, Play, Truck, CheckCircle2, User, CalendarDays, Package, MapPin } from 'lucide-react';
 import { clsx } from 'clsx';
 import apiClient from '../../api/client';
 import { ClientRequest } from '../../types';
@@ -95,7 +95,7 @@ export function ClientRequestsPage() {
 
       {/* Filter Bar */}
       <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 flex flex-wrap items-center gap-3 shadow-sm">
-        <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">Filter</span>
+        <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('common.filter')}</span>
         <select className="input w-44" value={statusFilter} onChange={e => { setStatusFilter(e.target.value); setPage(1); }}>
           <option value="">{t('common.allStatuses')}</option>
           {['submitted','assigned','in_progress','delivered','confirmed','rejected'].map(s => (
@@ -113,11 +113,11 @@ export function ClientRequestsPage() {
             className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
             onClick={() => { setStatusFilter(''); setTypeFilter(''); setPage(1); }}
           >
-            Clear
+            {t('common.all')}
           </button>
         )}
         <span className="ms-auto text-xs text-slate-400 font-medium">
-          {requests.length} request{requests.length !== 1 ? 's' : ''}
+          {crData?.pagination?.total ?? requests.length} {t('clientRequests.title').toLowerCase()}
         </span>
       </div>
 
@@ -154,10 +154,17 @@ export function ClientRequestsPage() {
                     <User className="h-3 w-3" />
                     {(req.requestedBy as any)?.fullName || '—'}
                   </span>
+                  {(req.floor as any)?.name && (
+                    <span className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {(req.floor as any).name}
+                      {req.room && ` · ${req.room}`}
+                    </span>
+                  )}
                   {req.expectedDelivery && (
                     <span className="flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
-                      Due {format(new Date(req.expectedDelivery), 'dd MMM')}
+                      {t('common.dueDate')}: {format(new Date(req.expectedDelivery), 'dd MMM')}
                     </span>
                   )}
                   {req.items?.length > 0 && (
@@ -176,7 +183,7 @@ export function ClientRequestsPage() {
                 <StatusBadge status={req.status} />
                 <div className="flex items-center gap-1.5">
                   <div className={`h-2 w-2 rounded-full ${PRIORITY_DOT[req.priority] ?? 'bg-slate-300'}`} />
-                  <span className="text-xs text-slate-500 capitalize">{req.priority}</span>
+                  <span className="text-xs text-slate-500">{t(`status.${req.priority}`)}</span>
                 </div>
               </div>
             </div>

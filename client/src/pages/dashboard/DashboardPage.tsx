@@ -43,10 +43,11 @@ const PRIORITY_DOT: Record<string, string> = {
 };
 
 function StatusPill({ status }: { status: string }) {
+  const { t } = useTranslation();
   const cls = STATUS_COLORS[status] ?? 'bg-slate-100 text-slate-600';
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${cls}`}>
-      {status.replace(/_/g, ' ')}
+      {t(`status.${status}`, { defaultValue: status.replace(/_/g, ' ') })}
     </span>
   );
 }
@@ -116,17 +117,18 @@ function CardHeader({ icon: Icon, title, iconBg, badge, badgeColor, onExport }: 
 }
 
 function RequestTable({ rows, emptyLabel }: { rows: DashboardRequestRow[]; emptyLabel: string }) {
+  const { t } = useTranslation();
   if (!rows.length) return <p className="text-sm text-slate-400 py-6 text-center">{emptyLabel}</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200">
-            <Th className="w-[42%]">Request</Th>
-            <Th>Floor</Th>
-            <Th>Priority</Th>
-            <Th>Status</Th>
-            <Th>Time</Th>
+            <Th className="w-[42%]">{t('common.request')}</Th>
+            <Th>{t('common.floor')}</Th>
+            <Th>{t('common.priority')}</Th>
+            <Th>{t('common.status')}</Th>
+            <Th>{t('common.time')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -134,13 +136,13 @@ function RequestTable({ rows, emptyLabel }: { rows: DashboardRequestRow[]; empty
             <tr key={r._id} className="border-b border-slate-50 hover:bg-indigo-50/30 transition-colors last:border-0">
               <td className="py-3 px-4">
                 <p className="font-semibold text-slate-800 truncate max-w-[220px]" title={r.title}>{r.title}</p>
-                <p className="text-xs text-slate-400 mt-0.5">{r.itemCount} item{r.itemCount !== 1 ? 's' : ''}</p>
+                <p className="text-xs text-slate-400 mt-0.5">{r.itemCount} {t('dashboard.itemsCount')}</p>
               </td>
               <td className="py-3 px-4 text-slate-600 whitespace-nowrap">{r.floor}</td>
               <td className="py-3 px-4">
                 <div className="flex items-center gap-1.5">
                   <div className={`h-2 w-2 rounded-full flex-shrink-0 ${PRIORITY_DOT[r.priority] ?? 'bg-slate-300'}`} />
-                  <span className="text-xs text-slate-600 capitalize">{r.priority}</span>
+                  <span className="text-xs text-slate-600">{t(`status.${r.priority}`, { defaultValue: r.priority })}</span>
                 </div>
               </td>
               <td className="py-3 px-4"><StatusPill status={r.status} /></td>
@@ -156,17 +158,18 @@ function RequestTable({ rows, emptyLabel }: { rows: DashboardRequestRow[]; empty
 }
 
 function ReceivingTable({ rows }: { rows: DashboardReceivingRow[] }) {
-  if (!rows.length) return <p className="text-sm text-slate-400 py-6 text-center">No receiving records</p>;
+  const { t } = useTranslation();
+  if (!rows.length) return <p className="text-sm text-slate-400 py-6 text-center">{t('dashboard.noReceiving')}</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200">
-            <Th>Supplier</Th>
-            <Th>Date</Th>
-            <Th>Items</Th>
-            <Th>Invoice</Th>
-            <Th>Status</Th>
+            <Th>{t('common.supplier')}</Th>
+            <Th>{t('common.date')}</Th>
+            <Th>{t('clientRequests.requestedItems')}</Th>
+            <Th>{t('common.invoice')}</Th>
+            <Th>{t('common.status')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -174,7 +177,7 @@ function ReceivingTable({ rows }: { rows: DashboardReceivingRow[] }) {
             <tr key={r._id} className="border-b border-slate-50 hover:bg-teal-50/30 transition-colors last:border-0">
               <td className="py-3 px-4 font-semibold text-slate-800 max-w-[180px] truncate" title={r.supplierName}>{r.supplierName}</td>
               <td className="py-3 px-4 text-slate-600 whitespace-nowrap">{format(parseISO(r.deliveryDate), 'dd MMM yyyy')}</td>
-              <td className="py-3 px-4 text-slate-600">{r.lineCount} items</td>
+              <td className="py-3 px-4 text-slate-600">{r.lineCount} {t('dashboard.itemsCount')}</td>
               <td className="py-3 px-4 text-slate-500 font-mono text-xs">{r.invoiceNumber || '—'}</td>
               <td className="py-3 px-4"><StatusPill status={r.status} /></td>
             </tr>
@@ -186,17 +189,18 @@ function ReceivingTable({ rows }: { rows: DashboardReceivingRow[] }) {
 }
 
 function POTable({ rows }: { rows: DashboardPORow[] }) {
-  if (!rows.length) return <p className="text-sm text-slate-400 py-6 text-center">No purchase orders</p>;
+  const { t } = useTranslation();
+  if (!rows.length) return <p className="text-sm text-slate-400 py-6 text-center">{t('dashboard.noPOs')}</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200">
-            <Th>PO #</Th>
-            <Th>Supplier</Th>
-            <Th>Month</Th>
-            <Th>Received</Th>
-            <Th>Status</Th>
+            <Th>{t('purchaseOrders.poNumber')}</Th>
+            <Th>{t('common.supplier')}</Th>
+            <Th>{t('purchaseOrders.month')}</Th>
+            <Th>{t('common.received')}</Th>
+            <Th>{t('common.status')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -226,17 +230,18 @@ function POTable({ rows }: { rows: DashboardPORow[] }) {
 }
 
 function LowStockTable({ rows }: { rows: DashboardLowStockRow[] }) {
-  if (!rows.length) return <p className="text-sm text-slate-400 py-6 text-center">All items well stocked</p>;
+  const { t } = useTranslation();
+  if (!rows.length) return <p className="text-sm text-slate-400 py-6 text-center">{t('dashboard.allStocked')}</p>;
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-slate-200">
-            <Th>Item</Th>
-            <Th>Type</Th>
-            <Th>Remaining</Th>
-            <Th>Limit</Th>
-            <Th>Status</Th>
+            <Th>{t('common.item')}</Th>
+            <Th>{t('common.type')}</Th>
+            <Th>{t('common.remaining')}</Th>
+            <Th>{t('common.limit')}</Th>
+            <Th>{t('common.status')}</Th>
           </tr>
         </thead>
         <tbody>
@@ -245,7 +250,7 @@ function LowStockTable({ rows }: { rows: DashboardLowStockRow[] }) {
               <td className="py-3 px-4 font-semibold text-slate-800">{r.name}</td>
               <td className="py-3 px-4">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${r.type === 'food' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
-                  {r.type}
+                  {t(`status.${r.type}`, { defaultValue: r.type })}
                 </span>
               </td>
               <td className="py-3 px-4 font-bold text-slate-700 tabular-nums">
@@ -305,17 +310,17 @@ function ClientDashboard() {
         <div className="flex items-start justify-between gap-3 mb-2">
           <p className="font-semibold text-slate-800 text-sm leading-snug">{req.title}</p>
           <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold whitespace-nowrap flex-shrink-0 ${statusColor}`}>
-            {req.status.replace(/_/g, ' ')}
+            {t(`status.${req.status}`, { defaultValue: req.status.replace(/_/g, ' ') })}
           </span>
         </div>
         <div className="flex items-center gap-3 text-xs text-slate-400">
-          <span className="capitalize">{t(`clientRequests.types.${req.requestType}`, { defaultValue: req.requestType.replace(/_/g, ' ') })}</span>
+          <span>{t(`clientRequests.types.${req.requestType}`, { defaultValue: req.requestType.replace(/_/g, ' ') })}</span>
           {req.floor && <><span>·</span><span>{typeof req.floor === 'object' ? req.floor.name : req.floor}</span></>}
           <span>·</span>
           <span>{formatDistanceToNow(parseISO(req.createdAt), { addSuffix: true })}</span>
         </div>
         {req.items?.length > 0 && (
-          <p className="text-xs text-slate-400 mt-1.5">{req.items.length} item{req.items.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-slate-400 mt-1.5">{req.items.length} {t('dashboard.itemsCount')}</p>
         )}
       </Link>
     );
@@ -329,7 +334,7 @@ function ClientDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{t('clientRequests.myRequests')}</h1>
           <p className="text-slate-500 text-sm mt-0.5">
-            {new Date().toLocaleDateString('en-SA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>
         <Link to="/client-requests/new" className="btn-primary flex items-center gap-2 whitespace-nowrap">
@@ -340,9 +345,9 @@ function ClientDashboard() {
       {/* Summary pills */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: 'Active',             value: active.length,    color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-          { label: 'Awaiting Confirmation', value: delivered.length, color: 'bg-violet-50 border-violet-200 text-violet-700' },
-          { label: 'Completed',          value: history.length,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+          { label: t('clientRequests.active'),              value: active.length,    color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+          { label: t('clientRequests.awaitingConfirmation'), value: delivered.length, color: 'bg-violet-50 border-violet-200 text-violet-700' },
+          { label: t('dashboard.completed'),                 value: history.length,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 text-center ${s.color}`}>
             <p className="text-3xl font-extrabold tabular-nums">{s.value}</p>
@@ -365,10 +370,10 @@ function ClientDashboard() {
                   <p className="font-semibold text-slate-900">{r.title}</p>
                   <p className="text-xs text-slate-500 mt-0.5">
                     {t(`clientRequests.types.${r.requestType}`, { defaultValue: r.requestType.replace(/_/g, ' ') })}
-                    {r.deliveredAt && <> · Delivered {formatDistanceToNow(parseISO(r.deliveredAt), { addSuffix: true })}</>}
+                    {r.deliveredAt && <> · {t('clientRequests.deliveredAgo')} {formatDistanceToNow(parseISO(r.deliveredAt), { addSuffix: true })}</>}
                   </p>
                 </div>
-                <span className="text-xs px-3 py-1.5 rounded-full font-bold bg-violet-600 text-white">Confirm →</span>
+                <span className="text-xs px-3 py-1.5 rounded-full font-bold bg-violet-600 text-white">{t('clientRequests.confirmArrow')}</span>
               </Link>
             ))}
           </div>
@@ -378,7 +383,7 @@ function ClientDashboard() {
       {/* Active requests */}
       <div className="space-y-3">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-          Active Requests ({active.length})
+          {t('clientRequests.activeRequests')} ({active.length})
         </h2>
         {active.length === 0
           ? <p className="text-slate-400 text-sm py-4 text-center">{t('clientRequests.noActiveRequests')}</p>
@@ -389,14 +394,14 @@ function ClientDashboard() {
       {/* Recent history */}
       {history.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Recent History</h2>
+          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('clientRequests.recentHistory')}</h2>
           <div className="space-y-2">{history.map(r => <RequestCard key={r._id} req={r} />)}</div>
         </div>
       )}
 
       <div className="text-center pt-2">
         <Link to="/client-requests" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">
-          View all requests →
+          {t('clientRequests.viewAll')} →
         </Link>
       </div>
     </div>
@@ -435,18 +440,18 @@ export function DashboardPage() {
             </p>
             <h1 className="text-2xl font-bold tracking-tight">{t('dashboard.title')}</h1>
             <p className="text-indigo-200/80 text-sm mt-1.5">
-              Cafeteria Operations Management ·{' '}
-              {new Date().toLocaleDateString('en-SA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+              {t('dashboard.cafeteriaOps')} ·{' '}
+              {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>
           <div className="bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/10 flex-shrink-0">
-            <p className="text-indigo-200 text-xs font-semibold uppercase tracking-wider mb-1">System</p>
+            <p className="text-indigo-200 text-xs font-semibold uppercase tracking-wider mb-1">{t('dashboard.system')}</p>
             <div className="flex items-center gap-2">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-400" />
               </span>
-              <span className="text-sm font-semibold text-white">Live · Operational</span>
+              <span className="text-sm font-semibold text-white">{t('dashboard.systemLive')}</span>
             </div>
           </div>
         </div>
@@ -456,46 +461,46 @@ export function DashboardPage() {
 
       {/* ── KPI Row ── */}
       <div className="space-y-3">
-        <SectionHeader>Today's Operations</SectionHeader>
+        <SectionHeader>{t('dashboard.todayOps')}</SectionHeader>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
-          <KpiCard icon={ClipboardList}   label="Operation Requests"    value={data.operationRequestsOpen ?? 0}                    bg="bg-indigo-500" accent="text-indigo-600" highlight />
-          <KpiCard icon={Coffee}          label="Coffee Break Requests" value={data.coffeeBreakRequestsOpen ?? 0}                   bg="bg-purple-500" accent="text-purple-600" highlight />
-          <KpiCard icon={ArrowDownToLine} label="Receiving Today"       value={data.receivingToday ?? 0}                           bg="bg-teal-500"   accent="text-teal-600" />
-          <KpiCard icon={ShoppingCart}    label="Active Purchase Orders" value={data.openPurchaseOrders ?? 0}                       bg="bg-blue-500"   accent="text-blue-600" />
-          <KpiCard icon={Flame}           label="Today's Consumption"   value={(data as any).todayConsumption?.qty ?? 0}            bg="bg-orange-500" accent="text-orange-600" />
-          <KpiCard icon={TrendingDown}    label="Low / Out of Stock"    value={(data.lowStock ?? 0) + (data.outOfStock ?? 0)}       bg="bg-amber-500"  accent="text-amber-600" highlight />
-          <KpiCard icon={Bell}            label="Active Alerts"         value={totalAlerts}                                        bg="bg-red-500"    accent="text-red-600"  highlight />
+          <KpiCard icon={ClipboardList}   label={t('dashboard.operationRequests')}  value={data.operationRequestsOpen ?? 0}                    bg="bg-indigo-500" accent="text-indigo-600" highlight />
+          <KpiCard icon={Coffee}          label={t('dashboard.coffeeBreakRequests')} value={data.coffeeBreakRequestsOpen ?? 0}                   bg="bg-purple-500" accent="text-purple-600" highlight />
+          <KpiCard icon={ArrowDownToLine} label={t('dashboard.receivingToday')}      value={data.receivingToday ?? 0}                           bg="bg-teal-500"   accent="text-teal-600" />
+          <KpiCard icon={ShoppingCart}    label={t('dashboard.activePOs')}           value={data.openPurchaseOrders ?? 0}                       bg="bg-blue-500"   accent="text-blue-600" />
+          <KpiCard icon={Flame}           label={t('dashboard.todayConsumptionKpi')} value={(data as any).todayConsumption?.qty ?? 0}            bg="bg-orange-500" accent="text-orange-600" />
+          <KpiCard icon={TrendingDown}    label={t('dashboard.lowOutOfStock')}       value={(data.lowStock ?? 0) + (data.outOfStock ?? 0)}       bg="bg-amber-500"  accent="text-amber-600" highlight />
+          <KpiCard icon={Bell}            label={t('dashboard.activeAlerts')}        value={totalAlerts}                                        bg="bg-red-500"    accent="text-red-600"  highlight />
         </div>
       </div>
 
       {/* ── Inventory Health ── */}
       <div className="space-y-3">
-        <SectionHeader>Inventory Status — {new Date().toLocaleString('en', { month: 'long', year: 'numeric' })}</SectionHeader>
+        <SectionHeader>{t('dashboard.inventoryStatus')} — {new Date().toLocaleString(undefined, { month: 'long', year: 'numeric' })}</SectionHeader>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Food Inventory */}
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
             <div className="flex items-center gap-3 mb-5">
               <div className="p-2 rounded-lg bg-green-500"><Package className="h-4 w-4 text-white" /></div>
               <div>
-                <h3 className="font-semibold text-slate-800 text-sm">Food Inventory</h3>
-                <p className="text-xs text-slate-400">{foodTotal} categories tracked</p>
+                <h3 className="font-semibold text-slate-800 text-sm">{t('dashboard.foodInventoryTitle')}</h3>
+                <p className="text-xs text-slate-400">{foodTotal} {t('dashboard.categoriesTracked')}</p>
               </div>
               <div className="ms-auto text-right">
                 <span className="text-2xl font-bold text-green-600">{Math.round(data.foodInventory.available / Math.max(1, foodTotal) * 100)}%</span>
-                <p className="text-xs text-slate-400">healthy</p>
+                <p className="text-xs text-slate-400">{t('dashboard.healthy')}</p>
               </div>
             </div>
             <div className="space-y-3.5">
               {[
-                { label: 'Available',     val: data.foodInventory.available,    bar: 'bg-emerald-500', text: 'text-emerald-700' },
-                { label: 'Low Stock',     val: data.foodInventory.lowStock,     bar: 'bg-amber-500',   text: 'text-amber-700' },
-                { label: 'Out of Stock',  val: data.foodInventory.outOfStock,   bar: 'bg-red-500',     text: 'text-red-700' },
-                { label: 'Over Consumed', val: data.foodInventory.overConsumed, bar: 'bg-red-700',     text: 'text-red-800' },
+                { label: t('status.available'),     val: data.foodInventory.available,    bar: 'bg-emerald-500', text: 'text-emerald-700' },
+                { label: t('status.low_stock'),      val: data.foodInventory.lowStock,     bar: 'bg-amber-500',   text: 'text-amber-700' },
+                { label: t('status.out_of_stock'),   val: data.foodInventory.outOfStock,   bar: 'bg-red-500',     text: 'text-red-700' },
+                { label: t('status.over_consumed'),  val: data.foodInventory.overConsumed, bar: 'bg-red-700',     text: 'text-red-800' },
               ].map(({ label, val, bar, text }) => (
                 <div key={label}>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs font-medium text-slate-600">{label}</span>
-                    <span className={`text-xs font-bold tabular-nums ${text}`}>{val} items</span>
+                    <span className={`text-xs font-bold tabular-nums ${text}`}>{val} {t('dashboard.itemsCount')}</span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div className={`h-full ${bar} rounded-full transition-all duration-500`} style={{ width: `${foodTotal > 0 ? Math.round((val / foodTotal) * 100) : 0}%` }} />
@@ -510,24 +515,24 @@ export function DashboardPage() {
             <div className="flex items-center gap-3 mb-5">
               <div className="p-2 rounded-lg bg-blue-500"><Warehouse className="h-4 w-4 text-white" /></div>
               <div>
-                <h3 className="font-semibold text-slate-800 text-sm">Materials Inventory</h3>
-                <p className="text-xs text-slate-400">{matTotal} categories tracked</p>
+                <h3 className="font-semibold text-slate-800 text-sm">{t('dashboard.materialsInventoryTitle')}</h3>
+                <p className="text-xs text-slate-400">{matTotal} {t('dashboard.categoriesTracked')}</p>
               </div>
               <div className="ms-auto text-right">
                 <span className="text-2xl font-bold text-blue-600">{Math.round(data.materialsInventory.available / Math.max(1, matTotal) * 100)}%</span>
-                <p className="text-xs text-slate-400">available</p>
+                <p className="text-xs text-slate-400">{t('dashboard.availablePct')}</p>
               </div>
             </div>
             <div className="space-y-3.5 mb-5">
               {[
-                { label: 'Available',    val: data.materialsInventory.available,  bar: 'bg-emerald-500', text: 'text-emerald-700' },
-                { label: 'Low Stock',    val: data.materialsInventory.lowStock,   bar: 'bg-amber-500',   text: 'text-amber-700' },
-                { label: 'Out of Stock', val: data.materialsInventory.outOfStock, bar: 'bg-red-500',     text: 'text-red-700' },
+                { label: t('status.available'),   val: data.materialsInventory.available,  bar: 'bg-emerald-500', text: 'text-emerald-700' },
+                { label: t('status.low_stock'),    val: data.materialsInventory.lowStock,   bar: 'bg-amber-500',   text: 'text-amber-700' },
+                { label: t('status.out_of_stock'), val: data.materialsInventory.outOfStock, bar: 'bg-red-500',     text: 'text-red-700' },
               ].map(({ label, val, bar, text }) => (
                 <div key={label}>
                   <div className="flex items-center justify-between mb-1.5">
                     <span className="text-xs font-medium text-slate-600">{label}</span>
-                    <span className={`text-xs font-bold tabular-nums ${text}`}>{val} items</span>
+                    <span className={`text-xs font-bold tabular-nums ${text}`}>{val} {t('dashboard.itemsCount')}</span>
                   </div>
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                     <div className={`h-full ${bar} rounded-full transition-all duration-500`} style={{ width: `${matTotal > 0 ? Math.round((val / matTotal) * 100) : 0}%` }} />
@@ -536,9 +541,9 @@ export function DashboardPage() {
               ))}
             </div>
             <div className="border-t border-slate-100 pt-3 space-y-0">
-              <MiniStat label="Shortage Items"    value={data.shortages}                    dot="bg-red-500"    text="text-red-600" />
-              <MiniStat label="Pending Transfers" value={data.pendingTransfers ?? 0}        dot="bg-sky-500"    text="text-sky-600" />
-              <MiniStat label="Open Maintenance"  value={data.openMaintenanceRequests ?? 0} dot="bg-yellow-500" text="text-yellow-600" />
+              <MiniStat label={t('dashboard.shortageItems')}         value={data.shortages}                    dot="bg-red-500"    text="text-red-600" />
+              <MiniStat label={t('dashboard.pendingTransfers')}       value={data.pendingTransfers ?? 0}        dot="bg-sky-500"    text="text-sky-600" />
+              <MiniStat label={t('dashboard.openMaintenance')}        value={data.openMaintenanceRequests ?? 0} dot="bg-yellow-500" text="text-yellow-600" />
             </div>
           </div>
         </div>
@@ -546,34 +551,34 @@ export function DashboardPage() {
 
       {/* ── Latest Requests ── */}
       <div className="space-y-3">
-        <SectionHeader>Latest Requests</SectionHeader>
+        <SectionHeader>{t('dashboard.latestRequests')}</SectionHeader>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <CardHeader
-              icon={ClipboardList} title="Operation Requests" iconBg="bg-indigo-500"
+              icon={ClipboardList} title={t('dashboard.operationRequests')} iconBg="bg-indigo-500"
               badge={data.operationRequestsOpen ?? 0} badgeColor="bg-indigo-100 text-indigo-700"
               onExport={() => downloadExport('/export/operation-requests/excel', `Mirsad_Operation_Requests_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
             />
-            <RequestTable rows={data.latestOperationRequests ?? []} emptyLabel="No operation requests" />
+            <RequestTable rows={data.latestOperationRequests ?? []} emptyLabel={t('dashboard.noOpRequests')} />
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <CardHeader
-              icon={Coffee} title="Coffee Break Requests" iconBg="bg-purple-500"
+              icon={Coffee} title={t('dashboard.coffeeBreakRequests')} iconBg="bg-purple-500"
               badge={data.coffeeBreakRequestsOpen ?? 0} badgeColor="bg-purple-100 text-purple-700"
               onExport={() => downloadExport('/export/coffee-break-requests/excel', `Mirsad_Coffee_Break_Requests_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
             />
-            <RequestTable rows={data.latestCoffeeBreakRequests ?? []} emptyLabel="No coffee break requests" />
+            <RequestTable rows={data.latestCoffeeBreakRequests ?? []} emptyLabel={t('dashboard.noCbRequests')} />
           </div>
         </div>
       </div>
 
       {/* ── Receiving & POs ── */}
       <div className="space-y-3">
-        <SectionHeader>Receiving & Purchase Orders</SectionHeader>
+        <SectionHeader>{t('dashboard.receivingAndPOs')}</SectionHeader>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <CardHeader
-              icon={ArrowDownToLine} title="Recent Receiving" iconBg="bg-teal-500"
+              icon={ArrowDownToLine} title={t('dashboard.recentReceiving')} iconBg="bg-teal-500"
               badge={data.receivingToday ?? 0} badgeColor="bg-teal-100 text-teal-700"
               onExport={() => downloadExport('/export/receiving/excel', `Mirsad_Receiving_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
             />
@@ -581,7 +586,7 @@ export function DashboardPage() {
           </div>
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <CardHeader
-              icon={ShoppingCart} title="Purchase Orders" iconBg="bg-blue-500"
+              icon={ShoppingCart} title={t('dashboard.purchaseOrdersTitle')} iconBg="bg-blue-500"
               badge={data.openPurchaseOrders ?? 0} badgeColor="bg-blue-100 text-blue-700"
               onExport={() => downloadExport('/export/purchase-orders/excel', `Mirsad_Purchase_Orders_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
             />
@@ -592,11 +597,11 @@ export function DashboardPage() {
 
       {/* ── Stock Alerts & Floor Safety ── */}
       <div className="space-y-3">
-        <SectionHeader>Stock Alerts & Floor Safety</SectionHeader>
+        <SectionHeader>{t('dashboard.stockAlerts')}</SectionHeader>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <CardHeader
-              icon={TrendingDown} title="Low Stock Items" iconBg="bg-amber-500"
+              icon={TrendingDown} title={t('dashboard.lowStockItemsTitle')} iconBg="bg-amber-500"
               badge={(data.lowStock + data.outOfStock)} badgeColor="bg-amber-100 text-amber-700"
               onExport={() => downloadExport('/export/inventory/excel', `Mirsad_Inventory_Report_${new Date().toISOString().slice(0,10)}.xlsx`).catch(() => toast.error('Export failed'))}
             />
@@ -606,11 +611,11 @@ export function DashboardPage() {
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-emerald-500"><CheckCircle className="h-4 w-4 text-white" /></div>
-              <h3 className="font-semibold text-slate-800 text-sm">Floor Checks & Food Safety</h3>
+              <h3 className="font-semibold text-slate-800 text-sm">{t('dashboard.floorChecksSafety')}</h3>
             </div>
             <div>
               <div className="flex justify-between text-xs font-semibold mb-2">
-                <span className="text-slate-500">Today's Completion</span>
+                <span className="text-slate-500">{t('dashboard.todayCompletion')}</span>
                 <span className="text-slate-700">
                   {data.checks.total > 0 ? Math.round((data.checks.completed / data.checks.total) * 100) : 0}%
                 </span>
@@ -623,9 +628,9 @@ export function DashboardPage() {
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {[
-                  { val: data.checks.completed, label: 'Done',      color: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
-                  { val: data.checks.pending,   label: 'Pending',   color: 'bg-amber-50 text-amber-700 border border-amber-100' },
-                  { val: data.pendingApprovals, label: 'Approvals', color: 'bg-blue-50 text-blue-700 border border-blue-100' },
+                  { val: data.checks.completed, label: t('dashboard.done'),         color: 'bg-emerald-50 text-emerald-700 border border-emerald-100' },
+                  { val: data.checks.pending,   label: t('dashboard.pending'),       color: 'bg-amber-50 text-amber-700 border border-amber-100' },
+                  { val: data.pendingApprovals, label: t('dashboard.approvalsCount'), color: 'bg-blue-50 text-blue-700 border border-blue-100' },
                 ].map(({ val, label, color }) => (
                   <div key={label} className={`rounded-xl p-3 text-center ${color}`}>
                     <p className="text-xl font-bold tabular-nums">{val}</p>
@@ -635,10 +640,10 @@ export function DashboardPage() {
               </div>
             </div>
             <div className="border-t border-slate-100 pt-2 space-y-0">
-              <MiniStat label="Expiring in 3 Days"     value={data.expiringIn3Days ?? 0}        dot="bg-amber-400"  text="text-amber-600" />
-              <MiniStat label="Active Spoilage Alerts"  value={data.activeSpoilageAlerts ?? 0}   dot="bg-red-500"    text="text-red-600" />
-              <MiniStat label="Corrective Actions Open" value={data.activeCorrectiveActions ?? 0} dot="bg-orange-500" text="text-orange-600" />
-              <MiniStat label="Fridge Checks Today"     value={data.fridgeChecksToday ?? 0}      dot="bg-blue-500"   text="text-blue-600" />
+              <MiniStat label={t('dashboard.expiringIn3Days')}         value={data.expiringIn3Days ?? 0}        dot="bg-amber-400"  text="text-amber-600" />
+              <MiniStat label={t('dashboard.activeSpoilageAlerts')}    value={data.activeSpoilageAlerts ?? 0}   dot="bg-red-500"    text="text-red-600" />
+              <MiniStat label={t('dashboard.activeCorrectiveActions')}  value={data.activeCorrectiveActions ?? 0} dot="bg-orange-500" text="text-orange-600" />
+              <MiniStat label={t('dashboard.fridgeChecksToday')}        value={data.fridgeChecksToday ?? 0}      dot="bg-blue-500"   text="text-blue-600" />
             </div>
           </div>
         </div>
@@ -647,13 +652,13 @@ export function DashboardPage() {
       {/* ── Analytics ── */}
       {(data.topConsumedItems?.length || data.checksByFloor?.length) ? (
         <div className="space-y-3">
-          <SectionHeader>Analytics & Insights</SectionHeader>
+          <SectionHeader>{t('dashboard.analyticsInsights')}</SectionHeader>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {data.topConsumedItems?.length ? (
               <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-orange-500"><TrendingUp className="h-4 w-4 text-white" /></div>
-                  <h3 className="font-semibold text-slate-800 text-sm">Top Consumed Items</h3>
+                  <h3 className="font-semibold text-slate-800 text-sm">{t('dashboard.topConsumedItems')}</h3>
                 </div>
                 <div className="space-y-3">
                   {data.topConsumedItems.map((item, i) => {
@@ -681,7 +686,7 @@ export function DashboardPage() {
               <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 rounded-lg bg-indigo-500"><BarChart2 className="h-4 w-4 text-white" /></div>
-                  <h3 className="font-semibold text-slate-800 text-sm">Checks by Floor</h3>
+                  <h3 className="font-semibold text-slate-800 text-sm">{t('dashboard.checksByFloor')}</h3>
                 </div>
                 <div className="space-y-3">
                   {data.checksByFloor.map((floor, i) => {
@@ -712,7 +717,7 @@ export function DashboardPage() {
       {/* ── Recent Activity ── */}
       {data.recentActivity.length > 0 && (
         <div className="space-y-3">
-          <SectionHeader>Recent Activity</SectionHeader>
+          <SectionHeader>{t('dashboard.recentActivityTitle')}</SectionHeader>
           <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
             <div className="divide-y divide-slate-50">
               {data.recentActivity.slice(0, 8).map((rec: any) => (

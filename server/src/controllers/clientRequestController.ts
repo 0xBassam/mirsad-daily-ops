@@ -2,11 +2,18 @@ import { Request, Response } from 'express';
 import { ClientRequest } from '../models/ClientRequest';
 import { Item } from '../models/Item';
 import { StockMovement } from '../models/StockMovement';
+import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 import { applyMovementToBalance } from '../services/inventoryService';
+import { sendRequestCreated, sendRequestAssigned, sendRequestDelivered, sendRequestConfirmed } from '../services/emailService';
+
+async function getAdminEmails(): Promise<string[]> {
+  const admins = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
+  return admins.map((u: any) => u.email).filter(Boolean);
+}
 
 const POPULATE = [
   { path: 'project',     select: 'name' },
@@ -41,6 +48,17 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
   const data = await ClientRequest.create({ ...req.body, requestedBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'client_request', entityId: data._id, req });
   res.status(201).json({ success: true, data });
+
+  // Fire-and-forget email to admins
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(data._id).populate('requestedBy', 'fullName').populate('floor', 'name').lean() as any;
+      const adminEmails = await getAdminEmails();
+      for (const email of adminEmails) {
+        await sendRequestCreated({ to: email, requestTitle: data.title, requestType: data.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', floor: populated?.floor?.name, room: data.room, itemCount: data.items?.length, requestId: String(data._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const updateClientRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -60,6 +78,16 @@ export const assignClientRequest = asyncHandler(async (req: Request, res: Respon
   await cr.save();
   await logAction({ userId: req.user?.userId, action: 'assign', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
+
+  // Notify requester
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').populate('assignedTo', 'fullName').lean() as any;
+      if (populated?.requestedBy?.email) {
+        await sendRequestAssigned({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, assigneeName: populated.assignedTo?.fullName || 'Staff', requestId: String(cr._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const startClientRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -100,6 +128,16 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
 
   await logAction({ userId: req.user?.userId, action: 'deliver', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
+
+  // Notify requester to confirm
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').lean() as any;
+      if (populated?.requestedBy?.email) {
+        await sendRequestDelivered({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, requestId: String(cr._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const confirmClientRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -111,6 +149,17 @@ export const confirmClientRequest = asyncHandler(async (req: Request, res: Respo
   await cr.save();
   await logAction({ userId: req.user?.userId, action: 'confirm', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
+
+  // Notify admins of confirmation
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName').lean() as any;
+      const adminEmails = await getAdminEmails();
+      for (const email of adminEmails) {
+        await sendRequestConfirmed({ to: email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', requestId: String(cr._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const rejectClientRequest = asyncHandler(async (req: Request, res: Response) => {

@@ -25,6 +25,8 @@ export interface IClientRequest extends Document {
   expectedDelivery?: Date;
   deliveredAt?:      Date;
   confirmedAt?:      Date;
+  room?:             string;
+  locationNotes?:    string;
   rejectionReason?:  string;
   notes?:            string;
 }
@@ -50,6 +52,8 @@ const clientRequestSchema = new Schema<IClientRequest>({
   expectedDelivery: Date,
   deliveredAt:      Date,
   confirmedAt:      Date,
+  room:             String,
+  locationNotes:    String,
   rejectionReason:  String,
   notes:            String,
 }, { timestamps: true });

@@ -445,6 +445,8 @@ export interface ClientRequest {
   project: { _id: string; name: string } | string;
   building?: { _id: string; name: string } | string;
   floor?: { _id: string; name: string } | string;
+  room?: string;
+  locationNotes?: string;
   requestedBy: { _id: string; fullName: string; role?: string } | string;
   assignedTo?: { _id: string; fullName: string } | string;
   status: 'submitted' | 'assigned' | 'in_progress' | 'delivered' | 'confirmed' | 'rejected';
