@@ -1,16 +1,21 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { env } from '../config/env';
 import { getSystemSettings } from '../models/SystemSettings';
 
-// ─── Transporter cache ────────────────────────────────────────────────────────
+// ─── Cache ────────────────────────────────────────────────────────────────────
 
-let _transporter: nodemailer.Transporter | null | undefined = undefined; // undefined = not yet resolved
+let _smtpTransporter: nodemailer.Transporter | null | undefined = undefined;
+let _resendClient:    Resend | null | undefined = undefined;
 
 export function clearTransporterCache() {
-  _transporter = undefined;
+  _smtpTransporter = undefined;
+  _resendClient    = undefined;
 }
 
-function makeTransport(host: string, port: number, tls: boolean, user: string, pass: string) {
+// ─── SMTP helpers ─────────────────────────────────────────────────────────────
+
+function makeSmtpTransport(host: string, port: number, tls: boolean, user: string, pass: string) {
   const implicitTls = port === 465;
   return nodemailer.createTransport({
     host,
@@ -24,33 +29,58 @@ function makeTransport(host: string, port: number, tls: boolean, user: string, p
   });
 }
 
-async function getTransporter(): Promise<nodemailer.Transporter | null> {
-  if (_transporter !== undefined) return _transporter;
-
+async function getSmtpTransporter(): Promise<nodemailer.Transporter | null> {
+  if (_smtpTransporter !== undefined) return _smtpTransporter;
   try {
     const s = await getSystemSettings();
     if (s.smtpHost && s.smtpUser && s.smtpPass) {
-      _transporter = makeTransport(s.smtpHost, s.smtpPort || 587, s.smtpTls, s.smtpUser, s.smtpPass);
-      return _transporter;
+      _smtpTransporter = makeSmtpTransport(s.smtpHost, s.smtpPort || 587, s.smtpTls, s.smtpUser, s.smtpPass);
+      return _smtpTransporter;
     }
-  } catch { /* DB not ready yet */ }
-
-  // Fall back to env vars
+  } catch { /* DB not ready */ }
   if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
     const port = Number(env.SMTP_PORT || 587);
-    _transporter = makeTransport(env.SMTP_HOST, port, port !== 465, env.SMTP_USER, env.SMTP_PASS);
-    return _transporter;
+    _smtpTransporter = makeSmtpTransport(env.SMTP_HOST, port, port !== 465, env.SMTP_USER, env.SMTP_PASS);
+    return _smtpTransporter;
   }
-
-  _transporter = null;
+  _smtpTransporter = null;
   return null;
 }
 
-async function getFrom(): Promise<string> {
+// ─── Resend helpers ───────────────────────────────────────────────────────────
+
+async function getResendClient(): Promise<Resend | null> {
+  if (_resendClient !== undefined) return _resendClient;
   try {
     const s = await getSystemSettings();
+    if (s.resendApiKey) {
+      _resendClient = new Resend(s.resendApiKey);
+      return _resendClient;
+    }
+  } catch { /* DB not ready */ }
+  if (env.RESEND_API_KEY) {
+    _resendClient = new Resend(env.RESEND_API_KEY);
+    return _resendClient;
+  }
+  _resendClient = null;
+  return null;
+}
+
+// ─── From address resolution ──────────────────────────────────────────────────
+
+async function getFromAddress(provider: 'resend' | 'smtp'): Promise<string> {
+  try {
+    const s = await getSystemSettings();
+    if (provider === 'resend') {
+      const email = s.resendFromEmail || env.RESEND_FROM_EMAIL || 'alerts@stdsec.sa';
+      const name  = s.resendFromName  || env.RESEND_FROM_NAME  || 'Mirsad Alerts';
+      return `${name} <${email}>`;
+    }
     if (s.smtpFromEmail) return `"${s.smtpFromName || 'Mirsad'}" <${s.smtpFromEmail}>`;
   } catch { /* ignore */ }
+  if (provider === 'resend') {
+    return `${env.RESEND_FROM_NAME || 'Mirsad Alerts'} <${env.RESEND_FROM_EMAIL || 'alerts@stdsec.sa'}>`;
+  }
   return `"${env.SMTP_FROM_NAME || 'Mirsad'}" <${env.SMTP_FROM_EMAIL || env.SMTP_USER || 'noreply@mirsad.app'}>`;
 }
 
@@ -67,16 +97,38 @@ async function isAlertEnabled(key: AlertKey): Promise<boolean> {
   }
 }
 
+// ─── Active provider ──────────────────────────────────────────────────────────
+
+async function activeProvider(): Promise<'resend' | 'smtp'> {
+  try {
+    const s = await getSystemSettings();
+    if (s.emailProvider) return s.emailProvider;
+  } catch { /* ignore */ }
+  return (env.EMAIL_PROVIDER === 'resend') ? 'resend' : 'smtp';
+}
+
 // ─── Core send ────────────────────────────────────────────────────────────────
 
 async function send(to: string, subject: string, html: string) {
-  const transporter = await getTransporter();
+  const provider = await activeProvider();
+
+  if (provider === 'resend') {
+    const client = await getResendClient();
+    if (!client) { console.warn('[email] Resend selected but no API key configured'); return; }
+    const from = await getFromAddress('resend');
+    const result = await client.emails.send({ from, to, subject, html });
+    if (result.error) console.warn('[email] Resend error:', result.error);
+    return;
+  }
+
+  // SMTP path
+  const transporter = await getSmtpTransporter();
   if (!transporter) return;
-  const from = await getFrom();
+  const from = await getFromAddress('smtp');
   try {
     await transporter.sendMail({ from, to, subject, html });
   } catch (err) {
-    console.warn('[email] send failed:', (err as Error).message);
+    console.warn('[email] SMTP send failed:', (err as Error).message);
   }
 }
 
