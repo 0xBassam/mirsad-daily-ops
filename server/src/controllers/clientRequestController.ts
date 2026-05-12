@@ -1,9 +1,12 @@
 import { Request, Response } from 'express';
 import { ClientRequest } from '../models/ClientRequest';
+import { Item } from '../models/Item';
+import { StockMovement } from '../models/StockMovement';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
+import { applyMovementToBalance } from '../services/inventoryService';
 
 const POPULATE = [
   { path: 'project',     select: 'name' },
@@ -76,6 +79,25 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
   cr.deliveredAt = new Date();
   if (req.body.notes) cr.notes = req.body.notes;
   await cr.save();
+
+  // Auto-consume inventory for request items (best-effort name match, never blocks delivery)
+  if (cr.items?.length && cr.project) {
+    const movDate = new Date();
+    for (const reqItem of cr.items) {
+      try {
+        const invItem = await Item.findOne({ name: { $regex: new RegExp(`^${reqItem.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+        if (!invItem) continue;
+        await StockMovement.create({
+          project: cr.project, item: invItem._id, movementType: 'CONSUMPTION',
+          quantity: reqItem.quantity, movementDate: movDate,
+          sourceType: 'client_request', sourceRef: cr._id,
+          notes: cr.title, createdBy: req.user?.userId,
+        });
+        await applyMovementToBalance({ project: cr.project as any, item: invItem._id as any, movementType: 'CONSUMPTION', quantity: reqItem.quantity, date: movDate });
+      } catch { /* silent — don't fail delivery if inventory lookup errors */ }
+    }
+  }
+
   await logAction({ userId: req.user?.userId, action: 'deliver', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
 });

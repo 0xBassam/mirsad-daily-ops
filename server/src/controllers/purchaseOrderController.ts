@@ -74,8 +74,7 @@ export const receivePOLine = asyncHandler(async (req: Request, res: Response) =>
   if (!line) throw new AppError('PO line not found', 404);
 
   line.receivedQty += quantity;
-  line.remainingQty = line.approvedQty - line.distributedQty - line.consumedQty;
-  (po as any).recalculate();
+  (po as any).recalculate(); // sets remainingQty = approvedQty - receivedQty
   await po.save();
 
   const movDate = new Date();

@@ -14,7 +14,7 @@ const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
 import {
   ClipboardList, Coffee, Package, Warehouse, ShoppingCart,
   CheckCircle, TrendingDown, ArrowDownToLine, Bell,
-  BarChart2, TrendingUp, Download,
+  BarChart2, TrendingUp, Download, Flame,
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -457,11 +457,12 @@ export function DashboardPage() {
       {/* ── KPI Row ── */}
       <div className="space-y-3">
         <SectionHeader>Today's Operations</SectionHeader>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3">
           <KpiCard icon={ClipboardList}   label="Operation Requests"    value={data.operationRequestsOpen ?? 0}                    bg="bg-indigo-500" accent="text-indigo-600" highlight />
           <KpiCard icon={Coffee}          label="Coffee Break Requests" value={data.coffeeBreakRequestsOpen ?? 0}                   bg="bg-purple-500" accent="text-purple-600" highlight />
           <KpiCard icon={ArrowDownToLine} label="Receiving Today"       value={data.receivingToday ?? 0}                           bg="bg-teal-500"   accent="text-teal-600" />
           <KpiCard icon={ShoppingCart}    label="Active Purchase Orders" value={data.openPurchaseOrders ?? 0}                       bg="bg-blue-500"   accent="text-blue-600" />
+          <KpiCard icon={Flame}           label="Today's Consumption"   value={(data as any).todayConsumption?.qty ?? 0}            bg="bg-orange-500" accent="text-orange-600" />
           <KpiCard icon={TrendingDown}    label="Low / Out of Stock"    value={(data.lowStock ?? 0) + (data.outOfStock ?? 0)}       bg="bg-amber-500"  accent="text-amber-600" highlight />
           <KpiCard icon={Bell}            label="Active Alerts"         value={totalAlerts}                                        bg="bg-red-500"    accent="text-red-600"  highlight />
         </div>

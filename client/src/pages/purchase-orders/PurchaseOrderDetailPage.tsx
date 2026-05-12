@@ -10,21 +10,21 @@ import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { StatusBadge } from '../../components/ui/Badge';
 import toast from 'react-hot-toast';
 
-function BalanceBar({ approved, distributed, consumed, remaining }: { approved: number; distributed: number; consumed: number; remaining: number }) {
-  const usedPct  = Math.min(100, approved > 0 ? ((distributed + consumed) / approved) * 100 : 0);
-  const isOver   = remaining < 0;
+function BalanceBar({ approved, received, remaining }: { approved: number; received: number; remaining: number }) {
+  const receivedPct = Math.min(100, approved > 0 ? (received / approved) * 100 : 0);
+  const isOver = remaining < 0;
   return (
     <div className="mt-1">
       <div className="flex justify-between text-xs text-slate-500 mb-1">
-        <span>{distributed + consumed} / {approved} {isOver && <span className="text-red-600 font-semibold ms-1">▲ over</span>}</span>
-        <span className={remaining < 0 ? 'text-red-600 font-semibold' : remaining / approved < 0.15 ? 'text-amber-600 font-semibold' : 'text-green-700'}>
-          {remaining >= 0 ? remaining : Math.abs(remaining)} {remaining < 0 ? 'over' : 'left'}
+        <span>{received} / {approved} received {isOver && <span className="text-red-600 font-semibold ms-1">▲ over-delivered</span>}</span>
+        <span className={remaining < 0 ? 'text-red-600 font-semibold' : remaining / Math.max(1, approved) < 0.15 ? 'text-amber-600 font-semibold' : 'text-slate-500'}>
+          {Math.abs(remaining)} {remaining < 0 ? 'over' : 'pending'}
         </span>
       </div>
       <div className="w-full bg-slate-100 rounded-full h-2">
         <div
-          className={`h-2 rounded-full transition-all ${isOver ? 'bg-red-500' : usedPct > 85 ? 'bg-amber-500' : 'bg-indigo-500'}`}
-          style={{ width: `${Math.min(100, usedPct)}%` }}
+          className={`h-2 rounded-full transition-all ${isOver ? 'bg-red-500' : receivedPct > 85 ? 'bg-green-500' : 'bg-indigo-500'}`}
+          style={{ width: `${receivedPct}%` }}
         />
       </div>
     </div>
@@ -121,9 +121,9 @@ export function PurchaseOrderDetailPage() {
           </div>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-slate-400 uppercase font-medium">{t('purchaseOrders.totalBalance')}</p>
+          <p className="text-xs text-slate-400 uppercase font-medium">Pending Delivery</p>
           <p className="text-xl font-bold text-slate-900 mt-0.5">{totalRemaining.toLocaleString()}</p>
-          <p className="text-xs text-slate-500">{t('purchaseOrders.of')} {totalApproved.toLocaleString()} {t('purchaseOrders.approved')}</p>
+          <p className="text-xs text-slate-500">of {totalApproved.toLocaleString()} approved</p>
         </div>
       </div>
 
@@ -168,8 +168,7 @@ export function PurchaseOrderDetailPage() {
 
                 <BalanceBar
                   approved={line.approvedQty}
-                  distributed={line.distributedQty}
-                  consumed={line.consumedQty}
+                  received={line.receivedQty}
                   remaining={line.remainingQty}
                 />
 
