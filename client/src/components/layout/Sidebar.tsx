@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Building2, Package, ClipboardList,
   CheckSquare, Utensils, GitBranch,
   FileText, BookOpen, LogOut, ChevronDown, Thermometer,
-  Boxes, ShieldCheck, ShoppingCart, Trash2, ArrowRightLeft, Truck, Wrench, MessageSquare
+  Boxes, ShieldCheck, ShoppingCart, Trash2, ArrowRightLeft, Truck, Wrench, MessageSquare, UtensilsCrossed
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -46,6 +46,7 @@ const navSections: NavSection[] = [
       { to: '/receiving',          icon: Truck,           labelKey: 'nav.receiving',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/maintenance',        icon: Wrench,          labelKey: 'nav.maintenance',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/client-requests',    icon: MessageSquare,   labelKey: 'nav.clientRequests',    roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'client'] },
+      { to: '/menu',               icon: UtensilsCrossed, labelKey: 'nav.menu',              roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager'] },
     ],
   },
   {

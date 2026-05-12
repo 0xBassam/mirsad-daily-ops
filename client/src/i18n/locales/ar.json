@@ -38,6 +38,7 @@
     "receiving": "الاستلام",
     "maintenance": "الصيانة",
     "clientRequests": "طلبات العملاء",
+    "menu": "المنيو",
     "projectsLocations": "المشاريع والمواقع",
     "itemsMaster": "قائمة الأصناف",
     "section": {
@@ -543,5 +544,30 @@
     "noActiveRequests":    "لا توجد طلبات نشطة",
     "noDelivered":         "لا يوجد شيء بانتظار تأكيدك",
     "noHistory":           "لا توجد طلبات مكتملة بعد"
+  },
+  "menu": {
+    "title": "إدارة المنيو",
+    "subtitle": "تخطيط ونشر قوائم الوجبات اليومية",
+    "addMenu": "إضافة منيو",
+    "today": "اليوم",
+    "mealType": "نوع الوجبة",
+    "mealTypes": {
+      "breakfast":    "الإفطار",
+      "lunch":        "الغداء",
+      "dinner":       "العشاء",
+      "coffee_break": "كوفي بريك"
+    },
+    "menuItems": "أصناف المنيو",
+    "addItem": "إضافة صنف",
+    "items": "أصناف",
+    "noMenuForDate": "لا يوجد منيو لهذا التاريخ",
+    "noItems": "لا توجد أصناف",
+    "noItemsYet": "لم يتم إضافة أصناف بعد",
+    "addedBy": "أضافه",
+    "newMenu": "منيو جديد",
+    "editMenu": "تعديل المنيو",
+    "notesPlaceholder": "تعليمات خاصة أو ملاحظات لهذه الوجبة…",
+    "todayReference": "مرجع منيو اليوم",
+    "noMenuToday": "لا يوجد منيو مخطط لهذا اليوم"
   }
 }

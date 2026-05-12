@@ -2,11 +2,78 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { ArrowLeft, Truck, CheckCircle2, FileText } from 'lucide-react';
+import { ArrowLeft, Truck, CheckCircle2, FileText, UtensilsCrossed, ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 import apiClient from '../../api/client';
 import { Receiving } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
+
+const MEAL_COLORS: Record<string, string> = {
+  breakfast:    'border-amber-200  bg-amber-50  text-amber-800',
+  lunch:        'border-orange-200 bg-orange-50 text-orange-800',
+  dinner:       'border-indigo-200 bg-indigo-50 text-indigo-800',
+  coffee_break: 'border-purple-200 bg-purple-50 text-purple-800',
+};
+
+function TodayMenuPanel({ projectId }: { projectId: string }) {
+  const { t } = useTranslation();
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const [open, setOpen] = useState(true);
+
+  const { data: menus = [], isLoading } = useQuery({
+    queryKey: ['menu', today, projectId],
+    queryFn: () => apiClient.get('/menu', { params: { date: today, project: projectId } }).then(r => r.data.data as any[]),
+    enabled: !!projectId,
+  });
+
+  return (
+    <div className="card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-4 py-3 bg-indigo-50 border-b border-indigo-100 hover:bg-indigo-100 transition-colors"
+      >
+        <div className="flex items-center gap-2 text-indigo-700 font-semibold text-sm">
+          <UtensilsCrossed className="h-4 w-4" />
+          {t('menu.todayReference')}
+        </div>
+        <ChevronDown className={`h-4 w-4 text-indigo-500 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="p-4">
+          {isLoading ? (
+            <p className="text-sm text-slate-400 text-center py-3">{t('common.loading')}</p>
+          ) : menus.length === 0 ? (
+            <p className="text-sm text-slate-400 text-center py-3">{t('menu.noMenuToday')}</p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {menus.map((menu: any) => (
+                <div key={menu._id} className={`rounded-xl border p-3 ${MEAL_COLORS[menu.mealType] ?? 'border-slate-200 bg-slate-50 text-slate-700'}`}>
+                  <p className="font-semibold text-sm mb-2">
+                    {t(`menu.mealTypes.${menu.mealType}`)}
+                    <span className="ms-2 font-normal text-xs opacity-70">({menu.items?.length ?? 0} {t('menu.items')})</span>
+                  </p>
+                  {(menu.items ?? []).length > 0 && (
+                    <ul className="space-y-0.5">
+                      {menu.items.map((item: any, i: number) => (
+                        <li key={i} className="text-xs flex justify-between">
+                          <span>{item.name}</span>
+                          <span className="font-mono tabular-nums">{item.quantity}{item.unit ? ` ${item.unit}` : ''}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 const CONDITION_COLORS: Record<string, string> = {
   good:     'bg-green-100 text-green-700',
@@ -112,6 +179,8 @@ export function ReceivingDetailPage() {
           <p className="text-sm text-slate-600">{rec.notes}</p>
         </div>
       )}
+
+      <TodayMenuPanel projectId={(rec.project as any)?._id ?? (rec.project as any)} />
 
       <div className="card overflow-hidden">
         <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">

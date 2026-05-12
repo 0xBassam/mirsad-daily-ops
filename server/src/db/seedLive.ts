@@ -945,7 +945,46 @@ export async function seedLive(): Promise<void> {
     },
   ]);
 
-  // ─── 11. Audit Logs ───────────────────────────────────────────────────────────
+  // ─── 11. Menu ────────────────────────────────────────────────────────────────
+  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+  await db.collection('menus').insertMany([
+    {
+      _id: id(), project: projectId, date: todayStart, mealType: 'breakfast', status: 'active',
+      notes: 'الوجبة تُقدَّم من 7:00 صباحاً حتى 9:00 صباحاً',
+      items: [
+        { name: 'ساندويتش بيض مع جبنة',   quantity: 2,  unit: 'قطعة' },
+        { name: 'عصير برتقال طازج',        quantity: 1,  unit: 'كوب'  },
+        { name: 'لبن',                     quantity: 1,  unit: 'كوب'  },
+        { name: 'تمر',                     quantity: 3,  unit: 'حبة'  },
+      ],
+      createdBy: supervisorId, createdAt: daysAgo(0), updatedAt: daysAgo(0),
+    },
+    {
+      _id: id(), project: projectId, date: todayStart, mealType: 'lunch', status: 'active',
+      notes: 'وجبة الغداء من 12:00 ظهراً حتى 2:00 مساءً',
+      items: [
+        { name: 'أرز بسمتي مع دجاج مشوي', quantity: 1,  unit: 'طبق'  },
+        { name: 'سلطة فتوش',              quantity: 1,  unit: 'طبق'  },
+        { name: 'خبز',                    quantity: 2,  unit: 'رغيف' },
+        { name: 'مياه معدنية',            quantity: 1,  unit: 'زجاجة'},
+        { name: 'فاكهة الموسم',           quantity: 1,  unit: 'حصة'  },
+      ],
+      createdBy: supervisorId, createdAt: daysAgo(0), updatedAt: daysAgo(0),
+    },
+    {
+      _id: id(), project: projectId, date: todayStart, mealType: 'coffee_break', status: 'active',
+      notes: 'كوفي بريك الساعة 10:30 صباحاً',
+      items: [
+        { name: 'قهوة عربية',             quantity: 1,  unit: 'فنجان'},
+        { name: 'شاي كرك',               quantity: 1,  unit: 'كوب'  },
+        { name: 'تمر سكري',              quantity: 3,  unit: 'حبة'  },
+        { name: 'معمول',                  quantity: 1,  unit: 'قطعة' },
+      ],
+      createdBy: assistantId, createdAt: daysAgo(0), updatedAt: daysAgo(0),
+    },
+  ]);
+
+  // ─── 12. Audit Logs ───────────────────────────────────────────────────────────
   await db.collection('auditlogs').insertMany([
     { _id: id(), user: adminId,      action: 'login',   entityType: 'user',              entityId: adminId,      createdAt: daysAgo(7) },
     { _id: id(), user: adminId,      action: 'create',  entityType: 'project',           entityId: projectId,    createdAt: daysAgo(7) },
@@ -976,5 +1015,5 @@ export async function seedLive(): Promise<void> {
     { _id: id(), user: clientId,     action: 'create',  entityType: 'client_request',    entityId: cr4Id,        details: 'كوفي بريك VIP — الطابق 19',                            createdAt: daysAgo(4) },
   ]);
 
-  console.log('✅ Auto-seed complete: 5 users (@mirsad.com / demo1234), 15 Arabic categories, 72 items, 56 floor checks, 2 suppliers, 2 purchase orders, 3 receiving records, 8 client requests, 3 maintenance requests, 4 batches, 2 fridge checks, 1 spoilage record, 1 corrective action, 2 transfers, 27 audit logs');
+  console.log('✅ Auto-seed complete: 5 users (@mirsad.com / demo1234), 15 Arabic categories, 72 items, 56 floor checks, 2 suppliers, 2 purchase orders, 3 receiving records, 8 client requests, 3 maintenance requests, 4 batches, 2 fridge checks, 1 spoilage record, 1 corrective action, 2 transfers, 3 menus, 27 audit logs');
 }

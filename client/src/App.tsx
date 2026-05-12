@@ -47,6 +47,8 @@ import { MaintenanceDetailPage } from './pages/maintenance/MaintenanceDetailPage
 import { MaintenanceNewPage } from './pages/maintenance/MaintenanceNewPage';
 import { ClientRequestsPage } from './pages/client-requests/ClientRequestsPage';
 import { ClientRequestDetailPage } from './pages/client-requests/ClientRequestDetailPage';
+import { MenuPage } from './pages/menu/MenuPage';
+import { MenuFormPage } from './pages/menu/MenuFormPage';
 import { ClientRequestNewPage } from './pages/client-requests/ClientRequestNewPage';
 
 export default function App() {
@@ -102,6 +104,9 @@ export default function App() {
               <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
               <Route path="/corrective-actions/new" element={<CorrectiveActionNewPage />} />
               <Route path="/corrective-actions/:id" element={<CorrectiveActionDetailPage />} />
+              <Route path="/menu"      element={<MenuPage />} />
+              <Route path="/menu/new" element={<MenuFormPage />} />
+              <Route path="/menu/:id" element={<MenuFormPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/reports/:id" element={<ReportDetailPage />} />

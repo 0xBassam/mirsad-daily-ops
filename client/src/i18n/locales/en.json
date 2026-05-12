@@ -38,6 +38,7 @@
     "receiving": "Receiving",
     "maintenance": "Maintenance",
     "clientRequests": "Client Requests",
+    "menu": "Menu",
     "projectsLocations": "Projects & Locations",
     "itemsMaster": "Items Master",
     "section": {
@@ -543,5 +544,30 @@
     "noActiveRequests":    "No active requests",
     "noDelivered":         "Nothing waiting for your confirmation",
     "noHistory":           "No completed requests yet"
+  },
+  "menu": {
+    "title": "Menu Management",
+    "subtitle": "Plan and publish daily meal menus",
+    "addMenu": "Add Menu",
+    "today": "Today",
+    "mealType": "Meal Type",
+    "mealTypes": {
+      "breakfast":    "Breakfast",
+      "lunch":        "Lunch",
+      "dinner":       "Dinner",
+      "coffee_break": "Coffee Break"
+    },
+    "menuItems": "Menu Items",
+    "addItem": "Add Item",
+    "items": "items",
+    "noMenuForDate": "No menu planned for this date",
+    "noItems": "No items listed",
+    "noItemsYet": "No items added yet",
+    "addedBy": "Added by",
+    "newMenu": "New Menu",
+    "editMenu": "Edit Menu",
+    "notesPlaceholder": "Special instructions or notes for this meal…",
+    "todayReference": "Today's Menu Reference",
+    "noMenuToday": "No menu planned for today"
   }
 }
