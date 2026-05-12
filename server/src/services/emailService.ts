@@ -10,30 +10,35 @@ export function clearTransporterCache() {
   _transporter = undefined;
 }
 
+function makeTransport(host: string, port: number, tls: boolean, user: string, pass: string) {
+  const implicitTls = port === 465;
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure:            implicitTls,
+    requireTLS:        tls && !implicitTls,
+    connectionTimeout: 8_000,
+    greetingTimeout:   8_000,
+    socketTimeout:     8_000,
+    auth: { user, pass },
+  });
+}
+
 async function getTransporter(): Promise<nodemailer.Transporter | null> {
   if (_transporter !== undefined) return _transporter;
 
   try {
     const s = await getSystemSettings();
     if (s.smtpHost && s.smtpUser && s.smtpPass) {
-      _transporter = nodemailer.createTransport({
-        host: s.smtpHost,
-        port: s.smtpPort || 587,
-        secure: s.smtpTls,
-        auth: { user: s.smtpUser, pass: s.smtpPass },
-      });
+      _transporter = makeTransport(s.smtpHost, s.smtpPort || 587, s.smtpTls, s.smtpUser, s.smtpPass);
       return _transporter;
     }
   } catch { /* DB not ready yet */ }
 
   // Fall back to env vars
   if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
-    _transporter = nodemailer.createTransport({
-      host: env.SMTP_HOST,
-      port: Number(env.SMTP_PORT || 587),
-      secure: Number(env.SMTP_PORT || 587) === 465,
-      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
-    });
+    const port = Number(env.SMTP_PORT || 587);
+    _transporter = makeTransport(env.SMTP_HOST, port, port !== 465, env.SMTP_USER, env.SMTP_PASS);
     return _transporter;
   }
 

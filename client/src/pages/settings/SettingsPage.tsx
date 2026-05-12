@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Mail, Server, Send, Save, Eye, EyeOff } from 'lucide-react';
+import { Mail, Server, Send, Save, Eye, EyeOff, Loader2 } from 'lucide-react';
 import apiClient from '../../api/client';
 import toast from 'react-hot-toast';
 
@@ -102,9 +102,14 @@ export function SettingsPage() {
   });
 
   const testMutation = useMutation({
-    mutationFn: () => apiClient.post('/settings/test-email', { to: testEmail }),
+    mutationFn: () => apiClient.post('/settings/test-email', { to: testEmail }, { timeout: 12_000 }),
     onSuccess: () => toast.success(t('settings.testEmailSent')),
-    onError: (e: any) => toast.error(e.response?.data?.message || t('settings.testEmailFailed')),
+    onError: (e: any) => {
+      const msg = e.response?.data?.message
+        ?? (e.code === 'ECONNABORTED' ? 'Request timed out — no response from server' : null)
+        ?? t('settings.testEmailFailed');
+      toast.error(msg, { duration: 6000 });
+    },
   });
 
   function set(key: keyof Settings, value: any) {
@@ -209,22 +214,30 @@ export function SettingsPage() {
 
       {/* Test Email */}
       <SectionCard title={t('settings.testEmail')} icon={Send}>
-        <div className="flex items-center gap-3">
-          <input
-            className={inputCls + ' flex-1'}
-            type="email"
-            value={testEmail}
-            onChange={e => setTestEmail(e.target.value)}
-            placeholder={t('settings.testEmailTo')}
-          />
-          <button
-            onClick={() => testMutation.mutate()}
-            disabled={!testEmail || testMutation.isPending}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-          >
-            <Send className="h-4 w-4" />
-            {testMutation.isPending ? '...' : t('settings.testEmail')}
-          </button>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <input
+              className={inputCls + ' flex-1'}
+              type="email"
+              value={testEmail}
+              onChange={e => setTestEmail(e.target.value)}
+              placeholder={t('settings.testEmailTo')}
+              disabled={testMutation.isPending}
+            />
+            <button
+              onClick={() => testMutation.mutate()}
+              disabled={!testEmail || testMutation.isPending}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+            >
+              {testMutation.isPending
+                ? <><Loader2 className="h-4 w-4 animate-spin" />{t('settings.testEmailSending')}</>
+                : <><Send className="h-4 w-4" />{t('settings.testEmail')}</>
+              }
+            </button>
+          </div>
+          {testMutation.isPending && (
+            <p className="text-xs text-slate-500">{t('settings.testEmailWait')}</p>
+          )}
         </div>
       </SectionCard>
 

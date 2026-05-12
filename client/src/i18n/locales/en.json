@@ -335,6 +335,8 @@
     "testEmailTo": "Test recipient email",
     "testEmailSent": "Test email sent successfully",
     "testEmailFailed": "Test email failed",
+    "testEmailSending": "Testing…",
+    "testEmailWait": "Connecting to SMTP server, please wait (up to 10 seconds)…",
     "emailAlerts": "Email Alert Controls",
     "emailAlertsDesc": "Choose which events trigger email notifications to admins",
     "saveSettings": "Save Settings",
