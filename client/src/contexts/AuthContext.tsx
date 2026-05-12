@@ -13,23 +13,23 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('mirsad_user');
+    const stored = sessionStorage.getItem('mirsad_user');
     return stored ? JSON.parse(stored) : null;
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('mirsad_token'));
+  const [token, setToken] = useState<string | null>(() => sessionStorage.getItem('mirsad_token'));
 
   function login(u: User, t: string) {
     setUser(u);
     setToken(t);
-    localStorage.setItem('mirsad_user', JSON.stringify(u));
-    localStorage.setItem('mirsad_token', t);
+    sessionStorage.setItem('mirsad_user', JSON.stringify(u));
+    sessionStorage.setItem('mirsad_token', t);
   }
 
   function logout() {
     setUser(null);
     setToken(null);
-    localStorage.removeItem('mirsad_user');
-    localStorage.removeItem('mirsad_token');
+    sessionStorage.removeItem('mirsad_user');
+    sessionStorage.removeItem('mirsad_token');
   }
 
   return (
