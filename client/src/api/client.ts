@@ -5,7 +5,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(config => {
-  const token = localStorage.getItem('mirsad_token');
+  const token = sessionStorage.getItem('mirsad_token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -14,8 +14,8 @@ apiClient.interceptors.response.use(
   res => res,
   err => {
     if (err.response?.status === 401) {
-      localStorage.removeItem('mirsad_token');
-      localStorage.removeItem('mirsad_user');
+      sessionStorage.removeItem('mirsad_token');
+      sessionStorage.removeItem('mirsad_user');
       window.location.href = '/login';
     }
     return Promise.reject(err);
