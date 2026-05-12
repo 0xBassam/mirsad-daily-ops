@@ -39,6 +39,7 @@
     "maintenance": "Maintenance",
     "clientRequests": "Client Requests",
     "menu": "Menu",
+    "settings": "Settings",
     "projectsLocations": "Projects & Locations",
     "itemsMaster": "Items Master",
     "section": {
@@ -305,7 +306,51 @@
     "noPOs": "No purchase orders",
     "allStocked": "All items well stocked",
     "recentActivityTitle": "Recent Activity",
-    "openMaintenance": "Open Maintenance"
+    "openMaintenance": "Open Maintenance",
+    "customize": "Customize dashboard",
+    "customizeLayout": "Customize Layout",
+    "dateRange": "Date Range",
+    "allTime": "All time",
+    "lastNDays": "Last {{count}} days",
+    "widgets": {
+      "label": "Widgets",
+      "stats": "Summary Stats",
+      "awaiting": "Awaiting Confirmation",
+      "active": "Active Requests",
+      "history": "Recent History"
+    }
+  },
+  "settings": {
+    "title": "System Settings",
+    "subtitle": "Configure SMTP and email alert preferences",
+    "smtpConfig": "SMTP Configuration",
+    "smtpHost": "SMTP Host",
+    "smtpPort": "SMTP Port",
+    "smtpUser": "SMTP Username",
+    "smtpPass": "SMTP Password",
+    "smtpFromEmail": "From Email",
+    "smtpFromName": "From Name",
+    "smtpTls": "Use TLS / SSL",
+    "testEmail": "Send Test Email",
+    "testEmailTo": "Test recipient email",
+    "testEmailSent": "Test email sent successfully",
+    "testEmailFailed": "Test email failed",
+    "emailAlerts": "Email Alert Controls",
+    "emailAlertsDesc": "Choose which events trigger email notifications to admins",
+    "saveSettings": "Save Settings",
+    "settingsSaved": "Settings saved",
+    "alerts": {
+      "clientRequestCreated":   "New client request submitted",
+      "clientRequestAssigned":  "Client request assigned",
+      "clientRequestDelivered": "Client request delivered (prompt client to confirm)",
+      "clientRequestConfirmed": "Client confirms delivery",
+      "lowStock":               "Item enters low stock",
+      "outOfStock":             "Item runs out of stock",
+      "newPurchaseOrder":       "New purchase order created",
+      "receivingCompleted":     "Receiving record confirmed",
+      "maintenanceOpened":      "New maintenance request opened",
+      "maintenanceCompleted":   "Maintenance request resolved"
+    }
   },
   "floorChecks": {
     "title": "Floor Checks",

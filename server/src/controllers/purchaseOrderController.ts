@@ -6,6 +6,13 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 import { applyMovementToBalance } from '../services/inventoryService';
+import { sendNewPurchaseOrder } from '../services/emailService';
+import { User } from '../models/User';
+
+async function getAdminEmails(): Promise<string[]> {
+  const admins = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
+  return admins.map((u: any) => u.email).filter(Boolean);
+}
 
 export const getPurchaseOrders = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, skip } = getPaginationParams(req);
@@ -50,6 +57,16 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
   const data = await PurchaseOrder.create({ ...req.body, lines, createdBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'purchase_order', entityId: data._id, req });
   res.status(201).json({ success: true, data });
+
+  (async () => {
+    try {
+      const populated = await PurchaseOrder.findById(data._id).populate('supplier', 'name').lean() as any;
+      const emails = await getAdminEmails();
+      for (const email of emails) {
+        await sendNewPurchaseOrder({ to: email, poNumber: data.poNumber, supplierName: populated?.supplier?.name || '—', month: data.month || '', lineCount: data.lines?.length || 0, poId: String(data._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const updatePurchaseOrder = asyncHandler(async (req: Request, res: Response) => {

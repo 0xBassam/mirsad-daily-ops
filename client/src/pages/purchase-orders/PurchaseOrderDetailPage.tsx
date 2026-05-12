@@ -82,7 +82,7 @@ export function PurchaseOrderDetailPage() {
       {/* Header */}
       <div className="flex items-start gap-4">
         <button onClick={() => navigate(-1)} className="mt-1 p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">

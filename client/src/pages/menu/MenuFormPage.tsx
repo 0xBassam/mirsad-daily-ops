@@ -107,7 +107,7 @@ export function MenuFormPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
         <Link to="/menu" className="text-slate-400 hover:text-slate-600">
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </Link>
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-indigo-500">

@@ -75,7 +75,7 @@ export function DailyPlanFormPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/daily-plans" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to="/daily-plans" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5 rtl:rotate-180" /></Link>
         <h1 className="text-2xl font-bold text-slate-900">
           {isEdit ? `${t('common.edit')} ${t('dailyPlans.title')}` : t('dailyPlans.new')}
         </h1>

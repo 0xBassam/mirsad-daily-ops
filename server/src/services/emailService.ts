@@ -1,36 +1,90 @@
 import nodemailer from 'nodemailer';
 import { env } from '../config/env';
+import { getSystemSettings } from '../models/SystemSettings';
 
-function createTransporter() {
-  if (!env.SMTP_HOST || !env.SMTP_USER || !env.SMTP_PASS) return null;
-  return nodemailer.createTransport({
-    host: env.SMTP_HOST,
-    port: Number(env.SMTP_PORT || 587),
-    secure: Number(env.SMTP_PORT || 587) === 465,
-    auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
-  });
+// ─── Transporter cache ────────────────────────────────────────────────────────
+
+let _transporter: nodemailer.Transporter | null | undefined = undefined; // undefined = not yet resolved
+
+export function clearTransporterCache() {
+  _transporter = undefined;
 }
 
-const FROM = `"${env.SMTP_FROM_NAME || 'Mirsad'}" <${env.SMTP_FROM_EMAIL || env.SMTP_USER || 'noreply@mirsad.app'}>`;
+async function getTransporter(): Promise<nodemailer.Transporter | null> {
+  if (_transporter !== undefined) return _transporter;
+
+  try {
+    const s = await getSystemSettings();
+    if (s.smtpHost && s.smtpUser && s.smtpPass) {
+      _transporter = nodemailer.createTransport({
+        host: s.smtpHost,
+        port: s.smtpPort || 587,
+        secure: s.smtpTls,
+        auth: { user: s.smtpUser, pass: s.smtpPass },
+      });
+      return _transporter;
+    }
+  } catch { /* DB not ready yet */ }
+
+  // Fall back to env vars
+  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+    _transporter = nodemailer.createTransport({
+      host: env.SMTP_HOST,
+      port: Number(env.SMTP_PORT || 587),
+      secure: Number(env.SMTP_PORT || 587) === 465,
+      auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+    });
+    return _transporter;
+  }
+
+  _transporter = null;
+  return null;
+}
+
+async function getFrom(): Promise<string> {
+  try {
+    const s = await getSystemSettings();
+    if (s.smtpFromEmail) return `"${s.smtpFromName || 'Mirsad'}" <${s.smtpFromEmail}>`;
+  } catch { /* ignore */ }
+  return `"${env.SMTP_FROM_NAME || 'Mirsad'}" <${env.SMTP_FROM_EMAIL || env.SMTP_USER || 'noreply@mirsad.app'}>`;
+}
+
+// ─── Alert enabled check ──────────────────────────────────────────────────────
+
+type AlertKey = keyof import('../models/SystemSettings').IEmailAlerts;
+
+async function isAlertEnabled(key: AlertKey): Promise<boolean> {
+  try {
+    const s = await getSystemSettings();
+    return s.emailAlerts?.[key] !== false;
+  } catch {
+    return true;
+  }
+}
+
+// ─── Core send ────────────────────────────────────────────────────────────────
 
 async function send(to: string, subject: string, html: string) {
-  const transporter = createTransporter();
+  const transporter = await getTransporter();
   if (!transporter) return;
+  const from = await getFrom();
   try {
-    await transporter.sendMail({ from: FROM, to, subject, html });
+    await transporter.sendMail({ from, to, subject, html });
   } catch (err) {
     console.warn('[email] send failed:', (err as Error).message);
   }
 }
 
+// ─── HTML helpers ─────────────────────────────────────────────────────────────
+
 function row(label: string, value: string) {
-  return `<tr><td style="padding:4px 12px 4px 0;color:#64748b;font-size:13px">${label}</td><td style="padding:4px 0;font-size:13px;font-weight:600">${value}</td></tr>`;
+  return `<tr><td style="padding:4px 12px 4px 0;color:#64748b;font-size:13px;white-space:nowrap">${label}</td><td style="padding:4px 0;font-size:13px;font-weight:600">${value}</td></tr>`;
 }
 
-function layout(title: string, body: string) {
-  return `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px">
+function layout(title: string, body: string, accentColor = '#4f46e5') {
+  return `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;margin:0">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden">
-  <div style="background:#4f46e5;padding:20px 24px">
+  <div style="background:${accentColor};padding:20px 24px">
     <p style="margin:0;color:#fff;font-size:18px;font-weight:700">${title}</p>
   </div>
   <div style="padding:24px">${body}</div>
@@ -39,6 +93,16 @@ function layout(title: string, body: string) {
   </div>
 </div></body></html>`;
 }
+
+function actionButton(label: string, href: string, color = '#4f46e5') {
+  return `<a href="${href}" style="display:inline-block;margin-top:20px;padding:10px 20px;background:${color};color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">${label}</a>`;
+}
+
+function appLink(path: string) {
+  return `${env.CLIENT_URL}${path}`;
+}
+
+// ─── Client Request emails ────────────────────────────────────────────────────
 
 export interface RequestEmailData {
   to: string;
@@ -49,11 +113,11 @@ export interface RequestEmailData {
   room?: string;
   itemCount?: number;
   requestId: string;
-  appUrl?: string;
 }
 
 export async function sendRequestCreated(data: RequestEmailData) {
-  const link = `${data.appUrl || env.CLIENT_URL}/client-requests/${data.requestId}`;
+  if (!await isAlertEnabled('clientRequestCreated')) return;
+  const link = appLink(`/client-requests/${data.requestId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A new client request has been submitted:</p>
     <table style="border-collapse:collapse;width:100%">
@@ -63,41 +127,182 @@ export async function sendRequestCreated(data: RequestEmailData) {
       ${data.floor ? row('Floor', `${data.floor}${data.room ? ' — ' + data.room : ''}`) : ''}
       ${data.itemCount ? row('Items', String(data.itemCount)) : ''}
     </table>
-    <a href="${link}" style="display:inline-block;margin-top:20px;padding:10px 20px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View Request</a>`;
+    ${actionButton('View Request', link)}`;
   await send(data.to, `New Request: ${data.requestTitle}`, layout('New Client Request', body));
 }
 
 export async function sendRequestAssigned(data: RequestEmailData & { assigneeName: string }) {
-  const link = `${data.appUrl || env.CLIENT_URL}/client-requests/${data.requestId}`;
+  if (!await isAlertEnabled('clientRequestAssigned')) return;
+  const link = appLink(`/client-requests/${data.requestId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">Your request has been assigned and is being processed:</p>
     <table style="border-collapse:collapse;width:100%">
       ${row('Request', data.requestTitle)}
       ${row('Assigned to', data.assigneeName)}
     </table>
-    <a href="${link}" style="display:inline-block;margin-top:20px;padding:10px 20px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View Request</a>`;
+    ${actionButton('View Request', link)}`;
   await send(data.to, `Request Assigned: ${data.requestTitle}`, layout('Request Assigned', body));
 }
 
 export async function sendRequestDelivered(data: RequestEmailData) {
-  const link = `${data.appUrl || env.CLIENT_URL}/client-requests/${data.requestId}`;
+  if (!await isAlertEnabled('clientRequestDelivered')) return;
+  const link = appLink(`/client-requests/${data.requestId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">Your request has been delivered. Please confirm receipt:</p>
     <table style="border-collapse:collapse;width:100%">
       ${row('Request', data.requestTitle)}
     </table>
-    <a href="${link}" style="display:inline-block;margin-top:20px;padding:10px 20px;background:#059669;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">Confirm Delivery →</a>`;
-  await send(data.to, `Delivered: ${data.requestTitle}`, layout('Request Delivered', body));
+    ${actionButton('Confirm Delivery →', link, '#059669')}`;
+  await send(data.to, `Delivered: ${data.requestTitle}`, layout('Request Delivered', body, '#059669'));
 }
 
 export async function sendRequestConfirmed(data: RequestEmailData) {
-  const link = `${data.appUrl || env.CLIENT_URL}/client-requests/${data.requestId}`;
+  if (!await isAlertEnabled('clientRequestConfirmed')) return;
+  const link = appLink(`/client-requests/${data.requestId}`);
   const body = `
-    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">The client has confirmed delivery of the following request:</p>
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">The client has confirmed delivery:</p>
     <table style="border-collapse:collapse;width:100%">
       ${row('Request', data.requestTitle)}
       ${row('Confirmed by', data.requesterName)}
     </table>
-    <a href="${link}" style="display:inline-block;margin-top:20px;padding:10px 20px;background:#4f46e5;color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600">View Record</a>`;
+    ${actionButton('View Record', link)}`;
   await send(data.to, `Confirmed: ${data.requestTitle}`, layout('Delivery Confirmed', body));
+}
+
+// ─── Inventory alert emails ───────────────────────────────────────────────────
+
+export interface StockAlertData {
+  to: string;
+  itemName: string;
+  itemType: string;
+  remainingQty: number;
+  monthlyLimit: number;
+  unit: string;
+  project: string;
+  period: string;
+}
+
+export async function sendLowStockAlert(data: StockAlertData) {
+  if (!await isAlertEnabled('lowStock')) return;
+  const link = appLink('/inventory/food');
+  const body = `
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">An inventory item is running low:</p>
+    <table style="border-collapse:collapse;width:100%">
+      ${row('Item', data.itemName)}
+      ${row('Type', data.itemType)}
+      ${row('Project', data.project)}
+      ${row('Period', data.period)}
+      ${row('Remaining', `${data.remainingQty} ${data.unit}`)}
+      ${row('Monthly limit', `${data.monthlyLimit} ${data.unit}`)}
+    </table>
+    ${actionButton('View Inventory', link, '#d97706')}`;
+  await send(data.to, `⚠ Low Stock: ${data.itemName}`, layout('Low Stock Alert', body, '#d97706'));
+}
+
+export async function sendOutOfStockAlert(data: StockAlertData) {
+  if (!await isAlertEnabled('outOfStock')) return;
+  const link = appLink('/inventory/food');
+  const body = `
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">An inventory item has run out of stock:</p>
+    <table style="border-collapse:collapse;width:100%">
+      ${row('Item', data.itemName)}
+      ${row('Type', data.itemType)}
+      ${row('Project', data.project)}
+      ${row('Period', data.period)}
+      ${row('Remaining', `${data.remainingQty} ${data.unit}`)}
+    </table>
+    ${actionButton('View Inventory', link, '#dc2626')}`;
+  await send(data.to, `🚨 Out of Stock: ${data.itemName}`, layout('Out of Stock Alert', body, '#dc2626'));
+}
+
+// ─── Purchase Order emails ────────────────────────────────────────────────────
+
+export interface POEmailData {
+  to: string;
+  poNumber: string;
+  supplierName: string;
+  month: string;
+  lineCount: number;
+  poId: string;
+}
+
+export async function sendNewPurchaseOrder(data: POEmailData) {
+  if (!await isAlertEnabled('newPurchaseOrder')) return;
+  const link = appLink(`/purchase-orders/${data.poId}`);
+  const body = `
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A new purchase order has been created:</p>
+    <table style="border-collapse:collapse;width:100%">
+      ${row('PO Number', data.poNumber)}
+      ${row('Supplier', data.supplierName)}
+      ${row('Month', data.month)}
+      ${row('Line items', String(data.lineCount))}
+    </table>
+    ${actionButton('View Purchase Order', link)}`;
+  await send(data.to, `New PO: ${data.poNumber}`, layout('New Purchase Order', body));
+}
+
+// ─── Receiving emails ─────────────────────────────────────────────────────────
+
+export interface ReceivingEmailData {
+  to: string;
+  invoiceNumber: string;
+  supplierName: string;
+  lineCount: number;
+  receivingId: string;
+}
+
+export async function sendReceivingCompleted(data: ReceivingEmailData) {
+  if (!await isAlertEnabled('receivingCompleted')) return;
+  const link = appLink(`/receiving/${data.receivingId}`);
+  const body = `
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A receiving record has been confirmed and inventory updated:</p>
+    <table style="border-collapse:collapse;width:100%">
+      ${row('Invoice', data.invoiceNumber || '—')}
+      ${row('Supplier', data.supplierName)}
+      ${row('Items received', String(data.lineCount))}
+    </table>
+    ${actionButton('View Receiving', link, '#0d9488')}`;
+  await send(data.to, `Receiving Confirmed: ${data.invoiceNumber || data.receivingId}`, layout('Receiving Completed', body, '#0d9488'));
+}
+
+// ─── Maintenance emails ───────────────────────────────────────────────────────
+
+export interface MaintenanceEmailData {
+  to: string;
+  title: string;
+  category: string;
+  priority: string;
+  location?: string;
+  maintenanceId: string;
+  reporterName?: string;
+}
+
+export async function sendMaintenanceOpened(data: MaintenanceEmailData) {
+  if (!await isAlertEnabled('maintenanceOpened')) return;
+  const link = appLink(`/maintenance/${data.maintenanceId}`);
+  const body = `
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A new maintenance request has been submitted:</p>
+    <table style="border-collapse:collapse;width:100%">
+      ${row('Title', data.title)}
+      ${row('Category', data.category)}
+      ${row('Priority', data.priority)}
+      ${data.location ? row('Location', data.location) : ''}
+      ${data.reporterName ? row('Reported by', data.reporterName) : ''}
+    </table>
+    ${actionButton('View Request', link, '#7c3aed')}`;
+  await send(data.to, `Maintenance: ${data.title}`, layout('New Maintenance Request', body, '#7c3aed'));
+}
+
+export async function sendMaintenanceCompleted(data: MaintenanceEmailData) {
+  if (!await isAlertEnabled('maintenanceCompleted')) return;
+  const link = appLink(`/maintenance/${data.maintenanceId}`);
+  const body = `
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A maintenance request has been resolved:</p>
+    <table style="border-collapse:collapse;width:100%">
+      ${row('Title', data.title)}
+      ${row('Category', data.category)}
+      ${row('Priority', data.priority)}
+    </table>
+    ${actionButton('View Record', link, '#059669')}`;
+  await send(data.to, `Resolved: ${data.title}`, layout('Maintenance Resolved', body, '#059669'));
 }

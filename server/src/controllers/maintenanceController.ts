@@ -4,6 +4,13 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
+import { sendMaintenanceOpened, sendMaintenanceCompleted } from '../services/emailService';
+import { User } from '../models/User';
+
+async function getAdminEmails(): Promise<string[]> {
+  const admins = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
+  return admins.map((u: any) => u.email).filter(Boolean);
+}
 
 const POPULATE = [
   { path: 'project',    select: 'name' },
@@ -38,6 +45,16 @@ export const createMaintenanceRequest = asyncHandler(async (req: Request, res: R
   const data = await MaintenanceRequest.create({ ...req.body, reportedBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'maintenance_request', entityId: data._id, req });
   res.status(201).json({ success: true, data });
+
+  (async () => {
+    try {
+      const populated = await MaintenanceRequest.findById(data._id).populate('reportedBy', 'fullName').populate('floor', 'name').lean() as any;
+      const emails = await getAdminEmails();
+      for (const email of emails) {
+        await sendMaintenanceOpened({ to: email, title: data.title, category: data.category || '', priority: data.priority || '', location: populated?.floor?.name, maintenanceId: String(data._id), reporterName: populated?.reportedBy?.fullName });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const updateMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -81,6 +98,15 @@ export const resolveMaintenanceRequest = asyncHandler(async (req: Request, res: 
   await mr.save();
   await logAction({ userId: req.user?.userId, action: 'resolve', entityType: 'maintenance_request', entityId: mr._id, req });
   res.json({ success: true, data: mr });
+
+  (async () => {
+    try {
+      const emails = await getAdminEmails();
+      for (const email of emails) {
+        await sendMaintenanceCompleted({ to: email, title: mr.title, category: (mr as any).category || '', priority: mr.priority || '', maintenanceId: String(mr._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const closeMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {

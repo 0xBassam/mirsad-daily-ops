@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow, parseISO, format } from 'date-fns';
 import { Link } from 'react-router-dom';
@@ -14,7 +15,8 @@ const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
 import {
   ClipboardList, Coffee, Package, Warehouse, ShoppingCart,
   CheckCircle, TrendingDown, ArrowDownToLine, Bell,
-  BarChart2, TrendingUp, Download, Flame,
+  BarChart2, TrendingUp, Download, Flame, SlidersHorizontal,
+  ChevronUp, ChevronDown as ChevronDownIcon, X,
 } from 'lucide-react';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -84,7 +86,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 function Th({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className={`px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide bg-slate-50 ${className}`}>
+    <th className={`px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase tracking-wide bg-slate-50 ${className}`}>
       {children}
     </th>
   );
@@ -288,17 +290,75 @@ const CR_STATUS_COLORS: Record<string, string> = {
   rejected:    'bg-red-100    text-red-700',
 };
 
+type WidgetId = 'stats' | 'awaiting' | 'active' | 'history';
+interface WidgetDef { id: WidgetId; labelKey: string; }
+const ALL_WIDGETS: WidgetDef[] = [
+  { id: 'stats',   labelKey: 'dashboard.widgets.stats' },
+  { id: 'awaiting',labelKey: 'dashboard.widgets.awaiting' },
+  { id: 'active',  labelKey: 'dashboard.widgets.active' },
+  { id: 'history', labelKey: 'dashboard.widgets.history' },
+];
+const DATE_RANGES = [7, 14, 30, 0] as const;
+
+function loadLayout(userId: string): { order: WidgetId[]; hidden: WidgetId[] } {
+  try {
+    const raw = localStorage.getItem(`clientDash:${userId}`);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return { order: ALL_WIDGETS.map(w => w.id), hidden: [] };
+}
+
+function saveLayout(userId: string, order: WidgetId[], hidden: WidgetId[]) {
+  try { localStorage.setItem(`clientDash:${userId}`, JSON.stringify({ order, hidden })); } catch { /* ignore */ }
+}
+
 function ClientDashboard() {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const userId = user?._id ?? 'guest';
+
+  const [dateRange, setDateRange] = useState<0 | 7 | 14 | 30>(7);
+  const [showCustomize, setShowCustomize] = useState(false);
+  const [layout, setLayout] = useState(() => loadLayout(userId));
+
+  const { order, hidden } = layout;
+
   const { data, isLoading } = useQuery({
     queryKey: ['client-requests'],
-    queryFn: () => apiClient.get('/client-requests', { params: { limit: 50 } }).then(r => r.data),
+    queryFn: () => apiClient.get('/client-requests', { params: { limit: 100 } }).then(r => r.data),
     refetchInterval: 30_000,
   });
 
+  const toggleWidget = useCallback((id: WidgetId) => {
+    setLayout(prev => {
+      const newHidden = prev.hidden.includes(id)
+        ? prev.hidden.filter(h => h !== id)
+        : [...prev.hidden, id];
+      saveLayout(userId, prev.order, newHidden);
+      return { ...prev, hidden: newHidden };
+    });
+  }, [userId]);
+
+  const moveWidget = useCallback((id: WidgetId, dir: -1 | 1) => {
+    setLayout(prev => {
+      const idx = prev.order.indexOf(id);
+      const newOrder = [...prev.order];
+      const swap = idx + dir;
+      if (swap < 0 || swap >= newOrder.length) return prev;
+      [newOrder[idx], newOrder[swap]] = [newOrder[swap], newOrder[idx]];
+      saveLayout(userId, newOrder, prev.hidden);
+      return { ...prev, order: newOrder };
+    });
+  }, [userId]);
+
   if (isLoading) return <PageLoader />;
 
-  const all: any[] = data?.data ?? [];
+  const now = Date.now();
+  const cutoff = dateRange > 0 ? now - dateRange * 86_400_000 : 0;
+  const all: any[] = (data?.data ?? []).filter((r: any) =>
+    cutoff === 0 || new Date(r.createdAt).getTime() >= cutoff
+  );
+
   const active    = all.filter(r => ['submitted','assigned','in_progress'].includes(r.status));
   const delivered = all.filter(r => r.status === 'delivered');
   const history   = all.filter(r => ['confirmed','rejected'].includes(r.status)).slice(0, 5);
@@ -326,28 +386,13 @@ function ClientDashboard() {
     );
   }
 
-  return (
-    <div className="space-y-6 max-w-3xl mx-auto">
-
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t('clientRequests.myRequests')}</h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
-        </div>
-        <Link to="/client-requests/new" className="btn-primary flex items-center gap-2 whitespace-nowrap">
-          + {t('clientRequests.newRequest')}
-        </Link>
-      </div>
-
-      {/* Summary pills */}
+  const widgetMap: Record<WidgetId, React.ReactNode> = {
+    stats: (
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: t('clientRequests.active'),              value: active.length,    color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-          { label: t('clientRequests.awaitingConfirmation'), value: delivered.length, color: 'bg-violet-50 border-violet-200 text-violet-700' },
-          { label: t('dashboard.completed'),                 value: history.length,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+          { label: t('clientRequests.active'),               value: active.length,    color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+          { label: t('clientRequests.awaitingConfirmation'),  value: delivered.length, color: 'bg-violet-50 border-violet-200 text-violet-700' },
+          { label: t('dashboard.completed'),                  value: history.length,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 text-center ${s.color}`}>
             <p className="text-3xl font-extrabold tabular-nums">{s.value}</p>
@@ -355,32 +400,30 @@ function ClientDashboard() {
           </div>
         ))}
       </div>
-
-      {/* Awaiting confirmation — highlighted */}
-      {delivered.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-            {t('clientRequests.awaitingConfirmation')} ({delivered.length})
-          </h2>
-          <div className="space-y-2">
-            {delivered.map(r => (
-              <Link key={r._id} to={`/client-requests/${r._id}`}
-                className="flex items-center justify-between bg-violet-50 border border-violet-200 rounded-2xl px-5 py-4 hover:bg-violet-100 transition-colors">
-                <div>
-                  <p className="font-semibold text-slate-900">{r.title}</p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {t(`clientRequests.types.${r.requestType}`, { defaultValue: r.requestType.replace(/_/g, ' ') })}
-                    {r.deliveredAt && <> · {t('clientRequests.deliveredAgo')} {formatDistanceToNow(parseISO(r.deliveredAt), { addSuffix: true })}</>}
-                  </p>
-                </div>
-                <span className="text-xs px-3 py-1.5 rounded-full font-bold bg-violet-600 text-white">{t('clientRequests.confirmArrow')}</span>
-              </Link>
-            ))}
-          </div>
+    ),
+    awaiting: delivered.length > 0 ? (
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          {t('clientRequests.awaitingConfirmation')} ({delivered.length})
+        </h2>
+        <div className="space-y-2">
+          {delivered.map(r => (
+            <Link key={r._id} to={`/client-requests/${r._id}`}
+              className="flex items-center justify-between bg-violet-50 border border-violet-200 rounded-2xl px-5 py-4 hover:bg-violet-100 transition-colors">
+              <div>
+                <p className="font-semibold text-slate-900">{r.title}</p>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {t(`clientRequests.types.${r.requestType}`, { defaultValue: r.requestType.replace(/_/g, ' ') })}
+                  {r.deliveredAt && <> · {t('clientRequests.deliveredAgo')} {formatDistanceToNow(parseISO(r.deliveredAt), { addSuffix: true })}</>}
+                </p>
+              </div>
+              <span className="text-xs px-3 py-1.5 rounded-full font-bold bg-violet-600 text-white">{t('clientRequests.confirmArrow')}</span>
+            </Link>
+          ))}
         </div>
-      )}
-
-      {/* Active requests */}
+      </div>
+    ) : null,
+    active: (
       <div className="space-y-3">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
           {t('clientRequests.activeRequests')} ({active.length})
@@ -390,14 +433,107 @@ function ClientDashboard() {
           : <div className="space-y-2">{active.map(r => <RequestCard key={r._id} req={r} />)}</div>
         }
       </div>
+    ),
+    history: history.length > 0 ? (
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('clientRequests.recentHistory')}</h2>
+        <div className="space-y-2">{history.map(r => <RequestCard key={r._id} req={r} />)}</div>
+      </div>
+    ) : null,
+  };
 
-      {/* Recent history */}
-      {history.length > 0 && (
-        <div className="space-y-3">
-          <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('clientRequests.recentHistory')}</h2>
-          <div className="space-y-2">{history.map(r => <RequestCard key={r._id} req={r} />)}</div>
+  const visibleOrder = order.filter(id => !hidden.includes(id));
+
+  return (
+    <div className="space-y-6 max-w-3xl mx-auto">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">{t('clientRequests.myRequests')}</h1>
+          <p className="text-slate-500 text-sm mt-0.5">
+            {new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setShowCustomize(p => !p)}
+            className={`p-2 rounded-lg border transition-colors ${showCustomize ? 'bg-indigo-50 border-indigo-300 text-indigo-600' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-800'}`}
+            title={t('dashboard.customize')}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+          </button>
+          <Link to="/client-requests/new" className="btn-primary flex items-center gap-2 whitespace-nowrap">
+            + {t('clientRequests.newRequest')}
+          </Link>
+        </div>
+      </div>
+
+      {/* Customize panel */}
+      {showCustomize && (
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold text-slate-700">{t('dashboard.customizeLayout')}</p>
+            <button onClick={() => setShowCustomize(false)} className="text-slate-400 hover:text-slate-600">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Date range */}
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-2">{t('dashboard.dateRange')}</p>
+            <div className="flex flex-wrap gap-2">
+              {DATE_RANGES.map(d => (
+                <button
+                  key={d}
+                  onClick={() => setDateRange(d as any)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors ${dateRange === d ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:border-indigo-400'}`}
+                >
+                  {d === 0 ? t('dashboard.allTime') : t('dashboard.lastNDays', { count: d })}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Widget toggles + reorder */}
+          <div>
+            <p className="text-xs font-semibold text-slate-500 mb-2">{t('dashboard.widgets.label')}</p>
+            <div className="space-y-1.5">
+              {order.map((id, idx) => {
+                const def = ALL_WIDGETS.find(w => w.id === id)!;
+                const isVisible = !hidden.includes(id);
+                return (
+                  <div key={id} className="flex items-center gap-2 bg-white rounded-lg border border-slate-200 px-3 py-2">
+                    <label className="flex items-center gap-2 flex-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                        checked={isVisible}
+                        onChange={() => toggleWidget(id)}
+                      />
+                      <span className="text-sm text-slate-700">{t(def.labelKey)}</span>
+                    </label>
+                    <div className="flex items-center gap-0.5">
+                      <button onClick={() => moveWidget(id, -1)} disabled={idx === 0} className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30">
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => moveWidget(id, 1)} disabled={idx === order.length - 1} className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30">
+                        <ChevronDownIcon className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
       )}
+
+      {/* Widgets in order */}
+      {visibleOrder.map(id => {
+        const node = widgetMap[id];
+        return node ? <div key={id}>{node}</div> : null;
+      })}
 
       <div className="text-center pt-2">
         <Link to="/client-requests" className="text-sm text-indigo-600 hover:text-indigo-800 font-medium">

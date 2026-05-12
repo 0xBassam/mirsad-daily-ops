@@ -7,6 +7,13 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 import { applyMovementToBalance } from '../services/inventoryService';
+import { sendReceivingCompleted } from '../services/emailService';
+import { User } from '../models/User';
+
+async function getAdminEmails(): Promise<string[]> {
+  const admins = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
+  return admins.map((u: any) => u.email).filter(Boolean);
+}
 
 export const getReceivings = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, skip } = getPaginationParams(req);
@@ -99,4 +106,14 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
 
   await logAction({ userId: req.user?.userId, action: 'confirm', entityType: 'receiving', entityId: receiving._id, req });
   res.json({ success: true, data: receiving });
+
+  (async () => {
+    try {
+      const populated = await Receiving.findById(receiving._id).populate('supplier', 'name').lean() as any;
+      const emails = await getAdminEmails();
+      for (const email of emails) {
+        await sendReceivingCompleted({ to: email, invoiceNumber: receiving.invoiceNumber || '', supplierName: populated?.supplier?.name || '—', lineCount: receiving.lines?.length || 0, receivingId: String(receiving._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });

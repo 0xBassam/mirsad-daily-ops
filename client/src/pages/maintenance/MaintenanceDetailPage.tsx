@@ -54,7 +54,7 @@ export function MaintenanceDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-slate-500 hover:text-slate-700 text-sm">
-          <ArrowLeft className="h-4 w-4" />{t('common.back')}
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />{t('common.back')}
         </button>
       </div>
 

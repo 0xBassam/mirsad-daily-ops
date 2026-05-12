@@ -50,6 +50,7 @@ import { ClientRequestDetailPage } from './pages/client-requests/ClientRequestDe
 import { MenuPage } from './pages/menu/MenuPage';
 import { MenuFormPage } from './pages/menu/MenuFormPage';
 import { ClientRequestNewPage } from './pages/client-requests/ClientRequestNewPage';
+import { SettingsPage } from './pages/settings/SettingsPage';
 
 export default function App() {
   return (
@@ -111,6 +112,7 @@ export default function App() {
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/reports/:id" element={<ReportDetailPage />} />
               <Route path="/audit-logs" element={<AuditLogsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Route>
           </Route>

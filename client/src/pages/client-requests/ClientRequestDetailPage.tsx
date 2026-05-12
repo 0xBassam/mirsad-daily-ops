@@ -64,7 +64,7 @@ export function ClientRequestDetailPage() {
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-slate-500">
         <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 hover:text-slate-700 transition-colors font-medium">
-          <ArrowLeft className="h-4 w-4" />{t('common.back')}
+          <ArrowLeft className="h-4 w-4 rtl:rotate-180" />{t('common.back')}
         </button>
         <ChevronRight className="h-3.5 w-3.5 text-slate-300" />
         <span className="text-slate-400">{t('clientRequests.title')}</span>

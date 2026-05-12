@@ -65,6 +65,9 @@ export function DailyPlansPage() {
             <tr>{[t('common.date'), t('common.project'), t('common.building'), t('common.shift'), t('common.status'), t('common.createdBy'), t('common.actions')].map(h => <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>)}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
+            {(!data?.data || data.data.length === 0) && (
+              <tr><td colSpan={7} className="px-4 py-10 text-center text-slate-400 text-sm">{t('common.noData')}</td></tr>
+            )}
             {data?.data?.map((p: DailyPlan) => (
               <tr key={p._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/daily-plans/${p._id}`)}>
                 <td className="px-4 py-3 font-medium text-slate-900">{formatDate(p.date)}</td>
