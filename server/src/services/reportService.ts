@@ -7,25 +7,32 @@ import { FloorCheck } from '../models/FloorCheck';
 import { FloorCheckLine } from '../models/FloorCheckLine';
 import { ApprovalRecord } from '../models/ApprovalRecord';
 import { InventoryBalance } from '../models/InventoryBalance';
-import { StockMovement } from '../models/StockMovement';
+import { AppError } from '../utils/AppError';
 import { format } from 'date-fns';
 
 const reportsDir = path.resolve(__dirname, '../../uploads/reports');
 fs.mkdirSync(reportsDir, { recursive: true });
 
-export async function generateFloorCheckPDF(floorCheckId: string, res: Response): Promise<void> {
-  const check = await FloorCheck.findById(floorCheckId)
+export async function generateFloorCheckPDF(floorCheckId: string, res: Response, organizationId?: string): Promise<void> {
+  const filter: Record<string, unknown> = { _id: floorCheckId };
+  if (organizationId) filter.organization = organizationId;
+
+  const check = await FloorCheck.findOne(filter)
     .populate('project', 'name')
     .populate('building', 'name')
     .populate('floor', 'name')
     .populate('supervisor', 'fullName');
 
-  if (!check) throw new Error('Floor check not found');
+  if (!check) throw new AppError('Floor check not found', 404);
 
-  const lines = await FloorCheckLine.find({ floorCheck: floorCheckId }).populate('item', 'name unit');
+  const linesFilter: Record<string, unknown> = { floorCheck: floorCheckId };
+  if (organizationId) linesFilter.organization = organizationId;
+
+  const lines = await FloorCheckLine.find(linesFilter).populate('item', 'name unit');
   const approvals = await ApprovalRecord.find({
     entityType: 'floor_check',
     entityId: floorCheckId,
+    ...(organizationId ? { organization: organizationId } : {}),
   })
     .populate('actor', 'fullName role')
     .sort({ createdAt: 1 });
@@ -110,15 +117,22 @@ export async function generateFloorCheckPDF(floorCheckId: string, res: Response)
   doc.end();
 }
 
-export async function generateFloorCheckExcel(floorCheckId: string, res: Response): Promise<void> {
-  const check = await FloorCheck.findById(floorCheckId)
+export async function generateFloorCheckExcel(floorCheckId: string, res: Response, organizationId?: string): Promise<void> {
+  const filter: Record<string, unknown> = { _id: floorCheckId };
+  if (organizationId) filter.organization = organizationId;
+
+  const check = await FloorCheck.findOne(filter)
     .populate('project', 'name')
     .populate('building', 'name')
     .populate('floor', 'name')
     .populate('supervisor', 'fullName');
 
-  if (!check) throw new Error('Floor check not found');
-  const lines = await FloorCheckLine.find({ floorCheck: floorCheckId }).populate('item', 'name unit type');
+  if (!check) throw new AppError('Floor check not found', 404);
+
+  const linesFilter: Record<string, unknown> = { floorCheck: floorCheckId };
+  if (organizationId) linesFilter.organization = organizationId;
+
+  const lines = await FloorCheckLine.find(linesFilter).populate('item', 'name unit type');
 
   const workbook = new ExcelJS.Workbook();
   const ws = workbook.addWorksheet('Floor Check');
@@ -163,9 +177,13 @@ export async function generateFloorCheckExcel(floorCheckId: string, res: Respons
 export async function generateInventoryExcel(
   type: 'food' | 'material',
   period: string,
-  res: Response
+  res: Response,
+  organizationId?: string
 ): Promise<void> {
-  const balances = await InventoryBalance.find({ period })
+  const filter: Record<string, unknown> = { period };
+  if (organizationId) filter.organization = organizationId;
+
+  const balances = await InventoryBalance.find(filter)
     .populate({
       path: 'item',
       match: { type },

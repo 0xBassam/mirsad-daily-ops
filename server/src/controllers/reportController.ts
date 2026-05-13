@@ -195,19 +195,22 @@ export const generateReport = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const exportFloorCheckPDF = asyncHandler(async (req: Request, res: Response) => {
-  await generateFloorCheckPDF(req.params.id, res);
+  const orgId = req.organizationId as string;
+  await generateFloorCheckPDF(req.params.id, res, orgId);
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'floor_check', entityId: req.params.id, req });
 });
 
 export const exportFloorCheckExcel = asyncHandler(async (req: Request, res: Response) => {
-  await generateFloorCheckExcel(req.params.id, res);
+  const orgId = req.organizationId as string;
+  await generateFloorCheckExcel(req.params.id, res, orgId);
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'floor_check', entityId: req.params.id, req });
 });
 
 export const exportInventoryExcel = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { type } = req.params;
   const period = (req.query.period as string) || format(new Date(), 'yyyy-MM');
   if (type !== 'food' && type !== 'material') throw new AppError('Type must be food or material', 400);
-  await generateInventoryExcel(type, period, res);
+  await generateInventoryExcel(type, period, res, orgId);
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'inventory', req });
 });

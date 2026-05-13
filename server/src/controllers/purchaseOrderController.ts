@@ -100,7 +100,7 @@ export const receivePOLine = asyncHandler(async (req: Request, res: Response) =>
     movementDate: movDate, sourceType: 'purchase_order', sourceRef: po._id,
     notes: notes || `PO ${po.poNumber} — receive`, createdBy: req.user?.userId,
   });
-  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: 'RECEIVE', quantity, date: movDate });
+  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: 'RECEIVE', quantity, date: movDate, organizationId: orgId });
 
   await logAction({ userId: req.user?.userId, action: 'update', entityType: 'purchase_order', entityId: po._id, req });
   res.json({ success: true, data: po });
@@ -132,7 +132,7 @@ export const distributePOLine = asyncHandler(async (req: Request, res: Response)
     movementDate: movDate2, sourceType: 'purchase_order', sourceRef: po._id,
     notes: notes || `PO ${po.poNumber} — ${type}`, createdBy: req.user?.userId,
   });
-  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: movType2 as any, quantity, date: movDate2 });
+  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: movType2 as any, quantity, date: movDate2, organizationId: orgId });
 
   res.json({ success: true, data: po });
 });

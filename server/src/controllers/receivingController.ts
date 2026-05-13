@@ -86,7 +86,7 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
       notes: receiving.invoiceNumber ? `Invoice ${receiving.invoiceNumber}` : 'Delivery received',
       createdBy: req.user?.userId,
     });
-    await applyMovementToBalance({ project: receiving.project as any, item: line.item as any, movementType: 'RECEIVE', quantity: line.quantityReceived, date: receiving.deliveryDate });
+    await applyMovementToBalance({ project: receiving.project as any, item: line.item as any, movementType: 'RECEIVE', quantity: line.quantityReceived, date: receiving.deliveryDate, organizationId: orgId });
   }
 
   // Update linked PO receivedQty

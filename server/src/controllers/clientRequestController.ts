@@ -137,7 +137,7 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
           sourceType: 'client_request', sourceRef: cr._id,
           notes: cr.title, createdBy: req.user?.userId,
         });
-        await applyMovementToBalance({ project: cr.project as any, item: invItem._id as any, movementType: 'CONSUMPTION', quantity: reqItem.quantity, date: movDate });
+        await applyMovementToBalance({ project: cr.project as any, item: invItem._id as any, movementType: 'CONSUMPTION', quantity: reqItem.quantity, date: movDate, organizationId: orgId });
       } catch { /* silent — don't fail delivery if inventory lookup errors */ }
     }
   }
