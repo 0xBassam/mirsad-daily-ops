@@ -4,13 +4,7 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
-import { sendMaintenanceOpened, sendMaintenanceCompleted } from '../services/emailService';
-import { User } from '../models/User';
-
-async function getAdminEmails(): Promise<string[]> {
-  const admins = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
-  return admins.map((u: any) => u.email).filter(Boolean);
-}
+import { sendMaintenanceOpened, sendMaintenanceCompleted, getNotificationRecipients } from '../services/emailService';
 
 const POPULATE = [
   { path: 'project',    select: 'name' },
@@ -49,9 +43,9 @@ export const createMaintenanceRequest = asyncHandler(async (req: Request, res: R
   (async () => {
     try {
       const populated = await MaintenanceRequest.findById(data._id).populate('reportedBy', 'fullName').populate('floor', 'name').lean() as any;
-      const emails = await getAdminEmails();
-      for (const email of emails) {
-        await sendMaintenanceOpened({ to: email, title: data.title, category: data.category || '', priority: data.priority || '', location: populated?.floor?.name, maintenanceId: String(data._id), reporterName: populated?.reportedBy?.fullName });
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendMaintenanceOpened({ to: recipients, title: data.title, category: data.category || '', priority: data.priority || '', location: populated?.floor?.name, maintenanceId: String(data._id), reporterName: populated?.reportedBy?.fullName });
       }
     } catch { /* silent */ }
   })();
@@ -101,9 +95,9 @@ export const resolveMaintenanceRequest = asyncHandler(async (req: Request, res: 
 
   (async () => {
     try {
-      const emails = await getAdminEmails();
-      for (const email of emails) {
-        await sendMaintenanceCompleted({ to: email, title: mr.title, category: (mr as any).category || '', priority: mr.priority || '', maintenanceId: String(mr._id) });
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendMaintenanceCompleted({ to: recipients, title: mr.title, category: (mr as any).category || '', priority: mr.priority || '', maintenanceId: String(mr._id) });
       }
     } catch { /* silent */ }
   })();

@@ -30,6 +30,8 @@ export interface ISystemSettings extends Document {
   smtpFromEmail:  string;
   smtpFromName:   string;
   smtpTls:        boolean;
+  // Operational alert recipients — if empty, falls back to admin/project_manager users
+  notificationRecipients: string[];
   emailAlerts:    IEmailAlerts;
 }
 
@@ -47,17 +49,18 @@ const defaultAlerts: IEmailAlerts = {
 };
 
 const systemSettingsSchema = new Schema<ISystemSettings>({
-  emailProvider:   { type: String, enum: ['smtp', 'resend'] }, // no default — lets env var work for unset docs
-  resendApiKey:    { type: String, default: '' },
-  resendFromEmail: { type: String, default: '' },
-  resendFromName:  { type: String, default: 'Mirsad Alerts' },
-  smtpHost:        { type: String, default: '' },
-  smtpPort:        { type: Number, default: 587 },
-  smtpUser:        { type: String, default: '' },
-  smtpPass:        { type: String, default: '' },
-  smtpFromEmail:   { type: String, default: '' },
-  smtpFromName:    { type: String, default: 'Mirsad' },
-  smtpTls:         { type: Boolean, default: false },
+  emailProvider:          { type: String, enum: ['smtp', 'resend'] }, // no default — lets env var work for unset docs
+  resendApiKey:           { type: String, default: '' },
+  resendFromEmail:        { type: String, default: '' },
+  resendFromName:         { type: String, default: 'Mirsad Alerts' },
+  smtpHost:               { type: String, default: '' },
+  smtpPort:               { type: Number, default: 587 },
+  smtpUser:               { type: String, default: '' },
+  smtpPass:               { type: String, default: '' },
+  smtpFromEmail:          { type: String, default: '' },
+  smtpFromName:           { type: String, default: 'Mirsad' },
+  smtpTls:                { type: Boolean, default: false },
+  notificationRecipients: { type: [String], default: [] },
   emailAlerts: {
     clientRequestCreated:   { type: Boolean, default: true },
     clientRequestAssigned:  { type: Boolean, default: true },

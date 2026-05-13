@@ -2,18 +2,12 @@ import { Request, Response } from 'express';
 import { ClientRequest } from '../models/ClientRequest';
 import { Item } from '../models/Item';
 import { StockMovement } from '../models/StockMovement';
-import { User } from '../models/User';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 import { applyMovementToBalance } from '../services/inventoryService';
-import { sendRequestCreated, sendRequestAssigned, sendRequestDelivered, sendRequestConfirmed } from '../services/emailService';
-
-async function getAdminEmails(): Promise<string[]> {
-  const admins = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
-  return admins.map((u: any) => u.email).filter(Boolean);
-}
+import { sendRequestCreated, sendRequestAssigned, sendRequestDelivered, sendRequestConfirmed, getNotificationRecipients } from '../services/emailService';
 
 const POPULATE = [
   { path: 'project',     select: 'name' },
@@ -49,13 +43,13 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'client_request', entityId: data._id, req });
   res.status(201).json({ success: true, data });
 
-  // Fire-and-forget email to admins
+  // Fire-and-forget email to notification recipients
   (async () => {
     try {
       const populated = await ClientRequest.findById(data._id).populate('requestedBy', 'fullName').populate('floor', 'name').lean() as any;
-      const adminEmails = await getAdminEmails();
-      for (const email of adminEmails) {
-        await sendRequestCreated({ to: email, requestTitle: data.title, requestType: data.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', floor: populated?.floor?.name, room: data.room, itemCount: data.items?.length, requestId: String(data._id) });
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendRequestCreated({ to: recipients, requestTitle: data.title, requestType: data.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', floor: populated?.floor?.name, room: data.room, itemCount: data.items?.length, requestId: String(data._id) });
       }
     } catch { /* silent */ }
   })();
@@ -150,13 +144,13 @@ export const confirmClientRequest = asyncHandler(async (req: Request, res: Respo
   await logAction({ userId: req.user?.userId, action: 'confirm', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
 
-  // Notify admins of confirmation
+  // Notify notification recipients of confirmation
   (async () => {
     try {
       const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName').lean() as any;
-      const adminEmails = await getAdminEmails();
-      for (const email of adminEmails) {
-        await sendRequestConfirmed({ to: email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', requestId: String(cr._id) });
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendRequestConfirmed({ to: recipients, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', requestId: String(cr._id) });
       }
     } catch { /* silent */ }
   })();

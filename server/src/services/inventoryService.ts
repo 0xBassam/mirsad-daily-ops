@@ -5,14 +5,8 @@ import { Item } from '../models/Item';
 import { InventoryBalance } from '../models/InventoryBalance';
 import { StockMovement } from '../models/StockMovement';
 import { FloorCheck } from '../models/FloorCheck';
-import { User } from '../models/User';
-import { sendLowStockAlert, sendOutOfStockAlert } from './emailService';
+import { sendLowStockAlert, sendOutOfStockAlert, getNotificationRecipients } from './emailService';
 import { Project } from '../models/Project';
-
-async function getAdminEmails(): Promise<string[]> {
-  const admins = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
-  return admins.map((u: any) => u.email).filter(Boolean);
-}
 
 type MovementType = 'RECEIVE' | 'ISSUE' | 'CONSUMPTION' | 'RETURN' | 'DAMAGE' | 'ADJUSTMENT' | 'TRANSFER_IN' | 'TRANSFER_OUT';
 
@@ -57,21 +51,21 @@ export async function applyMovementToBalance(params: {
           Item.findById(item).select('name unit type').lean() as any,
           Project.findById(project).select('name').lean() as any,
         ]);
-        const emails = await getAdminEmails();
-        const alertData = {
-          itemName: itemDoc?.name || String(item),
-          itemType: itemDoc?.type || 'unknown',
-          remainingQty: balance.remainingQty,
-          monthlyLimit: balance.monthlyLimit,
-          unit: itemDoc?.unit || '',
-          project: projectDoc?.name || String(project),
-          period,
-        };
-        for (const email of emails) {
+        const recipients = await getNotificationRecipients();
+        if (recipients.length) {
+          const alertData = {
+            itemName: itemDoc?.name || String(item),
+            itemType: itemDoc?.type || 'unknown',
+            remainingQty: balance.remainingQty,
+            monthlyLimit: balance.monthlyLimit,
+            unit: itemDoc?.unit || '',
+            project: projectDoc?.name || String(project),
+            period,
+          };
           if (newStatus === 'out_of_stock') {
-            await sendOutOfStockAlert({ to: email, ...alertData });
+            await sendOutOfStockAlert({ to: recipients, ...alertData });
           } else {
-            await sendLowStockAlert({ to: email, ...alertData });
+            await sendLowStockAlert({ to: recipients, ...alertData });
           }
         }
       } catch { /* silent */ }

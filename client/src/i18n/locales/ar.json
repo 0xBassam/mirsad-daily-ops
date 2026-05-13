@@ -356,6 +356,8 @@
     "testEmailMessageLabel": "الرسالة",
     "testEmailMessageDefault": "هذا بريد تجريبي من ميرصاد. إذا وصلك هذا البريد، فإعداد البريد الإلكتروني لديك صحيح.",
     "testEmailMessageRequired": "الرسالة مطلوبة",
+    "notificationRecipients": "مستلمو التنبيهات",
+    "notificationRecipientsHint": "استخدم عناوين بريد إلكتروني مفصولة بفواصل. سيتلقى هؤلاء المستلمون تنبيهات العمليات.",
     "emailAlerts": "إعدادات تنبيهات البريد",
     "emailAlertsDesc": "اختر الأحداث التي تُرسل تنبيهات بريدية للمسؤولين",
     "saveSettings": "حفظ الإعدادات",

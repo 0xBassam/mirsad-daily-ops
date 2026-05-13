@@ -356,6 +356,8 @@
     "testEmailMessageLabel": "Message",
     "testEmailMessageDefault": "This is a test email from Mirsad. If you received this, your email configuration is correct.",
     "testEmailMessageRequired": "Message is required",
+    "notificationRecipients": "Notification Recipients",
+    "notificationRecipientsHint": "Use comma-separated email addresses. These recipients will receive operational alerts.",
     "emailAlerts": "Email Alert Controls",
     "emailAlertsDesc": "Choose which events trigger email notifications to admins",
     "saveSettings": "Save Settings",

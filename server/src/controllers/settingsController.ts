@@ -20,6 +20,19 @@ export const getSettings = asyncHandler(async (_req: Request, res: Response) => 
   res.json({ success: true, data: maskSettings(settings.toObject()) });
 });
 
+const EMAIL_RE = /^[^\s@,;'"<>]+@[^\s@,;'"<>]+\.[^\s@,;'"<>]{2,}$/;
+
+function parseAndValidateRecipientList(raw: unknown): string[] {
+  if (!raw) return [];
+  const list: string[] = Array.isArray(raw)
+    ? raw.map(String).map(s => s.trim()).filter(Boolean)
+    : String(raw).split(',').map(s => s.trim()).filter(Boolean);
+  const invalid = list.filter(e => !EMAIL_RE.test(e));
+  if (invalid.length > 0)
+    throw new AppError(`Invalid notification recipient email${invalid.length > 1 ? 's' : ''}: ${invalid.join(', ')}`, 400);
+  return list;
+}
+
 export const updateSettings = asyncHandler(async (req: Request, res: Response) => {
   const settings = await getSystemSettings();
   const body = req.body as Partial<{
@@ -27,20 +40,23 @@ export const updateSettings = asyncHandler(async (req: Request, res: Response) =
     resendApiKey: string; resendFromEmail: string; resendFromName: string;
     smtpHost: string; smtpPort: number; smtpUser: string; smtpPass: string;
     smtpFromEmail: string; smtpFromName: string; smtpTls: boolean;
+    notificationRecipients: string | string[];
     emailAlerts: Record<string, boolean>;
   }>;
 
   // Set each field explicitly so Mongoose change-tracking works correctly
-  if (body.emailProvider !== undefined) settings.emailProvider = body.emailProvider;
-  if (body.resendFromEmail !== undefined) settings.resendFromEmail = body.resendFromEmail;
-  if (body.resendFromName  !== undefined) settings.resendFromName  = body.resendFromName;
-  if (body.smtpHost        !== undefined) settings.smtpHost        = body.smtpHost;
-  if (body.smtpPort        !== undefined) settings.smtpPort        = body.smtpPort;
-  if (body.smtpUser        !== undefined) settings.smtpUser        = body.smtpUser;
-  if (body.smtpFromEmail   !== undefined) settings.smtpFromEmail   = body.smtpFromEmail;
-  if (body.smtpFromName    !== undefined) settings.smtpFromName    = body.smtpFromName;
-  if (body.smtpTls         !== undefined) settings.smtpTls         = body.smtpTls;
-  if (body.emailAlerts     !== undefined) settings.emailAlerts     = body.emailAlerts as any;
+  if (body.emailProvider         !== undefined) settings.emailProvider         = body.emailProvider;
+  if (body.resendFromEmail       !== undefined) settings.resendFromEmail       = body.resendFromEmail;
+  if (body.resendFromName        !== undefined) settings.resendFromName        = body.resendFromName;
+  if (body.smtpHost              !== undefined) settings.smtpHost              = body.smtpHost;
+  if (body.smtpPort              !== undefined) settings.smtpPort              = body.smtpPort;
+  if (body.smtpUser              !== undefined) settings.smtpUser              = body.smtpUser;
+  if (body.smtpFromEmail         !== undefined) settings.smtpFromEmail         = body.smtpFromEmail;
+  if (body.smtpFromName          !== undefined) settings.smtpFromName          = body.smtpFromName;
+  if (body.smtpTls               !== undefined) settings.smtpTls               = body.smtpTls;
+  if (body.emailAlerts           !== undefined) settings.emailAlerts           = body.emailAlerts as any;
+  if (body.notificationRecipients !== undefined)
+    settings.notificationRecipients = parseAndValidateRecipientList(body.notificationRecipients);
   // Only overwrite secrets when a real value is submitted (not the mask)
   if (body.smtpPass    && body.smtpPass    !== MASK) settings.smtpPass    = body.smtpPass;
   if (body.resendApiKey && body.resendApiKey !== MASK) settings.resendApiKey = body.resendApiKey;
@@ -77,8 +93,6 @@ function readableSmtpError(err: unknown): string {
 }
 
 // ─── Test email ───────────────────────────────────────────────────────────────
-
-const EMAIL_RE = /^[^\s@,;'"<>]+@[^\s@,;'"<>]+\.[^\s@,;'"<>]{2,}$/;
 
 function parseAndValidateRecipients(raw: unknown): string[] {
   // Accept either a pre-parsed array from the client or a raw string

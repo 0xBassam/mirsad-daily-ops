@@ -33,6 +33,7 @@ interface Settings {
   smtpFromEmail: string;
   smtpFromName: string;
   smtpTls: boolean;
+  notificationRecipients: string[];
   emailAlerts: Record<AlertKey, boolean>;
 }
 
@@ -48,6 +49,7 @@ const DEFAULTS: Settings = {
   smtpFromEmail: '',
   smtpFromName: '',
   smtpTls: false,
+  notificationRecipients: [],
   emailAlerts: {
     clientRequestCreated: true,
     clientRequestAssigned: true,
@@ -93,6 +95,9 @@ export function SettingsPage() {
   const [form, setForm] = useState<Settings>(DEFAULTS);
   const [showPass, setShowPass] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
+  // notification recipients field (edit as comma-joined text, store as array on save)
+  const [notifRaw, setNotifRaw] = useState('');
+  const [notifError, setNotifError] = useState<string | null>(null);
   const [testEmail, setTestEmail] = useState('');
   const [testEmailError, setTestEmailError] = useState<string | null>(null);
   const [testSubject, setTestSubject] = useState('');
@@ -106,6 +111,8 @@ export function SettingsPage() {
     return raw.split(',').map(s => s.trim()).filter(Boolean);
   }
 
+  const emailRe = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/;
+
   // Returns error message or null if valid
   function validateRecipients(raw: string): string | null {
     if (!raw.trim()) return null;
@@ -114,10 +121,25 @@ export function SettingsPage() {
       return t('settings.testEmailErrorQuoted');
     const emails = parseRecipients(raw);
     if (emails.length === 0) return t('settings.testEmailRequired');
-    const emailRe = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/;
     const bad = emails.filter(e => !emailRe.test(e));
     if (bad.length > 0) return `${t('settings.testEmailErrorInvalid')}: ${bad.join(', ')}`;
     return null;
+  }
+
+  function validateNotifRecipients(raw: string): string | null {
+    if (!raw.trim()) return null;
+    if (/;/.test(raw)) return t('settings.testEmailErrorSemicolon');
+    if (/"/.test(raw) || /</.test(raw) || />/.test(raw))
+      return t('settings.testEmailErrorQuoted');
+    const emails = raw.split(',').map(s => s.trim()).filter(Boolean);
+    const bad = emails.filter(e => !emailRe.test(e));
+    if (bad.length > 0) return `${t('settings.testEmailErrorInvalid')}: ${bad.join(', ')}`;
+    return null;
+  }
+
+  function handleNotifChange(value: string) {
+    setNotifRaw(value);
+    setNotifError(validateNotifRecipients(value));
   }
 
   function handleTestEmailChange(value: string) {
@@ -133,6 +155,7 @@ export function SettingsPage() {
   useEffect(() => {
     if (settingsData && !loaded) {
       setForm({ ...DEFAULTS, ...settingsData, emailAlerts: { ...DEFAULTS.emailAlerts, ...(settingsData.emailAlerts || {}) } });
+      setNotifRaw((settingsData.notificationRecipients || []).join(', '));
       setLoaded(true);
     }
   }, [settingsData]);
@@ -145,7 +168,10 @@ export function SettingsPage() {
   }, [t]);
 
   const saveMutation = useMutation({
-    mutationFn: (body: Settings) => apiClient.put('/settings', body),
+    mutationFn: () => {
+      const notificationRecipients = notifRaw.split(',').map(s => s.trim()).filter(Boolean);
+      return apiClient.put('/settings', { ...form, notificationRecipients });
+    },
     onSuccess: () => toast.success(t('settings.settingsSaved')),
     onError: (e: any) => toast.error(e.response?.data?.message || 'Save failed'),
   });
@@ -403,6 +429,26 @@ export function SettingsPage() {
       {/* Email Alert Controls */}
       <SectionCard title={t('settings.emailAlerts')} icon={Mail}>
         <p className="text-sm text-slate-500 mb-5">{t('settings.emailAlertsDesc')}</p>
+
+        {/* Notification Recipients */}
+        <div className="mb-6 pb-6 border-b border-slate-100">
+          <label className="block text-sm font-medium text-slate-700 mb-1">
+            {t('settings.notificationRecipients')}
+          </label>
+          <input
+            className={inputCls + (notifError ? ' border-red-400 focus:ring-red-400' : '')}
+            type="text"
+            value={notifRaw}
+            onChange={e => handleNotifChange(e.target.value)}
+            placeholder="iii_hx@hotmail.com, m.assaf@kuzama.co, Sultan.Naif@KUZAMA.CO"
+            autoComplete="off"
+          />
+          {notifError
+            ? <p className="mt-1 text-xs text-red-600 font-medium">{notifError}</p>
+            : <p className="mt-1 text-xs text-slate-400">{t('settings.notificationRecipientsHint')}</p>
+          }
+        </div>
+
         <div className="space-y-3">
           {ALERT_KEYS.map(key => (
             <label key={key} className="flex items-center gap-3 cursor-pointer group">
@@ -423,7 +469,7 @@ export function SettingsPage() {
       {/* Save */}
       <div className="flex justify-end pb-8">
         <button
-          onClick={() => saveMutation.mutate(form)}
+          onClick={() => saveMutation.mutate()}
           disabled={saveMutation.isPending}
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
         >
