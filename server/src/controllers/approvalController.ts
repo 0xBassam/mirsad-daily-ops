@@ -5,6 +5,7 @@ import { ApprovalRecord } from '../models/ApprovalRecord';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 
 export const processApproval = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { entityType, entityId, action } = req.params;
   const { comment, signatureAttachmentId } = req.body;
 
@@ -18,15 +19,17 @@ export const processApproval = asyncHandler(async (req: Request, res: Response) 
     action as any,
     req.user!,
     comment,
-    signatureAttachmentId
+    signatureAttachmentId,
+    orgId
   );
 
   res.json({ success: true, data: result });
 });
 
 export const getApprovals = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.entityType) filter.entityType = req.query.entityType;
   if (req.query.action) filter.action = req.query.action;
   if (req.query.actor) filter.actor = req.query.actor;

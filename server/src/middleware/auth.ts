@@ -47,3 +47,10 @@ export function requireRole(...roles: string[]) {
     next();
   };
 }
+
+export function requireOrganization(req: Request, _res: Response, next: NextFunction): void {
+  if (!req.organizationId) {
+    return next(new AppError('Organization context required — please log in again', 403));
+  }
+  next();
+}

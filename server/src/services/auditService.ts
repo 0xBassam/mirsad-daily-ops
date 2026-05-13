@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 
 interface LogOptions {
   userId?: string;
+  organizationId?: string | null;
   action: AuditAction;
   entityType?: string;
   entityId?: string | mongoose.Types.ObjectId;
@@ -14,7 +15,9 @@ interface LogOptions {
 
 export async function logAction(opts: LogOptions): Promise<void> {
   try {
+    const orgId = opts.organizationId ?? opts.req?.organizationId ?? null;
     await AuditLog.create({
+      organization: orgId ? new mongoose.Types.ObjectId(orgId) : undefined,
       user: opts.userId ? new mongoose.Types.ObjectId(opts.userId) : undefined,
       action: opts.action,
       entityType: opts.entityType,

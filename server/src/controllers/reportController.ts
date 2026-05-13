@@ -13,8 +13,9 @@ import { logAction } from '../services/auditService';
 import { format } from 'date-fns';
 
 export const getReports = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.reportType) filter.reportType = req.query.reportType;
   if (req.query.project) filter.project = req.query.project;
 
@@ -32,7 +33,8 @@ export const getReports = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getReportById = asyncHandler(async (req: Request, res: Response) => {
-  const report = await Report.findById(req.params.id)
+  const orgId = req.organizationId as string;
+  const report = await Report.findOne({ _id: req.params.id, organization: orgId })
     .populate('project', 'name')
     .populate('building', 'name')
     .populate('floor', 'name')
@@ -42,7 +44,8 @@ export const getReportById = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const getReportData = asyncHandler(async (req: Request, res: Response) => {
-  const report = await Report.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const report = await Report.findOne({ _id: req.params.id, organization: orgId });
   if (!report) throw new AppError('Report not found', 404);
 
   const dateFrom = report.dateFrom || new Date(0);
@@ -55,7 +58,7 @@ export const getReportData = asyncHandler(async (req: Request, res: Response) =>
   if (report.reportType === 'monthly_food_inventory' || report.reportType === 'monthly_materials') {
     const type = report.reportType === 'monthly_food_inventory' ? 'food' : 'material';
     const period = format(dateFrom, 'yyyy-MM');
-    const balances = await InventoryBalance.find({ period, ...(project ? { project } : {}) })
+    const balances = await InventoryBalance.find({ organization: orgId, period, ...(project ? { project } : {}) })
       .populate({ path: 'item', match: { type }, populate: { path: 'category', select: 'name' } })
       .lean();
 
@@ -74,6 +77,7 @@ export const getReportData = asyncHandler(async (req: Request, res: Response) =>
 
   } else if (report.reportType === 'daily_floor_check') {
     const checks = await FloorCheck.find({
+      organization: orgId,
       date: { $gte: dateFrom, $lte: dateTo },
       ...(project ? { project } : {}),
       ...(report.building ? { building: report.building } : {}),
@@ -96,6 +100,7 @@ export const getReportData = asyncHandler(async (req: Request, res: Response) =>
 
   } else if (report.reportType === 'daily_project_summary') {
     const checks = await FloorCheck.find({
+      organization: orgId,
       date: { $gte: dateFrom, $lte: dateTo },
       ...(project ? { project } : {}),
     })
@@ -105,7 +110,7 @@ export const getReportData = asyncHandler(async (req: Request, res: Response) =>
 
     headers = ['Date', 'Floor', 'Supervisor', 'Shift', 'Total Items', 'Status'];
     const lineCounts = await FloorCheckLine.aggregate([
-      { $match: { floorCheck: { $in: checks.map((c: any) => c._id) } } },
+      { $match: { organization: report.organization, floorCheck: { $in: checks.map((c: any) => c._id) } } },
       { $group: { _id: '$floorCheck', count: { $sum: 1 } } },
     ]);
     const countMap = Object.fromEntries(lineCounts.map((l: any) => [l._id.toString(), l.count]));
@@ -121,6 +126,7 @@ export const getReportData = asyncHandler(async (req: Request, res: Response) =>
 
   } else if (report.reportType === 'weekly_warehouse') {
     const movements = await StockMovement.find({
+      organization: orgId,
       movementDate: { $gte: dateFrom, $lte: dateTo },
       ...(project ? { project } : {}),
     })
@@ -139,6 +145,7 @@ export const getReportData = asyncHandler(async (req: Request, res: Response) =>
 
   } else if (report.reportType === 'approval_summary') {
     const approvals = await ApprovalRecord.find({
+      organization: orgId,
       createdAt: { $gte: dateFrom, $lte: dateTo },
     })
       .populate('actor', 'fullName')
@@ -159,6 +166,7 @@ export const getReportData = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const generateReport = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const body = req.body;
   const now  = new Date();
   const typeLabels: Record<string, string> = {
@@ -173,6 +181,7 @@ export const generateReport = asyncHandler(async (req: Request, res: Response) =
 
   const report = await Report.create({
     ...body,
+    organization: orgId,
     title,
     generatedBy: req.user?.userId,
     status: 'generated',

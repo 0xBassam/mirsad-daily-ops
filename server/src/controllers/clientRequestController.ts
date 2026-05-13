@@ -18,8 +18,9 @@ const POPULATE = [
 ];
 
 export const getClientRequests = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.status)      filter.status      = req.query.status;
   if (req.query.requestType) filter.requestType = req.query.requestType;
   if (req.query.priority)    filter.priority    = req.query.priority;
@@ -33,13 +34,15 @@ export const getClientRequests = asyncHandler(async (req: Request, res: Response
 });
 
 export const getClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const data = await ClientRequest.findById(req.params.id).populate(POPULATE);
+  const orgId = req.organizationId as string;
+  const data = await ClientRequest.findOne({ _id: req.params.id, organization: orgId }).populate(POPULATE);
   if (!data) throw new AppError('Client request not found', 404);
   res.json({ success: true, data });
 });
 
 export const createClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const data = await ClientRequest.create({ ...req.body, requestedBy: req.user?.userId });
+  const orgId = req.organizationId as string;
+  const data = await ClientRequest.create({ ...req.body, organization: orgId, requestedBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'client_request', entityId: data._id, req });
   res.status(201).json({ success: true, data });
 
@@ -70,7 +73,8 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
 });
 
 export const updateClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const cr = await ClientRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const cr = await ClientRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!cr) throw new AppError('Client request not found', 404);
   Object.assign(cr, req.body);
   await cr.save();
@@ -78,7 +82,8 @@ export const updateClientRequest = asyncHandler(async (req: Request, res: Respon
 });
 
 export const assignClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const cr = await ClientRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const cr = await ClientRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!cr) throw new AppError('Client request not found', 404);
   if (cr.status !== 'submitted') throw new AppError('Request is not in submitted status', 400);
   cr.status = 'assigned';
@@ -99,7 +104,8 @@ export const assignClientRequest = asyncHandler(async (req: Request, res: Respon
 });
 
 export const startClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const cr = await ClientRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const cr = await ClientRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!cr) throw new AppError('Client request not found', 404);
   if (cr.status !== 'assigned') throw new AppError('Request must be assigned first', 400);
   cr.status = 'in_progress';
@@ -108,7 +114,8 @@ export const startClientRequest = asyncHandler(async (req: Request, res: Respons
 });
 
 export const deliverClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const cr = await ClientRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const cr = await ClientRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!cr) throw new AppError('Client request not found', 404);
   if (cr.status !== 'in_progress') throw new AppError('Request must be in progress', 400);
   cr.status = 'delivered';
@@ -121,9 +128,10 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
     const movDate = new Date();
     for (const reqItem of cr.items) {
       try {
-        const invItem = await Item.findOne({ name: { $regex: new RegExp(`^${reqItem.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+        const invItem = await Item.findOne({ organization: orgId, name: { $regex: new RegExp(`^${reqItem.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
         if (!invItem) continue;
         await StockMovement.create({
+          organization: orgId,
           project: cr.project, item: invItem._id, movementType: 'CONSUMPTION',
           quantity: reqItem.quantity, movementDate: movDate,
           sourceType: 'client_request', sourceRef: cr._id,
@@ -149,7 +157,8 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
 });
 
 export const confirmClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const cr = await ClientRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const cr = await ClientRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!cr) throw new AppError('Client request not found', 404);
   if (cr.status !== 'delivered') throw new AppError('Request must be delivered first', 400);
   cr.status = 'confirmed';
@@ -171,7 +180,8 @@ export const confirmClientRequest = asyncHandler(async (req: Request, res: Respo
 });
 
 export const rejectClientRequest = asyncHandler(async (req: Request, res: Response) => {
-  const cr = await ClientRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const cr = await ClientRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!cr) throw new AppError('Client request not found', 404);
   if (['confirmed', 'rejected'].includes(cr.status)) throw new AppError('Cannot reject this request', 400);
   cr.status = 'rejected';

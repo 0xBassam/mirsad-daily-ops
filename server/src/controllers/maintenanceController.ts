@@ -15,8 +15,9 @@ const POPULATE = [
 ];
 
 export const getMaintenanceRequests = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.status)   filter.status   = req.query.status;
   if (req.query.priority) filter.priority = req.query.priority;
   if (req.query.category) filter.category = req.query.category;
@@ -30,13 +31,15 @@ export const getMaintenanceRequests = asyncHandler(async (req: Request, res: Res
 });
 
 export const getMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
-  const data = await MaintenanceRequest.findById(req.params.id).populate(POPULATE);
+  const orgId = req.organizationId as string;
+  const data = await MaintenanceRequest.findOne({ _id: req.params.id, organization: orgId }).populate(POPULATE);
   if (!data) throw new AppError('Maintenance request not found', 404);
   res.json({ success: true, data });
 });
 
 export const createMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
-  const data = await MaintenanceRequest.create({ ...req.body, reportedBy: req.user?.userId });
+  const orgId = req.organizationId as string;
+  const data = await MaintenanceRequest.create({ ...req.body, organization: orgId, reportedBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'maintenance_request', entityId: data._id, req });
   res.status(201).json({ success: true, data });
 
@@ -52,7 +55,8 @@ export const createMaintenanceRequest = asyncHandler(async (req: Request, res: R
 });
 
 export const updateMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
-  const mr = await MaintenanceRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const mr = await MaintenanceRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!mr) throw new AppError('Maintenance request not found', 404);
   Object.assign(mr, req.body);
   await mr.save();
@@ -61,7 +65,8 @@ export const updateMaintenanceRequest = asyncHandler(async (req: Request, res: R
 });
 
 export const assignMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
-  const mr = await MaintenanceRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const mr = await MaintenanceRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!mr) throw new AppError('Maintenance request not found', 404);
   if (mr.status !== 'open') throw new AppError('Request is not open', 400);
   mr.status = 'assigned';
@@ -73,7 +78,8 @@ export const assignMaintenanceRequest = asyncHandler(async (req: Request, res: R
 });
 
 export const startMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
-  const mr = await MaintenanceRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const mr = await MaintenanceRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!mr) throw new AppError('Maintenance request not found', 404);
   if (mr.status !== 'assigned') throw new AppError('Request must be assigned first', 400);
   mr.status = 'in_progress';
@@ -82,7 +88,8 @@ export const startMaintenanceRequest = asyncHandler(async (req: Request, res: Re
 });
 
 export const resolveMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
-  const mr = await MaintenanceRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const mr = await MaintenanceRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!mr) throw new AppError('Maintenance request not found', 404);
   if (!['assigned', 'in_progress'].includes(mr.status)) throw new AppError('Request must be in progress', 400);
   if (!req.body.resolution) throw new AppError('Resolution notes are required', 400);
@@ -104,7 +111,8 @@ export const resolveMaintenanceRequest = asyncHandler(async (req: Request, res: 
 });
 
 export const closeMaintenanceRequest = asyncHandler(async (req: Request, res: Response) => {
-  const mr = await MaintenanceRequest.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const mr = await MaintenanceRequest.findOne({ _id: req.params.id, organization: orgId });
   if (!mr) throw new AppError('Maintenance request not found', 404);
   if (mr.status !== 'resolved') throw new AppError('Request must be resolved before closing', 400);
   mr.status = 'closed';

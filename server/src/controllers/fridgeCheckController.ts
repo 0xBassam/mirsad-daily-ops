@@ -6,8 +6,9 @@ import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 
 export const getFridgeChecks = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.project) filter.project  = req.query.project;
   if (req.query.floor)   filter.floor    = req.query.floor;
   if (req.query.status)  filter.status   = req.query.status;
@@ -29,7 +30,8 @@ export const getFridgeChecks = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const getFridgeCheckById = asyncHandler(async (req: Request, res: Response) => {
-  const check = await FridgeCheck.findById(req.params.id)
+  const orgId = req.organizationId as string;
+  const check = await FridgeCheck.findOne({ _id: req.params.id, organization: orgId })
     .populate('project',  'name')
     .populate('building', 'name')
     .populate('floor',    'name')
@@ -43,6 +45,7 @@ export const getFridgeCheckById = asyncHandler(async (req: Request, res: Respons
 });
 
 export const createFridgeCheck = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const userId  = (req as any).user._id;
   const body    = req.body;
   const now     = new Date();
@@ -66,11 +69,12 @@ export const createFridgeCheck = asyncHandler(async (req: Request, res: Response
 
   const check = await FridgeCheck.create({
     ...body,
+    organization: orgId,
     itemsChecked,
     status,
     checkedBy: userId,
   });
 
-  await logAction({ userId: userId.toString(), action: 'create', entityType: 'fridge_check', entityId: check._id });
+  await logAction({ userId: userId.toString(), action: 'create', entityType: 'fridge_check', entityId: check._id, req });
   res.status(201).json({ success: true, data: check });
 });

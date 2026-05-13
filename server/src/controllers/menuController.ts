@@ -3,8 +3,9 @@ import { Menu } from '../models/Menu';
 
 export async function listMenus(req: Request, res: Response) {
   try {
+    const orgId = req.organizationId as string;
     const { date, project } = req.query;
-    const filter: any = { status: 'active' };
+    const filter: any = { organization: orgId, status: 'active' };
 
     if (project) filter.project = project;
 
@@ -29,7 +30,8 @@ export async function listMenus(req: Request, res: Response) {
 
 export async function createMenu(req: Request, res: Response) {
   try {
-    const menu = await Menu.create({ ...req.body, createdBy: req.user?.userId });
+    const orgId = req.organizationId as string;
+    const menu = await Menu.create({ ...req.body, organization: orgId, createdBy: req.user?.userId });
     res.status(201).json({ success: true, data: menu });
   } catch (err: any) {
     res.status(400).json({ success: false, message: err.message });
@@ -38,7 +40,8 @@ export async function createMenu(req: Request, res: Response) {
 
 export async function getMenu(req: Request, res: Response) {
   try {
-    const menu = await Menu.findById(req.params.id)
+    const orgId = req.organizationId as string;
+    const menu = await Menu.findOne({ _id: req.params.id, organization: orgId })
       .populate('project',   'name')
       .populate('createdBy', 'fullName')
       .lean();
@@ -52,7 +55,12 @@ export async function getMenu(req: Request, res: Response) {
 
 export async function updateMenu(req: Request, res: Response) {
   try {
-    const menu = await Menu.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
+    const orgId = req.organizationId as string;
+    const menu = await Menu.findOneAndUpdate(
+      { _id: req.params.id, organization: orgId },
+      req.body,
+      { new: true, runValidators: true }
+    )
       .populate('project',   'name')
       .populate('createdBy', 'fullName')
       .lean();

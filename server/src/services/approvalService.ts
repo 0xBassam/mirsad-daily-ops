@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { FloorCheck } from '../models/FloorCheck';
 import { ApprovalRecord, ApprovalAction, ApprovalStep } from '../models/ApprovalRecord';
 import { AppError } from '../utils/AppError';
@@ -37,9 +38,13 @@ export async function processFloorCheckApproval(
   action: ApprovalAction,
   actor: { userId: string; role: string },
   comment?: string,
-  signatureAttachmentId?: string
+  signatureAttachmentId?: string,
+  organizationId?: string | null
 ) {
-  const check = await FloorCheck.findById(floorCheckId);
+  const checkFilter: Record<string, unknown> = { _id: floorCheckId };
+  if (organizationId) checkFilter.organization = new mongoose.Types.ObjectId(organizationId);
+
+  const check = await FloorCheck.findOne(checkFilter);
   if (!check) throw new AppError('Floor check not found', 404);
 
   const allowedRoles = ACTION_ROLES[action];
@@ -58,6 +63,7 @@ export async function processFloorCheckApproval(
   });
 
   const record = await ApprovalRecord.create({
+    organization: organizationId ? new mongoose.Types.ObjectId(organizationId) : undefined,
     entityType: 'floor_check',
     entityId: check._id,
     step: ACTION_STEP[action],
@@ -89,6 +95,7 @@ export async function processFloorCheckApproval(
 
   await logAction({
     userId: actor.userId,
+    organizationId: organizationId ?? null,
     action: action as any,
     entityType: 'floor_check',
     entityId: floorCheckId,
