@@ -6,8 +6,9 @@ import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 
 export const getBatches = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.status)      filter.status      = req.query.status;
   if (req.query.storageZone) filter.storageZone = req.query.storageZone;
   if (req.query.project)     filter.project     = req.query.project;
@@ -26,7 +27,8 @@ export const getBatches = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const getBatch = asyncHandler(async (req: Request, res: Response) => {
-  const data = await Batch.findById(req.params.id)
+  const orgId = req.organizationId as string;
+  const data = await Batch.findOne({ _id: req.params.id, organization: orgId })
     .populate('item', 'name unit type category')
     .populate('supplier', 'name contactName phone email')
     .populate('project', 'name')
@@ -36,14 +38,20 @@ export const getBatch = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const createBatch = asyncHandler(async (req: Request, res: Response) => {
-  const body = { ...req.body, createdBy: req.user?.userId, remainingQty: req.body.quantity };
+  const orgId = req.organizationId as string;
+  const body = { ...req.body, organization: orgId, createdBy: req.user?.userId, remainingQty: req.body.quantity };
   const data = await Batch.create(body);
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'batch', entityId: data._id, req });
   res.status(201).json({ success: true, data });
 });
 
 export const updateBatch = asyncHandler(async (req: Request, res: Response) => {
-  const data = await Batch.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+  const orgId = req.organizationId as string;
+  const data = await Batch.findOneAndUpdate(
+    { _id: req.params.id, organization: orgId },
+    req.body,
+    { new: true, runValidators: true }
+  );
   if (!data) throw new AppError('Batch not found', 404);
   await logAction({ userId: req.user?.userId, action: 'update', entityType: 'batch', entityId: req.params.id, req });
   res.json({ success: true, data });
@@ -51,6 +59,7 @@ export const updateBatch = asyncHandler(async (req: Request, res: Response) => {
 
 // FEFO: batches sorted by expiryDate ASC (food items), FIFO: by receivedDate ASC (materials)
 export const getExpiryTracking = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
   const now = new Date();
   const tab = (req.query.tab as string) || 'expired';
@@ -70,7 +79,7 @@ export const getExpiryTracking = asyncHandler(async (req: Request, res: Response
     dateFilter = { expiryDate: { $gte: now, $lte: in7 } };
   }
 
-  const filter = { ...dateFilter, status: { $in: ['active', 'expired'] } };
+  const filter = { organization: orgId, ...dateFilter, status: { $in: ['active', 'expired'] } };
   const [data, total] = await Promise.all([
     Batch.find(filter)
       .populate('item', 'name unit type')

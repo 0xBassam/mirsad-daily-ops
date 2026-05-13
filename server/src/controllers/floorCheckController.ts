@@ -8,8 +8,9 @@ import { logAction } from '../services/auditService';
 import { processFloorCheckApproval } from '../services/approvalService';
 
 export const getFloorChecks = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.project) filter.project = req.query.project;
   if (req.query.floor) filter.floor = req.query.floor;
   if (req.query.status) filter.status = req.query.status;
@@ -35,7 +36,8 @@ export const getFloorChecks = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const getFloorCheck = asyncHandler(async (req: Request, res: Response) => {
-  const check = await FloorCheck.findById(req.params.id)
+  const orgId = req.organizationId as string;
+  const check = await FloorCheck.findOne({ _id: req.params.id, organization: orgId })
     .populate('project', 'name')
     .populate('building', 'name')
     .populate('floor', 'name')
@@ -45,7 +47,7 @@ export const getFloorCheck = asyncHandler(async (req: Request, res: Response) =>
 
   if (!check) throw new AppError('Floor check not found', 404);
 
-  const lines = await FloorCheckLine.find({ floorCheck: req.params.id })
+  const lines = await FloorCheckLine.find({ floorCheck: req.params.id, organization: orgId })
     .populate('item', 'name unit type')
     .populate('photos');
 
@@ -53,14 +55,16 @@ export const getFloorCheck = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const createFloorCheck = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { lines, ...checkData } = req.body;
   const check = await FloorCheck.create({
     ...checkData,
+    organization: orgId,
     supervisor: checkData.supervisor || req.user?.userId,
   });
 
   if (lines?.length) {
-    const lineDocs = lines.map((l: any) => ({ ...l, floorCheck: check._id }));
+    const lineDocs = lines.map((l: any) => ({ ...l, floorCheck: check._id, organization: orgId }));
     await FloorCheckLine.insertMany(lineDocs);
   }
 
@@ -69,18 +73,23 @@ export const createFloorCheck = asyncHandler(async (req: Request, res: Response)
 });
 
 export const updateFloorCheck = asyncHandler(async (req: Request, res: Response) => {
-  const existing = await FloorCheck.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const existing = await FloorCheck.findOne({ _id: req.params.id, organization: orgId });
   if (!existing) throw new AppError('Floor check not found', 404);
   if (!['draft', 'returned'].includes(existing.status)) {
     throw new AppError('Only draft or returned checks can be edited', 400);
   }
 
   const { lines, ...checkData } = req.body;
-  const check = await FloorCheck.findByIdAndUpdate(req.params.id, checkData, { new: true, runValidators: true });
+  const check = await FloorCheck.findOneAndUpdate(
+    { _id: req.params.id, organization: orgId },
+    checkData,
+    { new: true, runValidators: true }
+  );
 
   if (lines) {
-    await FloorCheckLine.deleteMany({ floorCheck: req.params.id });
-    const lineDocs = lines.map((l: any) => ({ ...l, floorCheck: check!._id }));
+    await FloorCheckLine.deleteMany({ floorCheck: req.params.id, organization: orgId });
+    const lineDocs = lines.map((l: any) => ({ ...l, floorCheck: check!._id, organization: orgId }));
     await FloorCheckLine.insertMany(lineDocs);
   }
 
@@ -89,23 +98,26 @@ export const updateFloorCheck = asyncHandler(async (req: Request, res: Response)
 });
 
 export const submitFloorCheck = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { comment, signatureAttachmentId } = req.body;
   const check = await processFloorCheckApproval(
     req.params.id,
     'submit',
     req.user!,
     comment,
-    signatureAttachmentId
+    signatureAttachmentId,
+    orgId
   );
   await logAction({ userId: req.user?.userId, action: 'submit', entityType: 'floor_check', entityId: req.params.id, req });
   res.json({ success: true, data: check });
 });
 
 export const deleteFloorCheck = asyncHandler(async (req: Request, res: Response) => {
-  const check = await FloorCheck.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const check = await FloorCheck.findOne({ _id: req.params.id, organization: orgId });
   if (!check) throw new AppError('Floor check not found', 404);
   if (check.status !== 'draft') throw new AppError('Only draft checks can be deleted', 400);
-  await FloorCheckLine.deleteMany({ floorCheck: req.params.id });
+  await FloorCheckLine.deleteMany({ floorCheck: req.params.id, organization: orgId });
   await check.deleteOne();
   await logAction({ userId: req.user?.userId, action: 'delete', entityType: 'floor_check', entityId: req.params.id, req });
   res.json({ success: true });

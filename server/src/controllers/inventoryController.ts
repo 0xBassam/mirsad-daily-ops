@@ -8,9 +8,10 @@ import { logAction } from '../services/auditService';
 import { format } from 'date-fns';
 
 export const getFoodInventory = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
   const period = (req.query.period as string) || format(new Date(), 'yyyy-MM');
-  const filter: Record<string, unknown> = { period };
+  const filter: Record<string, unknown> = { organization: orgId, period };
   if (req.query.project) filter.project = req.query.project;
   if (req.query.status) filter.status = req.query.status;
 
@@ -29,9 +30,10 @@ export const getFoodInventory = asyncHandler(async (req: Request, res: Response)
 });
 
 export const getMaterialsInventory = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
   const period = (req.query.period as string) || format(new Date(), 'yyyy-MM');
-  const filter: Record<string, unknown> = { period };
+  const filter: Record<string, unknown> = { organization: orgId, period };
   if (req.query.project) filter.project = req.query.project;
   if (req.query.status) filter.status = req.query.status;
 
@@ -50,8 +52,9 @@ export const getMaterialsInventory = asyncHandler(async (req: Request, res: Resp
 });
 
 export const getMovements = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.project) filter.project = req.query.project;
   if (req.query.item) filter.item = req.query.item;
   if (req.query.movementType) filter.movementType = req.query.movementType;
@@ -76,15 +79,17 @@ export const getMovements = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const createMovement = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const movement = await StockMovement.create({
     ...req.body,
+    organization: orgId,
     createdBy: req.user?.userId,
     movementDate: req.body.movementDate || new Date(),
   });
 
   const period = format(movement.movementDate, 'yyyy-MM');
   const balance = await InventoryBalance.findOneAndUpdate(
-    { project: movement.project, item: movement.item, period },
+    { organization: orgId, project: movement.project, item: movement.item, period },
     { $setOnInsert: { openingBalance: 0, monthlyLimit: 0 } },
     { upsert: true, new: true }
   );

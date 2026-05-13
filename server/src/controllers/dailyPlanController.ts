@@ -7,8 +7,9 @@ import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 
 export const getDailyPlans = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.project) filter.project = req.query.project;
   if (req.query.status) filter.status = req.query.status;
   if (req.query.dateFrom || req.query.dateTo) {
@@ -31,13 +32,14 @@ export const getDailyPlans = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const getDailyPlan = asyncHandler(async (req: Request, res: Response) => {
-  const plan = await DailyPlan.findById(req.params.id)
+  const orgId = req.organizationId as string;
+  const plan = await DailyPlan.findOne({ _id: req.params.id, organization: orgId })
     .populate('project', 'name')
     .populate('building', 'name')
     .populate('createdBy', 'fullName');
   if (!plan) throw new AppError('Daily plan not found', 404);
 
-  const lines = await DailyPlanLine.find({ dailyPlan: req.params.id })
+  const lines = await DailyPlanLine.find({ dailyPlan: req.params.id, organization: orgId })
     .populate('floor', 'name')
     .populate('item', 'name unit type')
     .populate('assignedTo', 'fullName')
@@ -47,11 +49,12 @@ export const getDailyPlan = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const createDailyPlan = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { lines, ...planData } = req.body;
-  const plan = await DailyPlan.create({ ...planData, createdBy: req.user?.userId });
+  const plan = await DailyPlan.create({ ...planData, organization: orgId, createdBy: req.user?.userId });
 
   if (lines?.length) {
-    const linesDocs = lines.map((l: any) => ({ ...l, dailyPlan: plan._id }));
+    const linesDocs = lines.map((l: any) => ({ ...l, dailyPlan: plan._id, organization: orgId }));
     await DailyPlanLine.insertMany(linesDocs);
   }
 
@@ -60,13 +63,20 @@ export const createDailyPlan = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const updateDailyPlan = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
+  const existing = await DailyPlan.findOne({ _id: req.params.id, organization: orgId });
+  if (!existing) throw new AppError('Daily plan not found', 404);
+
   const { lines, ...planData } = req.body;
-  const plan = await DailyPlan.findByIdAndUpdate(req.params.id, planData, { new: true, runValidators: true });
-  if (!plan) throw new AppError('Daily plan not found', 404);
+  const plan = await DailyPlan.findOneAndUpdate(
+    { _id: req.params.id, organization: orgId },
+    planData,
+    { new: true, runValidators: true }
+  );
 
   if (lines) {
-    await DailyPlanLine.deleteMany({ dailyPlan: req.params.id });
-    const linesDocs = lines.map((l: any) => ({ ...l, dailyPlan: plan._id }));
+    await DailyPlanLine.deleteMany({ dailyPlan: req.params.id, organization: orgId });
+    const linesDocs = lines.map((l: any) => ({ ...l, dailyPlan: plan!._id, organization: orgId }));
     if (linesDocs.length) await DailyPlanLine.insertMany(linesDocs);
   }
 
@@ -75,8 +85,9 @@ export const updateDailyPlan = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const startPlan = asyncHandler(async (req: Request, res: Response) => {
-  const plan = await DailyPlan.findByIdAndUpdate(
-    req.params.id,
+  const orgId = req.organizationId as string;
+  const plan = await DailyPlan.findOneAndUpdate(
+    { _id: req.params.id, organization: orgId },
     { status: 'in_progress' },
     { new: true, runValidators: true }
   );
@@ -86,8 +97,9 @@ export const startPlan = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const closePlan = asyncHandler(async (req: Request, res: Response) => {
-  const plan = await DailyPlan.findByIdAndUpdate(
-    req.params.id,
+  const orgId = req.organizationId as string;
+  const plan = await DailyPlan.findOneAndUpdate(
+    { _id: req.params.id, organization: orgId },
     { status: 'closed' },
     { new: true, runValidators: true }
   );
@@ -97,6 +109,7 @@ export const closePlan = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const updatePlanLine = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { lineId } = req.params;
   const { actualQty, lineStatus, notes } = req.body;
 
@@ -109,7 +122,11 @@ export const updatePlanLine = asyncHandler(async (req: Request, res: Response) =
     update.completedAt = new Date();
   }
 
-  const line = await DailyPlanLine.findByIdAndUpdate(lineId, update, { new: true, runValidators: true })
+  const line = await DailyPlanLine.findOneAndUpdate(
+    { _id: lineId, organization: orgId },
+    update,
+    { new: true, runValidators: true }
+  )
     .populate('item', 'name unit')
     .populate('floor', 'name')
     .populate('completedBy', 'fullName')
@@ -121,18 +138,21 @@ export const updatePlanLine = asyncHandler(async (req: Request, res: Response) =
 });
 
 export const getKitchenToday = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
   const plans = await DailyPlan.find({
+    organization: orgId,
     date: { $gte: today, $lt: tomorrow },
     status: { $in: ['published', 'in_progress'] },
   }).select('_id date shift status building project');
 
   const lines = plans.length
     ? await DailyPlanLine.find({
+        organization: orgId,
         dailyPlan: { $in: plans.map(p => p._id) },
         assignedTo: req.user?.userId,
       })
@@ -147,13 +167,14 @@ export const getKitchenToday = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const copyDailyPlan = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { targetDate } = req.body;
   if (!targetDate) throw new AppError('targetDate is required', 400);
 
-  const sourcePlan = await DailyPlan.findById(req.params.id);
+  const sourcePlan = await DailyPlan.findOne({ _id: req.params.id, organization: orgId });
   if (!sourcePlan) throw new AppError('Source plan not found', 404);
 
-  const sourceLines = await DailyPlanLine.find({ dailyPlan: req.params.id });
+  const sourceLines = await DailyPlanLine.find({ dailyPlan: req.params.id, organization: orgId });
 
   const newPlan = await DailyPlan.create({
     date: new Date(targetDate),
@@ -162,6 +183,7 @@ export const copyDailyPlan = asyncHandler(async (req: Request, res: Response) =>
     shift: sourcePlan.shift,
     status: 'draft',
     copiedFromDate: sourcePlan.date,
+    organization: orgId,
     createdBy: req.user?.userId,
   });
 
@@ -171,6 +193,7 @@ export const copyDailyPlan = asyncHandler(async (req: Request, res: Response) =>
     item: l.item,
     plannedQty: l.plannedQty,
     assignedTo: l.assignedTo,
+    organization: orgId,
   }));
   if (newLines.length) await DailyPlanLine.insertMany(newLines);
 
@@ -179,9 +202,10 @@ export const copyDailyPlan = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const deleteDailyPlan = asyncHandler(async (req: Request, res: Response) => {
-  const plan = await DailyPlan.findByIdAndDelete(req.params.id);
+  const orgId = req.organizationId as string;
+  const plan = await DailyPlan.findOneAndDelete({ _id: req.params.id, organization: orgId });
   if (!plan) throw new AppError('Daily plan not found', 404);
-  await DailyPlanLine.deleteMany({ dailyPlan: req.params.id });
+  await DailyPlanLine.deleteMany({ dailyPlan: req.params.id, organization: orgId });
   await logAction({ userId: req.user?.userId, action: 'delete', entityType: 'daily_plan', entityId: req.params.id, req });
   res.json({ success: true });
 });

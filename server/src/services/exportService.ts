@@ -20,6 +20,7 @@ import { StockMovement } from '../models/StockMovement';
 import { ApprovalRecord } from '../models/ApprovalRecord';
 import { Transfer } from '../models/Transfer';
 import { DailyPlan } from '../models/DailyPlan';
+import { Organization } from '../models/Organization';
 
 // ── Fonts ─────────────────────────────────────────────────────────────────────
 const FONTS_DIR   = path.resolve(__dirname, '../assets/fonts');
@@ -67,17 +68,17 @@ function fontFor(doc: any, text: string, bold = false) {
   }
 }
 
-function drawHdr(doc: any, title: string, subtitle?: string) {
-  // Indigo logo block
+function drawHdr(doc: any, title: string, subtitle?: string, orgName?: string, orgDept?: string) {
+  // Logo block
   doc.roundedRect(M, M, 38, 38, 7).fill('#4F46E5');
   doc.fill('#FFFFFF').font('Helvetica-Bold').fontSize(20)
-    .text('M', M, M + 8, { width: 38, align: 'center', lineBreak: false });
+    .text((orgName || 'Mirsad').charAt(0).toUpperCase(), M, M + 8, { width: 38, align: 'center', lineBreak: false });
 
   // Title block
   doc.font('Helvetica-Bold').fontSize(13).fill('#0F172A')
-    .text('MIRSAD', M + 50, M + 2, { lineBreak: false });
+    .text(orgName || 'Mirsad', M + 50, M + 2, { lineBreak: false });
   doc.font('Helvetica').fontSize(8).fill('#64748B')
-    .text('Ministry of Energy — Cafeteria Operations', M + 50, M + 18, { lineBreak: false });
+    .text(orgDept || '', M + 50, M + 18, { lineBreak: false });
 
   if (subtitle) {
     fontFor(doc, subtitle);
@@ -140,11 +141,11 @@ function drawTblRow(doc: any, cols: PDFCol[], row: Record<string, any>, y: numbe
   return y + H;
 }
 
-function drawFtr(doc: any, pageNum: number, total: number) {
+function drawFtr(doc: any, pageNum: number, total: number, orgName?: string) {
   const y = PH - FTR_H;
   doc.moveTo(M, y).lineTo(PW - M, y).strokeColor('#E2E8F0').lineWidth(0.5).stroke();
   doc.font('Helvetica').fontSize(7).fill('#94A3B8')
-    .text('Confidential — Ministry of Energy · Mirsad Daily Ops', M, y + 8, { width: 260, lineBreak: false });
+    .text(`Confidential — ${orgName || 'Mirsad'}`, M, y + 8, { width: 260, lineBreak: false });
   doc.font('Helvetica').fontSize(7).fill('#94A3B8')
     .text(`Page ${pageNum} of ${total}  ·  Generated: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`,
       PW / 2, y + 8, { width: PW / 2 - M, align: 'right', lineBreak: false });
@@ -157,15 +158,26 @@ async function buildPDF(
   subtitle: string | undefined,
   meta: MetaEntry[],
   cols: PDFCol[],
-  rows: Record<string, any>[]
+  rows: Record<string, any>[],
+  orgId?: string
 ): Promise<void> {
+  let orgName: string | undefined;
+  let orgDept: string | undefined;
+  if (orgId) {
+    try {
+      const org = await Organization.findById(orgId).select('name settings.department').lean() as any;
+      orgName = org?.name;
+      orgDept = org?.settings?.department;
+    } catch { /* use defaults */ }
+  }
+
   const doc = createDoc();
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
   doc.pipe(res);
 
   let y = TBL_START;
-  drawHdr(doc, title, subtitle);
+  drawHdr(doc, title, subtitle, orgName, orgDept);
   drawMeta(doc, meta);
 
   // Table
@@ -176,7 +188,7 @@ async function buildPDF(
     if (y + 16 > BODY_BTMY) {
       doc.addPage();
       y = M + 10;
-      drawHdr(doc, title);
+      drawHdr(doc, title, undefined, orgName, orgDept);
       y = drawTblHdr(doc, cols, y + HDR_H + 10);
     }
     y = drawTblRow(doc, cols, row, y, i % 2 === 0);
@@ -191,7 +203,7 @@ async function buildPDF(
   const range = (doc as any).bufferedPageRange();
   for (let p = 0; p < range.count; p++) {
     (doc as any).switchToPage(range.start + p);
-    drawFtr(doc, p + 1, range.count);
+    drawFtr(doc, p + 1, range.count, orgName);
   }
 
   doc.end();
@@ -218,10 +230,21 @@ async function buildExcel(
   reportTitle: string,
   meta: MetaEntry[],
   cols: XLCol[],
-  rows: Record<string, any>[]
+  rows: Record<string, any>[],
+  orgId?: string
 ): Promise<void> {
+  let orgName = 'Mirsad';
+  let orgDept = '';
+  if (orgId) {
+    try {
+      const org = await Organization.findById(orgId).select('name settings.department').lean() as any;
+      if (org?.name) orgName = org.name;
+      orgDept = org?.settings?.department || '';
+    } catch { /* use defaults */ }
+  }
+
   const wb = new ExcelJS.Workbook();
-  wb.creator = 'Mirsad Daily Ops';
+  wb.creator = orgName;
   wb.created = new Date();
 
   const ws = wb.addWorksheet(sheetTitle, { pageSetup: { orientation: 'landscape', fitToPage: true } });
@@ -231,7 +254,7 @@ async function buildExcel(
   const numCols = cols.length;
   ws.mergeCells(1, 1, 1, numCols);
   const hdrCell = ws.getCell(1, 1);
-  hdrCell.value = 'MIRSAD DAILY OPS — Ministry of Energy Cafeteria Operations';
+  hdrCell.value = orgDept ? `${orgName.toUpperCase()} — ${orgDept}` : orgName.toUpperCase();
   hdrCell.font = { name: 'Calibri', bold: true, size: 13, color: { argb: 'FFFFFFFF' } };
   hdrCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
   hdrCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -307,7 +330,7 @@ async function buildExcel(
 
   // Summary row
   ws.addRow([]);
-  const footerRow = ws.addRow([`Total rows: ${rows.length}   ·   Generated: ${format(new Date(), 'dd/MM/yyyy HH:mm')}   ·   Mirsad Daily Ops`]);
+  const footerRow = ws.addRow([`Total rows: ${rows.length}   ·   Generated: ${format(new Date(), 'dd/MM/yyyy HH:mm')}   ·   ${orgName}`]);
   ws.mergeCells(footerRow.number, 1, footerRow.number, numCols);
   footerRow.getCell(1).font = { name: 'Calibri', size: 8, italic: true, color: { argb: 'FF94A3B8' } };
   footerRow.getCell(1).alignment = { horizontal: 'center' };
@@ -343,8 +366,9 @@ const OP_COLS_XL: XLCol[] = [
   { header: 'Notes',          key: 'notes',    width: 28 },
 ];
 
-async function fetchRequestRows(type: string, dateFrom?: Date, dateTo?: Date) {
+async function fetchRequestRows(type: string, dateFrom?: Date, dateTo?: Date, organizationId?: string) {
   const filter: any = { requestType: type };
+  if (organizationId) filter.organization = organizationId;
   if (dateFrom || dateTo) filter.createdAt = {};
   if (dateFrom) filter.createdAt.$gte = dateFrom;
   if (dateTo)   filter.createdAt.$lte = dateTo;
@@ -369,29 +393,29 @@ async function fetchRequestRows(type: string, dateFrom?: Date, dateTo?: Date) {
   }));
 }
 
-export async function exportOperationRequestsPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
-  const rows = await fetchRequestRows('operation_request', opts.dateFrom, opts.dateTo);
+export async function exportOperationRequestsPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
+  const rows = await fetchRequestRows('operation_request', opts.dateFrom, opts.dateTo, opts.organizationId);
   const meta: MetaEntry[] = [
     { label: 'Report',    value: 'Operation Requests' },
     { label: 'Period',    value: opts.dateFrom ? `${format(opts.dateFrom, 'dd/MM/yyyy')} – ${format(opts.dateTo || new Date(), 'dd/MM/yyyy')}` : 'All time' },
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Operation_Requests')}.pdf`, 'Operation Requests Report', undefined, meta, OP_COLS_PDF, rows);
+  await buildPDF(res, `${safeName('Operation_Requests')}.pdf`, 'Operation Requests Report', undefined, meta, OP_COLS_PDF, rows, opts.organizationId);
 }
 
-export async function exportOperationRequestsExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
-  const rows = await fetchRequestRows('operation_request', opts.dateFrom, opts.dateTo);
+export async function exportOperationRequestsExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
+  const rows = await fetchRequestRows('operation_request', opts.dateFrom, opts.dateTo, opts.organizationId);
   const meta: MetaEntry[] = [
     { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom, 'dd MMM yyyy')} – ${format(opts.dateTo || new Date(), 'dd MMM yyyy')}` : 'All time' },
     { label: 'Records', value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Operation_Requests')}.xlsx`, 'Operation Requests', 'Operation Requests Report', meta, OP_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Operation_Requests')}.xlsx`, 'Operation Requests', 'Operation Requests Report', meta, OP_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Coffee Break Requests ──────────────────────────────────────────────────────
-export async function exportCoffeeBreakRequestsPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
-  const rows = await fetchRequestRows('coffee_break_request', opts.dateFrom, opts.dateTo);
+export async function exportCoffeeBreakRequestsPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
+  const rows = await fetchRequestRows('coffee_break_request', opts.dateFrom, opts.dateTo, opts.organizationId);
   const meta: MetaEntry[] = [
     { label: 'Report',    value: 'Coffee Break Requests' },
     { label: 'Period',    value: opts.dateFrom ? `${format(opts.dateFrom, 'dd/MM/yyyy')} – ${format(opts.dateTo || new Date(), 'dd/MM/yyyy')}` : 'All time' },
@@ -399,16 +423,16 @@ export async function exportCoffeeBreakRequestsPDF(res: Response, opts: { dateFr
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
   const cols: PDFCol[] = OP_COLS_PDF.map(c => c.key === 'title' ? { ...c, header: 'Request / Event' } : c);
-  await buildPDF(res, `${safeName('Coffee_Break_Requests')}.pdf`, 'Coffee Break Requests Report', undefined, meta, cols, rows);
+  await buildPDF(res, `${safeName('Coffee_Break_Requests')}.pdf`, 'Coffee Break Requests Report', undefined, meta, cols, rows, opts.organizationId);
 }
 
-export async function exportCoffeeBreakRequestsExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
-  const rows = await fetchRequestRows('coffee_break_request', opts.dateFrom, opts.dateTo);
+export async function exportCoffeeBreakRequestsExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
+  const rows = await fetchRequestRows('coffee_break_request', opts.dateFrom, opts.dateTo, opts.organizationId);
   const meta: MetaEntry[] = [
     { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom, 'dd MMM yyyy')} – ${format(opts.dateTo || new Date(), 'dd MMM yyyy')}` : 'All time' },
     { label: 'Records', value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Coffee_Break_Requests')}.xlsx`, 'Coffee Break Requests', 'Coffee Break Requests Report', meta, OP_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Coffee_Break_Requests')}.xlsx`, 'Coffee Break Requests', 'Coffee Break Requests Report', meta, OP_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Receiving Records ─────────────────────────────────────────────────────────
@@ -433,8 +457,9 @@ const REC_COLS_XL: XLCol[] = [
   { header: 'Notes',         key: 'notes',     width: 30 },
 ];
 
-export async function exportReceivingPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportReceivingPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.deliveryDate = {}; if (opts.dateFrom) filter.deliveryDate.$gte = opts.dateFrom; if (opts.dateTo) filter.deliveryDate.$lte = opts.dateTo; }
   const recs = await Receiving.find(filter).sort({ deliveryDate: -1 }).populate('supplier', 'name').populate('receivedBy', 'fullName').lean();
   const rows = recs.map((r: any) => ({
@@ -451,11 +476,12 @@ export async function exportReceivingPDF(res: Response, opts: { dateFrom?: Date;
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Receiving_Records')}.pdf`, 'Receiving Records Report', undefined, meta, REC_COLS_PDF, rows);
+  await buildPDF(res, `${safeName('Receiving_Records')}.pdf`, 'Receiving Records Report', undefined, meta, REC_COLS_PDF, rows, opts.organizationId);
 }
 
-export async function exportReceivingExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportReceivingExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.deliveryDate = {}; if (opts.dateFrom) filter.deliveryDate.$gte = opts.dateFrom; if (opts.dateTo) filter.deliveryDate.$lte = opts.dateTo; }
   const recs = await Receiving.find(filter).sort({ deliveryDate: -1 })
     .populate('supplier', 'name').populate('receivedBy', 'fullName')
@@ -476,7 +502,7 @@ export async function exportReceivingExcel(res: Response, opts: { dateFrom?: Dat
     { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom,'dd MMM yyyy')} – ${format(opts.dateTo||new Date(),'dd MMM yyyy')}` : 'All time' },
     { label: 'Records', value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Receiving_Records')}.xlsx`, 'Receiving Records', 'Receiving Records Report', meta, REC_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Receiving_Records')}.xlsx`, 'Receiving Records', 'Receiving Records Report', meta, REC_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Purchase Orders ────────────────────────────────────────────────────────────
@@ -502,8 +528,9 @@ const PO_COLS_XL: XLCol[] = [
   { header: 'Notes',          key: 'notes',       width: 30 },
 ];
 
-export async function exportPurchaseOrdersPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportPurchaseOrdersPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.createdAt = {}; if (opts.dateFrom) filter.createdAt.$gte = opts.dateFrom; if (opts.dateTo) filter.createdAt.$lte = opts.dateTo; }
   const pos = await PurchaseOrder.find(filter).sort({ createdAt: -1 }).populate('supplier', 'name').lean();
   const rows = pos.map((p: any) => {
@@ -525,11 +552,12 @@ export async function exportPurchaseOrdersPDF(res: Response, opts: { dateFrom?: 
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Purchase_Orders')}.pdf`, 'Purchase Orders Report', undefined, meta, PO_COLS_PDF, rows);
+  await buildPDF(res, `${safeName('Purchase_Orders')}.pdf`, 'Purchase Orders Report', undefined, meta, PO_COLS_PDF, rows, opts.organizationId);
 }
 
-export async function exportPurchaseOrdersExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportPurchaseOrdersExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.createdAt = {}; if (opts.dateFrom) filter.createdAt.$gte = opts.dateFrom; if (opts.dateTo) filter.createdAt.$lte = opts.dateTo; }
   const pos = await PurchaseOrder.find(filter).sort({ createdAt: -1 }).populate('supplier', 'name').lean();
   const rows = pos.map((p: any) => {
@@ -552,7 +580,7 @@ export async function exportPurchaseOrdersExcel(res: Response, opts: { dateFrom?
     { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom,'dd MMM yyyy')} – ${format(opts.dateTo||new Date(),'dd MMM yyyy')}` : 'All time' },
     { label: 'Records', value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Purchase_Orders')}.xlsx`, 'Purchase Orders', 'Purchase Orders Report', meta, PO_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Purchase_Orders')}.xlsx`, 'Purchase Orders', 'Purchase Orders Report', meta, PO_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Low Stock / Inventory ──────────────────────────────────────────────────────
@@ -580,9 +608,10 @@ const INV_COLS_XL: XLCol[] = [
   { header: 'Status',         key: 'status',      width: 18, status: true },
 ];
 
-export async function exportLowStockPDF(res: Response, opts: { period?: string } = {}) {
+export async function exportLowStockPDF(res: Response, opts: { period?: string; organizationId?: string } = {}) {
   const period = opts.period || format(new Date(), 'yyyy-MM');
-  const balances = await InventoryBalance.find({ period, status: { $in: ['low_stock', 'out_of_stock'] } })
+  const orgFilter = opts.organizationId ? { organization: opts.organizationId } : {};
+  const balances = await InventoryBalance.find({ ...orgFilter, period, status: { $in: ['low_stock', 'out_of_stock'] } })
     .populate({ path: 'item', populate: { path: 'category', select: 'name' } }).lean();
   const rows = balances.filter((b: any) => b.item).sort((a: any, b: any) => a.remainingQty - b.remainingQty).map((b: any) => ({
     itemName:  b.item?.name || '—',
@@ -599,15 +628,15 @@ export async function exportLowStockPDF(res: Response, opts: { period?: string }
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Low_Stock_Items')}.pdf`, 'Low Stock Items Report', undefined, meta, LS_COLS_PDF, rows);
+  await buildPDF(res, `${safeName('Low_Stock_Items')}.pdf`, 'Low Stock Items Report', undefined, meta, LS_COLS_PDF, rows, opts.organizationId);
 }
 
-export async function exportLowStockExcel(res: Response, opts: { period?: string; type?: 'food' | 'material' | 'all' } = {}) {
+export async function exportLowStockExcel(res: Response, opts: { period?: string; type?: 'food' | 'material' | 'all'; organizationId?: string } = {}) {
   const period = opts.period || format(new Date(), 'yyyy-MM');
   const statusFilter = opts.type === 'all' ? {} : { status: { $in: ['low_stock', 'out_of_stock'] } };
-  const typeMatch = opts.type && opts.type !== 'all' ? { 'item.type': opts.type } : {};
+  const orgFilter = opts.organizationId ? { organization: opts.organizationId } : {};
 
-  const balances = await InventoryBalance.find({ period, ...statusFilter })
+  const balances = await InventoryBalance.find({ ...orgFilter, period, ...statusFilter })
     .populate({ path: 'item', populate: { path: 'category', select: 'name' } }).lean();
 
   const rows = balances.filter((b: any) => b.item && (opts.type === 'all' || opts.type === undefined || b.item.type === opts.type)).map((b: any) => ({
@@ -630,7 +659,7 @@ export async function exportLowStockExcel(res: Response, opts: { period?: string
     { label: 'Type',   value: opts.type || 'All' },
     { label: 'Records',value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Inventory_Report')}.xlsx`, 'Inventory', `Inventory Report — ${period}`, meta, INV_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Inventory_Report')}.xlsx`, 'Inventory', `Inventory Report — ${period}`, meta, INV_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Audit Logs ─────────────────────────────────────────────────────────────────
@@ -653,8 +682,9 @@ const AUDIT_COLS_XL: XLCol[] = [
   { header: 'User Agent',   key: 'ua',         width: 32 },
 ];
 
-export async function exportAuditLogsPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportAuditLogsPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.createdAt = {}; if (opts.dateFrom) filter.createdAt.$gte = opts.dateFrom; if (opts.dateTo) filter.createdAt.$lte = opts.dateTo; }
   const logs = await AuditLog.find(filter).sort({ createdAt: -1 }).limit(500).populate('user', 'fullName role').lean();
   const rows = logs.map((l: any) => ({
@@ -671,11 +701,12 @@ export async function exportAuditLogsPDF(res: Response, opts: { dateFrom?: Date;
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Audit_Logs')}.pdf`, 'Audit Log Report', undefined, meta, AUDIT_COLS_PDF, rows);
+  await buildPDF(res, `${safeName('Audit_Logs')}.pdf`, 'Audit Log Report', undefined, meta, AUDIT_COLS_PDF, rows, opts.organizationId);
 }
 
-export async function exportAuditLogsExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportAuditLogsExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.createdAt = {}; if (opts.dateFrom) filter.createdAt.$gte = opts.dateFrom; if (opts.dateTo) filter.createdAt.$lte = opts.dateTo; }
   const logs = await AuditLog.find(filter).sort({ createdAt: -1 }).limit(2000).populate('user', 'fullName role').lean();
   const rows = logs.map((l: any) => ({
@@ -692,14 +723,16 @@ export async function exportAuditLogsExcel(res: Response, opts: { dateFrom?: Dat
     { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom,'dd MMM yyyy')} – ${format(opts.dateTo||new Date(),'dd MMM yyyy')}` : 'Last 2000 entries' },
     { label: 'Records', value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Audit_Logs')}.xlsx`, 'Audit Logs', 'Audit Log Report', meta, AUDIT_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Audit_Logs')}.xlsx`, 'Audit Logs', 'Audit Log Report', meta, AUDIT_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Saved Report generic PDF/Excel ─────────────────────────────────────────────
-export async function exportSavedReportPDF(reportId: string, res: Response): Promise<void> {
+export async function exportSavedReportPDF(reportId: string, res: Response, organizationId?: string): Promise<void> {
   // Delegate to domain-specific exporters based on reportType
   const { Report } = await import('../models/Report');
-  const report = await Report.findById(reportId).lean();
+  const reportFilter: any = { _id: reportId };
+  if (organizationId) reportFilter.organization = organizationId;
+  const report = await Report.findOne(reportFilter).lean();
   if (!report) { res.status(404).json({ success: false, message: 'Report not found' }); return; }
 
   const df = report.dateFrom ? new Date(report.dateFrom as any) : undefined;
@@ -707,18 +740,18 @@ export async function exportSavedReportPDF(reportId: string, res: Response): Pro
 
   switch ((report as any).reportType) {
     case 'monthly_food_inventory':
-      return exportLowStockExcel(res, { period: df ? format(df, 'yyyy-MM') : undefined, type: 'food' });
+      return exportLowStockExcel(res, { period: df ? format(df, 'yyyy-MM') : undefined, type: 'food', organizationId });
     case 'monthly_materials':
-      return exportLowStockExcel(res, { period: df ? format(df, 'yyyy-MM') : undefined, type: 'material' });
+      return exportLowStockExcel(res, { period: df ? format(df, 'yyyy-MM') : undefined, type: 'material', organizationId });
     case 'approval_summary':
-      return exportAuditLogsPDF(res, { dateFrom: df, dateTo: dt });
+      return exportAuditLogsPDF(res, { dateFrom: df, dateTo: dt, organizationId });
     default:
       // Generic: pull report data and render
-      return exportGenericReportPDF(report as any, res);
+      return exportGenericReportPDF(report as any, res, organizationId);
   }
 }
 
-async function exportGenericReportPDF(report: any, res: Response): Promise<void> {
+async function exportGenericReportPDF(report: any, res: Response, organizationId?: string): Promise<void> {
   const { Report } = await import('../models/Report');
   const df = report.dateFrom ? new Date(report.dateFrom) : new Date(0);
   const dt = report.dateTo   ? new Date(report.dateTo)   : new Date();
@@ -739,6 +772,7 @@ async function exportGenericReportPDF(report: any, res: Response): Promise<void>
       { header: 'Notes',       key: 'notes', width: 75 },
     ];
     const filter: any = { date: { $gte: df, $lte: dt } };
+    if (organizationId) filter.organization = organizationId;
     if (report.project) filter.project = report.project;
     if (report.floor)   filter.floor   = report.floor;
     const checks = await FloorCheck.find(filter).populate('floor', 'name').populate('supervisor', 'fullName').lean();
@@ -762,6 +796,7 @@ async function exportGenericReportPDF(report: any, res: Response): Promise<void>
       { header: 'Notes',    key: 'notes', width: 50 },
     ];
     const filter: any = { movementDate: { $gte: df, $lte: dt } };
+    if (organizationId) filter.organization = organizationId;
     if (report.project) filter.project = report.project;
     const mvts = await StockMovement.find(filter).populate('item', 'name unit').lean();
     rows = mvts.map((m: any) => ({
@@ -782,12 +817,14 @@ async function exportGenericReportPDF(report: any, res: Response): Promise<void>
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
 
-  await buildPDF(res, `${safeName(title.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_'))}.pdf`, title, undefined, meta, cols.length ? cols : [{ header: 'Data', key: 'data', width: PW - M*2 }], rows.length ? rows : [{ data: 'No data available' }]);
+  await buildPDF(res, `${safeName(title.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_'))}.pdf`, title, undefined, meta, cols.length ? cols : [{ header: 'Data', key: 'data', width: PW - M*2 }], rows.length ? rows : [{ data: 'No data available' }], organizationId);
 }
 
-export async function exportSavedReportExcel(reportId: string, res: Response): Promise<void> {
+export async function exportSavedReportExcel(reportId: string, res: Response, organizationId?: string): Promise<void> {
   const { Report } = await import('../models/Report');
-  const report = await Report.findById(reportId).lean();
+  const reportFilter: any = { _id: reportId };
+  if (organizationId) reportFilter.organization = organizationId;
+  const report = await Report.findOne(reportFilter).lean();
   if (!report) { res.status(404).json({ success: false, message: 'Report not found' }); return; }
 
   const df = (report as any).dateFrom ? new Date((report as any).dateFrom) : undefined;
@@ -795,14 +832,14 @@ export async function exportSavedReportExcel(reportId: string, res: Response): P
   const period = df ? format(df, 'yyyy-MM') : format(new Date(), 'yyyy-MM');
 
   switch ((report as any).reportType) {
-    case 'monthly_food_inventory': return exportLowStockExcel(res, { period, type: 'food' });
-    case 'monthly_materials':      return exportLowStockExcel(res, { period, type: 'material' });
-    case 'approval_summary':       return exportAuditLogsExcel(res, { dateFrom: df, dateTo: dt });
-    default:                       return exportGenericReportExcel(report as any, res);
+    case 'monthly_food_inventory': return exportLowStockExcel(res, { period, type: 'food', organizationId });
+    case 'monthly_materials':      return exportLowStockExcel(res, { period, type: 'material', organizationId });
+    case 'approval_summary':       return exportAuditLogsExcel(res, { dateFrom: df, dateTo: dt, organizationId });
+    default:                       return exportGenericReportExcel(report as any, res, organizationId);
   }
 }
 
-async function exportGenericReportExcel(report: any, res: Response): Promise<void> {
+async function exportGenericReportExcel(report: any, res: Response, organizationId?: string): Promise<void> {
   const df = report.dateFrom ? new Date(report.dateFrom) : new Date(0);
   const dt = report.dateTo   ? new Date(report.dateTo)   : new Date();
 
@@ -820,6 +857,7 @@ async function exportGenericReportExcel(report: any, res: Response): Promise<voi
       { header: 'Notes',      key: 'notes',  width: 28 },
     ];
     const filter: any = { date: { $gte: df, $lte: dt } };
+    if (organizationId) filter.organization = organizationId;
     if (report.project) filter.project = report.project;
     if (report.floor)   filter.floor   = report.floor;
     const checks = await FloorCheck.find(filter).populate('floor','name').populate('supervisor','fullName').lean();
@@ -842,6 +880,7 @@ async function exportGenericReportExcel(report: any, res: Response): Promise<voi
       { header: 'Notes',       key: 'notes',  width: 28 },
     ];
     const filter: any = { movementDate: { $gte: df, $lte: dt } };
+    if (organizationId) filter.organization = organizationId;
     if (report.project) filter.project = report.project;
     const mvts = await StockMovement.find(filter).populate('item','name unit').lean();
     rows = mvts.map((m: any) => ({
@@ -861,7 +900,7 @@ async function exportGenericReportExcel(report: any, res: Response): Promise<voi
   ];
 
   const sheetName = title.slice(0, 31);
-  await buildExcel(res, `${safeName(title.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_'))}.xlsx`, sheetName, title, meta, cols, rows);
+  await buildExcel(res, `${safeName(title.replace(/[^a-zA-Z0-9]/g,'_').replace(/_+/g,'_'))}.xlsx`, sheetName, title, meta, cols, rows, organizationId);
 }
 
 // ── Transfers (Daily Delivery) ────────────────────────────────────────────────
@@ -886,8 +925,9 @@ const TR_COLS_XL: XLCol[] = [
   { header: 'Notes',         key: 'notes',     width: 30 },
 ];
 
-export async function exportTransfersPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportTransfersPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.transferDate = {}; if (opts.dateFrom) filter.transferDate.$gte = opts.dateFrom; if (opts.dateTo) filter.transferDate.$lte = opts.dateTo; }
   const recs = await Transfer.find(filter).sort({ transferDate: -1 })
     .populate('floor', 'name').populate('building', 'name').populate('createdBy', 'fullName').lean();
@@ -906,11 +946,12 @@ export async function exportTransfersPDF(res: Response, opts: { dateFrom?: Date;
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Daily_Delivery_Report')}.pdf`, 'Daily Delivery Report', undefined, meta, TR_COLS_PDF, rows);
+  await buildPDF(res, `${safeName('Daily_Delivery_Report')}.pdf`, 'Daily Delivery Report', undefined, meta, TR_COLS_PDF, rows, opts.organizationId);
 }
 
-export async function exportTransfersExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportTransfersExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.transferDate = {}; if (opts.dateFrom) filter.transferDate.$gte = opts.dateFrom; if (opts.dateTo) filter.transferDate.$lte = opts.dateTo; }
   const recs = await Transfer.find(filter).sort({ transferDate: -1 })
     .populate('floor', 'name').populate('building', 'name')
@@ -930,7 +971,7 @@ export async function exportTransfersExcel(res: Response, opts: { dateFrom?: Dat
     { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom,'dd MMM yyyy')} – ${format(opts.dateTo||new Date(),'dd MMM yyyy')}` : 'All time' },
     { label: 'Records', value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Daily_Delivery_Report')}.xlsx`, 'Transfers', 'Daily Delivery Report', meta, TR_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Daily_Delivery_Report')}.xlsx`, 'Transfers', 'Daily Delivery Report', meta, TR_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Daily Plans (Menu Report) ─────────────────────────────────────────────────
@@ -953,8 +994,9 @@ const DP_COLS_XL: XLCol[] = [
   { header: 'Notes',        key: 'notes',     width: 30 },
 ];
 
-export async function exportDailyPlansPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportDailyPlansPDF(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.date = {}; if (opts.dateFrom) filter.date.$gte = opts.dateFrom; if (opts.dateTo) filter.date.$lte = opts.dateTo; }
   const recs = await DailyPlan.find(filter).sort({ date: -1 })
     .populate('building', 'name').populate('createdBy', 'fullName').lean();
@@ -973,11 +1015,12 @@ export async function exportDailyPlansPDF(res: Response, opts: { dateFrom?: Date
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Menu_Report')}.pdf`, 'Daily Menu Report', undefined, meta, DP_COLS_PDF, rows);
+  await buildPDF(res, `${safeName('Menu_Report')}.pdf`, 'Daily Menu Report', undefined, meta, DP_COLS_PDF, rows, opts.organizationId);
 }
 
-export async function exportDailyPlansExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date } = {}) {
+export async function exportDailyPlansExcel(res: Response, opts: { dateFrom?: Date; dateTo?: Date; organizationId?: string } = {}) {
   const filter: any = {};
+  if (opts.organizationId) filter.organization = opts.organizationId;
   if (opts.dateFrom || opts.dateTo) { filter.date = {}; if (opts.dateFrom) filter.date.$gte = opts.dateFrom; if (opts.dateTo) filter.date.$lte = opts.dateTo; }
   const recs = await DailyPlan.find(filter).sort({ date: -1 })
     .populate('building', 'name').populate('createdBy', 'fullName').lean();
@@ -994,13 +1037,14 @@ export async function exportDailyPlansExcel(res: Response, opts: { dateFrom?: Da
     { label: 'Period', value: opts.dateFrom ? `${format(opts.dateFrom,'dd MMM yyyy')} – ${format(opts.dateTo||new Date(),'dd MMM yyyy')}` : 'All time' },
     { label: 'Records', value: String(rows.length) },
   ];
-  await buildExcel(res, `${safeName('Menu_Report')}.xlsx`, 'Daily Plans', 'Daily Menu Report', meta, DP_COLS_XL, rows);
+  await buildExcel(res, `${safeName('Menu_Report')}.xlsx`, 'Daily Plans', 'Daily Menu Report', meta, DP_COLS_XL, rows, opts.organizationId);
 }
 
 // ── Food Inventory (separate typed export) ────────────────────────────────────
-export async function exportFoodInventoryPDF(res: Response, opts: { period?: string } = {}) {
+export async function exportFoodInventoryPDF(res: Response, opts: { period?: string; organizationId?: string } = {}) {
   const period = opts.period || format(new Date(), 'yyyy-MM');
-  const balances = await InventoryBalance.find({ period })
+  const orgFilter = opts.organizationId ? { organization: opts.organizationId } : {};
+  const balances = await InventoryBalance.find({ ...orgFilter, period })
     .populate({ path: 'item', match: { type: 'food' }, populate: { path: 'category', select: 'name' } }).lean();
   const rows = balances.filter((b: any) => b.item).map((b: any) => ({
     itemName:  b.item?.name || '—',
@@ -1030,12 +1074,13 @@ export async function exportFoodInventoryPDF(res: Response, opts: { period?: str
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Food_Inventory_Report')}.pdf`, 'Food Inventory Report', period, meta, cols, rows);
+  await buildPDF(res, `${safeName('Food_Inventory_Report')}.pdf`, 'Food Inventory Report', period, meta, cols, rows, opts.organizationId);
 }
 
-export async function exportMaterialsInventoryPDF(res: Response, opts: { period?: string } = {}) {
+export async function exportMaterialsInventoryPDF(res: Response, opts: { period?: string; organizationId?: string } = {}) {
   const period = opts.period || format(new Date(), 'yyyy-MM');
-  const balances = await InventoryBalance.find({ period })
+  const orgFilter = opts.organizationId ? { organization: opts.organizationId } : {};
+  const balances = await InventoryBalance.find({ ...orgFilter, period })
     .populate({ path: 'item', match: { type: 'material' }, populate: { path: 'category', select: 'name' } }).lean();
   const rows = balances.filter((b: any) => b.item).map((b: any) => ({
     itemName:  b.item?.name || '—',
@@ -1065,7 +1110,7 @@ export async function exportMaterialsInventoryPDF(res: Response, opts: { period?
     { label: 'Records',   value: String(rows.length) },
     { label: 'Generated', value: format(new Date(), 'dd/MM/yyyy HH:mm') },
   ];
-  await buildPDF(res, `${safeName('Materials_Inventory_Report')}.pdf`, 'Materials Inventory Report', period, meta, cols, rows);
+  await buildPDF(res, `${safeName('Materials_Inventory_Report')}.pdf`, 'Materials Inventory Report', period, meta, cols, rows, opts.organizationId);
 }
 
 // ── Re-export improved floor check exporters ──────────────────────────────────

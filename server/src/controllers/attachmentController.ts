@@ -7,6 +7,7 @@ export const uploadAttachment = asyncHandler(async (req: Request, res: Response)
   if (!req.file) throw new AppError('No file uploaded or file type not allowed', 400);
 
   const attachment = await Attachment.create({
+    organization: req.organizationId,
     filename: req.file.filename,
     originalName: req.file.originalname,
     mimeType: req.file.mimetype,
@@ -21,13 +22,15 @@ export const uploadAttachment = asyncHandler(async (req: Request, res: Response)
 });
 
 export const getAttachment = asyncHandler(async (req: Request, res: Response) => {
-  const data = await Attachment.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const data = await Attachment.findOne({ _id: req.params.id, organization: orgId });
   if (!data) throw new AppError('Attachment not found', 404);
   res.json({ success: true, data });
 });
 
 export const deleteAttachment = asyncHandler(async (req: Request, res: Response) => {
-  const data = await Attachment.findByIdAndDelete(req.params.id);
+  const orgId = req.organizationId as string;
+  const data = await Attachment.findOneAndDelete({ _id: req.params.id, organization: orgId });
   if (!data) throw new AppError('Attachment not found', 404);
   res.json({ success: true });
 });

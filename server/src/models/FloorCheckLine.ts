@@ -42,5 +42,7 @@ floorCheckLineSchema.pre('save', function (next) {
 
 floorCheckLineSchema.index({ organization: 1 });
 floorCheckLineSchema.index({ floorCheck: 1 });
+floorCheckLineSchema.index({ organization: 1, lineStatus: 1 });
+floorCheckLineSchema.index({ organization: 1, floorCheck: 1 });
 
 export const FloorCheckLine = mongoose.model<IFloorCheckLine>('FloorCheckLine', floorCheckLineSchema);

@@ -10,8 +10,9 @@ import { applyMovementToBalance } from '../services/inventoryService';
 import { sendReceivingCompleted, getNotificationRecipients } from '../services/emailService';
 
 export const getReceivings = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.status)        filter.status        = req.query.status;
   if (req.query.project)       filter.project       = req.query.project;
   if (req.query.supplier)      filter.supplier      = req.query.supplier;
@@ -32,7 +33,8 @@ export const getReceivings = asyncHandler(async (req: Request, res: Response) =>
 });
 
 export const getReceiving = asyncHandler(async (req: Request, res: Response) => {
-  const data = await Receiving.findById(req.params.id)
+  const orgId = req.organizationId as string;
+  const data = await Receiving.findOne({ _id: req.params.id, organization: orgId })
     .populate('project', 'name')
     .populate('supplier', 'name contactName phone')
     .populate('purchaseOrder', 'poNumber status')
@@ -44,13 +46,15 @@ export const getReceiving = asyncHandler(async (req: Request, res: Response) => 
 });
 
 export const createReceiving = asyncHandler(async (req: Request, res: Response) => {
-  const data = await Receiving.create({ ...req.body, receivedBy: req.user?.userId });
+  const orgId = req.organizationId as string;
+  const data = await Receiving.create({ ...req.body, organization: orgId, receivedBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'receiving', entityId: data._id, req });
   res.status(201).json({ success: true, data });
 });
 
 export const updateReceiving = asyncHandler(async (req: Request, res: Response) => {
-  const receiving = await Receiving.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const receiving = await Receiving.findOne({ _id: req.params.id, organization: orgId });
   if (!receiving) throw new AppError('Receiving record not found', 404);
   if (!['pending'].includes(receiving.status)) throw new AppError('Only pending records can be edited', 400);
   Object.assign(receiving, req.body);
@@ -59,7 +63,8 @@ export const updateReceiving = asyncHandler(async (req: Request, res: Response) 
 });
 
 export const confirmReceiving = asyncHandler(async (req: Request, res: Response) => {
-  const receiving = await Receiving.findById(req.params.id);
+  const orgId = req.organizationId as string;
+  const receiving = await Receiving.findOne({ _id: req.params.id, organization: orgId });
   if (!receiving) throw new AppError('Receiving record not found', 404);
   if (!['pending', 'partial'].includes(receiving.status)) throw new AppError('Already confirmed or rejected', 400);
 
@@ -72,20 +77,23 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
   receiving.confirmedAt = new Date();
   await receiving.save();
 
-  for (const line of goodLines) {
-    await StockMovement.create({
+  if (goodLines.length > 0) {
+    await StockMovement.insertMany(goodLines.map(line => ({
+      organization: orgId,
       project: receiving.project, item: line.item, movementType: 'RECEIVE',
       quantity: line.quantityReceived, movementDate: receiving.deliveryDate,
       sourceType: 'receiving', sourceRef: receiving._id,
       notes: receiving.invoiceNumber ? `Invoice ${receiving.invoiceNumber}` : 'Delivery received',
       createdBy: req.user?.userId,
-    });
-    await applyMovementToBalance({ project: receiving.project as any, item: line.item as any, movementType: 'RECEIVE', quantity: line.quantityReceived, date: receiving.deliveryDate });
+    })));
+    await Promise.all(goodLines.map(line =>
+      applyMovementToBalance({ project: receiving.project as any, item: line.item as any, movementType: 'RECEIVE', quantity: line.quantityReceived, date: receiving.deliveryDate, organizationId: orgId })
+    ));
   }
 
   // Update linked PO receivedQty
   if (receiving.purchaseOrder) {
-    const po = await PurchaseOrder.findById(receiving.purchaseOrder);
+    const po = await PurchaseOrder.findOne({ _id: receiving.purchaseOrder, organization: orgId });
     if (po) {
       for (const line of goodLines) {
         if (line.purchaseOrderLine) {
@@ -103,10 +111,10 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
 
   (async () => {
     try {
-      const populated = await Receiving.findById(receiving._id).populate('supplier', 'name').lean() as any;
-      const recipients = await getNotificationRecipients();
+      const populated = await Receiving.findOne({ _id: receiving._id, organization: orgId }).populate('supplier', 'name').lean() as any;
+      const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
-        await sendReceivingCompleted({ to: recipients, invoiceNumber: receiving.invoiceNumber || '', supplierName: populated?.supplier?.name || '—', lineCount: receiving.lines?.length || 0, receivingId: String(receiving._id) });
+        await sendReceivingCompleted({ to: recipients, invoiceNumber: receiving.invoiceNumber || '', supplierName: populated?.supplier?.name || '—', lineCount: receiving.lines?.length || 0, receivingId: String(receiving._id) }, orgId);
       }
     } catch { /* silent */ }
   })();

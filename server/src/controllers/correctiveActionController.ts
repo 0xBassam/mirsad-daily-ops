@@ -6,8 +6,9 @@ import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
 
 export const getCorrectiveActions = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.project)  filter.project  = req.query.project;
   if (req.query.status)   filter.status   = req.query.status;
   if (req.query.priority) filter.priority = req.query.priority;
@@ -27,7 +28,8 @@ export const getCorrectiveActions = asyncHandler(async (req: Request, res: Respo
 });
 
 export const getCorrectiveActionById = asyncHandler(async (req: Request, res: Response) => {
-  const action = await CorrectiveAction.findById(req.params.id)
+  const orgId = req.organizationId as string;
+  const action = await CorrectiveAction.findOne({ _id: req.params.id, organization: orgId })
     .populate('assignedTo', 'fullName')
     .populate('createdBy',  'fullName')
     .lean();
@@ -37,15 +39,17 @@ export const getCorrectiveActionById = asyncHandler(async (req: Request, res: Re
 });
 
 export const createCorrectiveAction = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const userId = (req as any).user._id;
-  const action = await CorrectiveAction.create({ ...req.body, createdBy: userId, status: 'open' });
-  await logAction({ userId: userId.toString(), action: 'create', entityType: 'corrective_action', entityId: action._id });
+  const action = await CorrectiveAction.create({ ...req.body, organization: orgId, createdBy: userId, status: 'open' });
+  await logAction({ userId: userId.toString(), action: 'create', entityType: 'corrective_action', entityId: action._id, req });
   res.status(201).json({ success: true, data: action });
 });
 
 export const updateCorrectiveAction = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const userId = (req as any).user._id;
-  const action = await CorrectiveAction.findById(req.params.id);
+  const action = await CorrectiveAction.findOne({ _id: req.params.id, organization: orgId });
   if (!action) throw new AppError('Corrective action not found', 404);
 
   const { status, resolution, ...rest } = req.body;
@@ -64,9 +68,9 @@ export const updateCorrectiveAction = asyncHandler(async (req: Request, res: Res
 
   Object.assign(action, rest);
   await action.save();
-  await logAction({ userId: userId.toString(), action: 'update', entityType: 'corrective_action', entityId: action._id });
+  await logAction({ userId: userId.toString(), action: 'update', entityType: 'corrective_action', entityId: action._id, req });
 
-  const populated = await CorrectiveAction.findById(action._id)
+  const populated = await CorrectiveAction.findOne({ _id: action._id, organization: orgId })
     .populate('assignedTo', 'fullName')
     .populate('createdBy',  'fullName')
     .lean();

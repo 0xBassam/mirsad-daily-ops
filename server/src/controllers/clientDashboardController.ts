@@ -1,21 +1,26 @@
 import { Request, Response } from 'express';
 import { format, subMonths } from 'date-fns';
+import mongoose from 'mongoose';
 import { ClientRequest } from '../models/ClientRequest';
 import { InventoryBalance } from '../models/InventoryBalance';
 import { User } from '../models/User';
 import { asyncHandler } from '../utils/asyncHandler';
-import { getSystemSettings } from '../models/SystemSettings';
+import { Organization } from '../models/Organization';
 
 export const getClientDashboard = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const userId    = req.user?.userId;
   const period    = format(new Date(), 'yyyy-MM');
   const today     = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const userDoc = await User.findById(userId).select('project').lean() as any;
+  const userDoc = await User.findOne({ _id: userId, organization: orgId }).select('project').lean() as any;
   const projectId = userDoc?.project ?? null;
 
-  const requestFilter: Record<string, unknown> = { requestedBy: userId };
+  const requestFilter: Record<string, unknown> = {
+    organization: orgId,
+    requestedBy: userId,
+  };
 
   const [
     statsByStatus,
@@ -88,12 +93,12 @@ export const getClientDashboard = asyncHandler(async (req: Request, res: Respons
 
     projectId
       ? InventoryBalance.aggregate([
-          { $match: { period, project: projectId } },
+          { $match: { organization: new mongoose.Types.ObjectId(orgId), period, project: projectId } },
           { $group: { _id: '$status', count: { $sum: 1 } } },
         ])
       : Promise.resolve([]),
 
-    getSystemSettings(),
+    Organization.findById(orgId).select('name settings').lean(),
   ]);
 
   // Stats map
@@ -128,10 +133,10 @@ export const getClientDashboard = asyncHandler(async (req: Request, res: Respons
     success: true,
     data: {
       branding: {
-        clientName:       settings.clientName       || '',
-        clientLogoUrl:    settings.clientLogoUrl    || '',
-        clientSiteName:   settings.clientSiteName   || '',
-        clientDepartment: settings.clientDepartment || '',
+        clientName:       (settings as any)?.name                    || '',
+        clientLogoUrl:    (settings as any)?.settings?.logoUrl       || '',
+        clientSiteName:   (settings as any)?.settings?.siteName      || '',
+        clientDepartment: (settings as any)?.settings?.department    || '',
       },
       stats,
       byType:  byTypeAgg.map(r => ({ type: r._id, count: r.count })),

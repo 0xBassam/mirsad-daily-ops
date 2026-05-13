@@ -478,7 +478,7 @@ export function SettingsPage() {
       <SectionCard title={t('clientBranding.title')} icon={Building2}>
         <div className="space-y-4">
           <Field label={t('clientBranding.clientName')}>
-            <input className={inputCls} value={form.clientName} onChange={e => setForm(p => ({ ...p, clientName: e.target.value }))} placeholder="Ministry of Energy" />
+            <input className={inputCls} value={form.clientName} onChange={e => setForm(p => ({ ...p, clientName: e.target.value }))} placeholder="Acme Corporation" />
           </Field>
           <Field label={t('clientBranding.clientSiteName')}>
             <input className={inputCls} value={form.clientSiteName} onChange={e => setForm(p => ({ ...p, clientSiteName: e.target.value }))} placeholder="Riyadh HQ Cafeteria" />

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow, parseISO, format } from 'date-fns';
 import apiClient from '../../api/client';
+import { useAuth } from '../../contexts/AuthContext';
 import { DashboardStats, DashboardRequestRow, DashboardReceivingRow, DashboardPORow, DashboardLowStockRow } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { downloadExport } from '../../utils/downloadExport';
@@ -270,6 +271,7 @@ function MiniStat({ label, value, dot, text }: { label: string; value: number; d
 
 export function DashboardPage() {
   const { t } = useTranslation();
+  const { orgName } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => apiClient.get<{ success: boolean; data: DashboardStats }>('/dashboard').then(r => r.data.data),
@@ -291,7 +293,7 @@ export function DashboardPage() {
         <div className="relative z-10 flex items-start justify-between flex-wrap gap-4">
           <div>
             <p className="text-indigo-300 text-xs font-bold uppercase tracking-[0.18em] mb-1.5">
-              Ministry of Energy · Kingdom of Saudi Arabia
+              {orgName || 'Mirsad'} · Daily Operations
             </p>
             <h1 className="text-2xl font-bold tracking-tight">{t('dashboard.title')}</h1>
             <p className="text-indigo-200/80 text-sm mt-1.5">

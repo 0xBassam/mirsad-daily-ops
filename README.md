@@ -247,24 +247,24 @@ Please add realistic dummy data for:
 ## Required Demo Login
 
 ```text
-Admin Email: admin@mirsad.demo
-Password: Demo@12345
+Admin Email: admin@demo.mirsad.app
+Password: demo1234
 ```
 
 Also create test users for each role:
 
 ```text
-Supervisor Email: supervisor@mirsad.demo
-Password: Demo@12345
+Supervisor Email: supervisor@demo.mirsad.app
+Password: demo1234
 
-Assistant Supervisor Email: assistant@mirsad.demo
-Password: Demo@12345
+Assistant Supervisor Email: assistant@demo.mirsad.app
+Password: demo1234
 
-Project Manager Email: manager@mirsad.demo
-Password: Demo@12345
+Project Manager Email: manager@demo.mirsad.app
+Password: demo1234
 
-Client / Ministry Manager Email: client@mirsad.demo
-Password: Demo@12345
+Client Email: client@demo.mirsad.app
+Password: demo1234
 ```
 
 ---
@@ -337,8 +337,8 @@ The system should support project and location structure.
 Example:
 
 ```text
-Project: CDMDNA Building Operations
-Building: CDMDNA Building
+Project: Demo Building Operations
+Building: Demo Main Building
 Floors:
 - 2 Floor
 - 3 Floor
@@ -839,17 +839,29 @@ Required security basics:
 
 ---
 
-## Environment Variables Example
+## Environment Variables
 
-Create `.env.example` only.
+Create a `.env` file in `server/` (never commit it):
 
 ```text
 NODE_ENV=development
 PORT=5000
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/mirsad
-JWT_SECRET=replace_with_secure_secret
+JWT_SECRET=replace_with_a_long_random_secret
 CLIENT_URL=http://localhost:5173
+
+# Super Admin (auto-created on startup when set)
+SUPER_ADMIN_EMAIL=superadmin@yourcompany.com
+SUPER_ADMIN_PASS=StrongPasswordHere
+
+# Email (optional — choose one)
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_xxxxxxxxxxxx
+RESEND_FROM_EMAIL=alerts@yourcompany.com
+RESEND_FROM_NAME=Mirsad Alerts
 ```
+
+For an `.env.example` template, copy the above with empty values.
 
 ---
 
@@ -1269,37 +1281,107 @@ Both request types appear as dedicated KPI cards on the dashboard, with separate
 
 ---
 
-## Ministry of Energy — Demo Data
+## Demo Organization Data
 
-The demo environment is seeded with real data from the Ministry of Energy cafeteria operation:
+The embedded demo environment (no MONGODB_URI required) is seeded with representative cafeteria operations data:
+
+**Organization:** Demo Organization (enterprise plan, all features enabled)
+
+**Demo Accounts (password: `demo1234`):**
+
+| Email | Role |
+|-------|------|
+| admin@demo.mirsad.app | Admin |
+| manager@demo.mirsad.app | Project Manager |
+| supervisor@demo.mirsad.app | Supervisor |
+| assistant@demo.mirsad.app | Assistant Supervisor |
+| client@demo.mirsad.app | Client |
 
 **Floor Structure (27 locations):**
 
-- Main Building: 2F, 3F, 4F, 5F, 6F, 7F, 8F, 9F, 10F, 11F, 12F, 13F, 14F, 15F, 16F, 17F, 18F, 19F
+- Main Building: 2F–19F (18 floors)
 - RD Building: RD 1&2, RD 3&4
-- Kafaa Building: KAFAA-1, KAFAA-2, KAFAA-3, KAFAA-4
+- Kafaa Building: KAFAA-1 through KAFAA-4
 - Service Areas: MAKASSB, OLD, SECURITY
 
-**Food Items (20 items, real monthly limits):**
+**Inventory:** 20 food items · 38 material items · 5 suppliers · live stock balances
 
-Breakfast Sandwiches (19,635/month), Lunch Sandwiches (11,235), Gluten Free Breads (2,100),
-Breakfast Meals (3,213), Lunch Meals (17,157), Fresh Fruits (10,500), Soups (5,040),
-Salads (10,080), Sweet Bakery's (8,400), Salted Bakery's (8,400), Yogurts (5,040),
-Nuts / Dates (10,500), Sweets Cakes (3,360), Granola (4,830), Fresh Juices (10,500),
-Waraqnab / Fattah, Samoli, Pizza, Zaatar Bread, Om Ali.
+**Pre-seeded data:** 5 POs · 3 receivings · 4 maintenance requests · 4 fridge checks · 4 corrective actions · 7 reports
 
-**Material Items (38 items):**
+---
 
-Coffee: Original Blend, House Blend, Camel (Rwanda Cvanza), Siwar (Mananasi Uganda),
-Shovel (Hambela), Bica, Turkish Coffee, Cardamom, Saffron, Saudi Coffee (Dallah).
+## SaaS Deployment
 
-Milk & Tea: Fresh Milk (Lactose Free), Vegetarian Milk, Black Tea, Green Tea,
-Camomile Tea, Karak Tea.
+### Onboarding New Organizations
 
-Water & Drinks: Nova Water (Small), Tania Gallons Water, Soda Water, Soft Drinks, Almarai Juices.
+New organizations self-register at `/signup`:
 
-Condiments: White Sugar, Brown Sugar, Diet Sugar, Wooden Stir Sticks,
-Multi-Flavor Syrup, Hot Chocolate Mix, Condensed Milk, Bony Milk.
+```
+POST /api/auth/signup
+{
+  "orgName": "Acme Corp",
+  "slug": "acme-corp",
+  "adminFullName": "Jane Smith",
+  "adminEmail": "jane@acme.com",
+  "adminPassword": "••••••••",
+  "siteName": "Main Office",
+  "plan": "trial"
+}
+```
 
-Snacks & Disposables: Digestive Biscuits, Chips, Paper Cups (Hot), Espresso Cups,
-Paper Plates, Single Spoon, Single Knife, Single Fork, Cutlery Sets.
+Creates: Organization + admin User + first Project. Returns JWT for immediate login.
+
+### Super Admin
+
+Set `SUPER_ADMIN_EMAIL` and `SUPER_ADMIN_PASS` environment variables. On first startup, Mirsad automatically creates a superadmin account. The superadmin can:
+
+- View platform-wide stats (orgs, users, requests, plan breakdown)
+- Manage any organization: update plan/limits, suspend/reactivate, toggle feature flags
+
+Superadmin login navigates directly to `/super-admin` dashboard (no organization context required).
+
+### Subscription & Feature Gates
+
+Each org has a `featureFlags` map. Setting any flag to `false` returns HTTP 402 for that feature. Org admins can view their subscription at `/settings/subscription`.
+
+### Environment Variables (Production)
+
+```text
+NODE_ENV=production
+PORT=5000
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/mirsad
+JWT_SECRET=<64-char-random-secret>
+CLIENT_URL=https://your-domain.com
+
+# Super Admin (created on first startup)
+SUPER_ADMIN_EMAIL=superadmin@yourdomain.com
+SUPER_ADMIN_PASS=<strong-password>
+
+# Email — choose one provider
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=re_xxxxxxxxxxxx
+RESEND_FROM_EMAIL=alerts@yourdomain.com
+RESEND_FROM_NAME=Mirsad Alerts
+
+# Or SMTP
+# EMAIL_PROVIDER=smtp
+# SMTP_HOST=smtp.example.com
+# SMTP_PORT=587
+# SMTP_USER=user@example.com
+# SMTP_PASS=••••••••
+
+# File uploads (optional)
+MAX_FILE_SIZE_MB=10
+```
+
+### Tenant Isolation
+
+Every MongoDB document carries `organization: ObjectId`. All queries are scoped to `req.organizationId` (derived from the JWT). Cross-tenant access returns 404 — documents from other organizations are never returned.
+
+### Render Deployment
+
+1. Set all env vars above in the Render dashboard
+2. Build command: `npm install && npm run build` (runs in both `server/` and `client/`)
+3. Start command: `node server/dist/server.js`
+4. First deploy: if DB is empty, `seedLive()` runs automatically
+5. SUPER_ADMIN_EMAIL user is created on every startup (safe upsert)

@@ -3,8 +3,10 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/auth/LoginPage';
+import { SignupPage } from './pages/auth/SignupPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { ClientDashboardPage } from './pages/dashboard/ClientDashboardPage';
+import { LandingPage } from './pages/landing/LandingPage';
 import { useAuth } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
@@ -19,7 +21,19 @@ function PageBoundary() {
 
 function DashboardRouter() {
   const { user } = useAuth();
+  if (user?.role === 'superadmin') return <Navigate to="/super-admin" replace />;
   return user?.role === 'client' ? <ClientDashboardPage /> : <DashboardPage />;
+}
+
+function HomeRoute() {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
+}
+
+function SuperAdminRoute() {
+  const { user } = useAuth();
+  if (user?.role !== 'superadmin') return <Navigate to="/dashboard" replace />;
+  return <Outlet />;
 }
 import { UsersPage } from './pages/users/UsersPage';
 import { ProjectsPage } from './pages/projects/ProjectsPage';
@@ -69,20 +83,33 @@ import { MenuPage } from './pages/menu/MenuPage';
 import { MenuFormPage } from './pages/menu/MenuFormPage';
 import { ClientRequestNewPage } from './pages/client-requests/ClientRequestNewPage';
 import { SettingsPage } from './pages/settings/SettingsPage';
+import { SubscriptionPage } from './pages/settings/SubscriptionPage';
 import { KitchenDashboardPage } from './pages/kitchen/KitchenDashboardPage';
+import { SuperAdminDashboard } from './pages/super-admin/SuperAdminDashboard';
+import { SuperAdminOrgsPage } from './pages/super-admin/SuperAdminOrgsPage';
+import { SuperAdminOrgDetailPage } from './pages/super-admin/SuperAdminOrgDetailPage';
 
 export default function App() {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/login"  element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route element={<PageBoundary />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardRouter />} />
+
+              {/* Super Admin — requires role=superadmin on client AND server */}
+              <Route element={<SuperAdminRoute />}>
+                <Route path="/super-admin"                        element={<SuperAdminDashboard />} />
+                <Route path="/super-admin/organizations"          element={<SuperAdminOrgsPage />} />
+                <Route path="/super-admin/organizations/:id"      element={<SuperAdminOrgDetailPage />} />
+              </Route>
+
               <Route path="/users" element={<UsersPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
@@ -134,6 +161,7 @@ export default function App() {
               <Route path="/reports/:id" element={<ReportDetailPage />} />
               <Route path="/audit-logs" element={<AuditLogsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings/subscription" element={<SubscriptionPage />} />
               <Route path="/kitchen-dashboard" element={<KitchenDashboardPage />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
               </Route>{/* PageBoundary */}

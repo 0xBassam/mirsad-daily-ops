@@ -1,29 +1,53 @@
 import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 import { env } from '../config/env';
-import { getSystemSettings } from '../models/SystemSettings';
+import { Organization, IOrganizationSettings } from '../models/Organization';
 import { User } from '../models/User';
 
-// ─── Cache ────────────────────────────────────────────────────────────────────
+// ─── Per-org cache with 6-hour TTL ───────────────────────────────────────────
 
-let _smtpTransporter: nodemailer.Transporter | null | undefined = undefined;
-let _resendClient:    Resend | null | undefined = undefined;
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 
-export function clearTransporterCache() {
-  _smtpTransporter = undefined;
-  _resendClient    = undefined;
+interface CacheEntry<T> { value: T | null; ts: number; }
+const _smtpCache   = new Map<string, CacheEntry<nodemailer.Transporter>>();
+const _resendCache = new Map<string, CacheEntry<Resend>>();
+
+function evictExpired() {
+  const now = Date.now();
+  for (const [k, v] of _smtpCache)   if (now - v.ts > CACHE_TTL) _smtpCache.delete(k);
+  for (const [k, v] of _resendCache) if (now - v.ts > CACHE_TTL) _resendCache.delete(k);
+}
+
+export function clearTransporterCache(orgId?: string) {
+  if (orgId) {
+    _smtpCache.delete(orgId);
+    _resendCache.delete(orgId);
+  } else {
+    _smtpCache.clear();
+    _resendCache.clear();
+  }
+}
+
+// ─── Org settings loader ──────────────────────────────────────────────────────
+
+async function loadOrgSettings(orgId: string): Promise<IOrganizationSettings> {
+  try {
+    const org = await Organization.findById(orgId).select('settings').lean();
+    return (org?.settings as IOrganizationSettings) ?? {};
+  } catch {
+    return {};
+  }
 }
 
 // ─── Notification recipients ──────────────────────────────────────────────────
 
-export async function getNotificationRecipients(): Promise<string[]> {
+export async function getNotificationRecipients(orgId: string): Promise<string[]> {
   try {
-    const s = await getSystemSettings();
+    const s = await loadOrgSettings(orgId);
     if (s.notificationRecipients?.length) return s.notificationRecipients;
   } catch { /* DB not ready */ }
-  // Fallback: all active admins and project managers
-  const users = await User.find({ role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
-  return (users as any[]).map(u => u.email).filter(Boolean);
+  const users = await User.find({ organization: orgId, role: { $in: ['admin', 'project_manager'] }, status: 'active' }).select('email').lean();
+  return (users as any[]).map((u: any) => u.email).filter(Boolean);
 }
 
 // ─── SMTP helpers ─────────────────────────────────────────────────────────────
@@ -42,87 +66,57 @@ function makeSmtpTransport(host: string, port: number, tls: boolean, user: strin
   });
 }
 
-async function getSmtpTransporter(): Promise<nodemailer.Transporter | null> {
-  if (_smtpTransporter !== undefined) return _smtpTransporter;
-  try {
-    const s = await getSystemSettings();
-    if (s.smtpHost && s.smtpUser && s.smtpPass) {
-      _smtpTransporter = makeSmtpTransport(s.smtpHost, s.smtpPort || 587, s.smtpTls, s.smtpUser, s.smtpPass);
-      return _smtpTransporter;
-    }
-  } catch { /* DB not ready */ }
-  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+function resolveSmtpTransporter(orgId: string, s: IOrganizationSettings): nodemailer.Transporter | null {
+  evictExpired();
+  const entry = _smtpCache.get(orgId);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.value;
+  let t: nodemailer.Transporter | null = null;
+  if (s.smtpHost && s.smtpUser && s.smtpPass) {
+    t = makeSmtpTransport(s.smtpHost, s.smtpPort || 587, !!s.smtpTls, s.smtpUser, s.smtpPass);
+  } else if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
     const port = Number(env.SMTP_PORT || 587);
-    _smtpTransporter = makeSmtpTransport(env.SMTP_HOST, port, port !== 465, env.SMTP_USER, env.SMTP_PASS);
-    return _smtpTransporter;
+    t = makeSmtpTransport(env.SMTP_HOST, port, port !== 465, env.SMTP_USER, env.SMTP_PASS);
   }
-  _smtpTransporter = null;
-  return null;
+  _smtpCache.set(orgId, { value: t, ts: Date.now() });
+  return t;
 }
 
 // ─── Resend helpers ───────────────────────────────────────────────────────────
 
-async function getResendClient(): Promise<Resend | null> {
-  if (_resendClient !== undefined) return _resendClient;
-  try {
-    const s = await getSystemSettings();
-    if (s.resendApiKey) {
-      _resendClient = new Resend(s.resendApiKey);
-      return _resendClient;
-    }
-  } catch { /* DB not ready */ }
-  if (env.RESEND_API_KEY) {
-    _resendClient = new Resend(env.RESEND_API_KEY);
-    return _resendClient;
-  }
-  _resendClient = null;
-  return null;
+function resolveResendClient(orgId: string, s: IOrganizationSettings): Resend | null {
+  const entry = _resendCache.get(orgId);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.value;
+  const key = s.resendApiKey || env.RESEND_API_KEY;
+  const client = key ? new Resend(key) : null;
+  _resendCache.set(orgId, { value: client, ts: Date.now() });
+  return client;
 }
 
 // ─── From address resolution ──────────────────────────────────────────────────
 
-async function getFromAddress(provider: 'resend' | 'smtp'): Promise<string> {
-  try {
-    const s = await getSystemSettings();
-    if (provider === 'resend') {
-      const email = s.resendFromEmail || env.RESEND_FROM_EMAIL || 'alerts@stdsec.sa';
-      const name  = s.resendFromName  || env.RESEND_FROM_NAME  || 'Mirsad Alerts';
-      return `${name} <${email}>`;
-    }
-    if (s.smtpFromEmail) return `"${s.smtpFromName || 'Mirsad'}" <${s.smtpFromEmail}>`;
-  } catch { /* ignore */ }
+function fromAddress(provider: 'resend' | 'smtp', s: IOrganizationSettings): string {
   if (provider === 'resend') {
-    return `${env.RESEND_FROM_NAME || 'Mirsad Alerts'} <${env.RESEND_FROM_EMAIL || 'alerts@stdsec.sa'}>`;
+    const email = s.resendFromEmail || env.RESEND_FROM_EMAIL || 'alerts@stdsec.sa';
+    const name  = s.resendFromName  || env.RESEND_FROM_NAME  || 'Mirsad Alerts';
+    return `${name} <${email}>`;
   }
+  if (s.smtpFromEmail) return `"${s.smtpFromName || 'Mirsad'}" <${s.smtpFromEmail}>`;
   return `"${env.SMTP_FROM_NAME || 'Mirsad'}" <${env.SMTP_FROM_EMAIL || env.SMTP_USER || 'noreply@mirsad.app'}>`;
 }
 
-// ─── Alert enabled check ──────────────────────────────────────────────────────
+// ─── Alert helpers ────────────────────────────────────────────────────────────
 
-type AlertKey = keyof import('../models/SystemSettings').IEmailAlerts;
+type AlertKey = keyof NonNullable<IOrganizationSettings['emailAlerts']>;
 
-async function isAlertEnabled(key: AlertKey): Promise<boolean> {
-  try {
-    const s = await getSystemSettings();
-    return s.emailAlerts?.[key] !== false;
-  } catch {
-    return true;
-  }
+function alertEnabled(key: AlertKey, s: IOrganizationSettings): boolean {
+  return s.emailAlerts?.[key] !== false;
 }
 
-// ─── Active provider ──────────────────────────────────────────────────────────
-
-async function activeProvider(): Promise<'resend' | 'smtp'> {
-  try {
-    const s = await getSystemSettings();
-    const resolved = s.emailProvider || env.EMAIL_PROVIDER || 'smtp';
-    console.log('[emailService] provider — db:', s.emailProvider, '| env:', env.EMAIL_PROVIDER, '| resolved:', resolved);
-    return resolved as 'resend' | 'smtp';
-  } catch { /* ignore */ }
-  return (env.EMAIL_PROVIDER === 'resend') ? 'resend' : 'smtp';
+function resolvedProvider(s: IOrganizationSettings): 'resend' | 'smtp' {
+  return (s.emailProvider || env.EMAIL_PROVIDER || 'smtp') as 'resend' | 'smtp';
 }
 
-// ─── Alert logging ────────────────────────────────────────────────────────────
+// ─── Logging ──────────────────────────────────────────────────────────────────
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
@@ -137,17 +131,24 @@ function logAlert(alertKey: string, provider: string, recipients: string[], rese
 
 // ─── Core send ────────────────────────────────────────────────────────────────
 
-async function send(to: string | string[], subject: string, html: string, alertKey?: string) {
+async function send(
+  to: string | string[],
+  subject: string,
+  html: string,
+  alertKey: string | undefined,
+  orgId: string,
+  orgSettings: IOrganizationSettings
+) {
   const recipients = Array.isArray(to) ? to : [to];
   if (recipients.length === 0) return;
 
-  const provider = await activeProvider();
-  console.log('[email] send() using provider:', provider, '| to:', recipients.map(maskEmail).join(', '));
+  const provider = resolvedProvider(orgSettings);
+  console.log('[email] send() provider:', provider, '| org:', orgId, '| to:', recipients.map(maskEmail).join(', '));
 
   if (provider === 'resend') {
-    const client = await getResendClient();
-    if (!client) { console.warn('[email] Resend selected but no API key configured — skipping'); return; }
-    const from = await getFromAddress('resend');
+    const client = resolveResendClient(orgId, orgSettings);
+    if (!client) { console.warn('[email] Resend selected but no API key — skipping'); return; }
+    const from   = fromAddress('resend', orgSettings);
     const result = await client.emails.send({ from, to: recipients, subject, html });
     if (result.error) {
       console.warn('[email] Resend error:', result.error);
@@ -158,10 +159,9 @@ async function send(to: string | string[], subject: string, html: string, alertK
     return;
   }
 
-  // SMTP path — loop per recipient
-  const transporter = await getSmtpTransporter();
+  const transporter = resolveSmtpTransporter(orgId, orgSettings);
   if (!transporter) return;
-  const from = await getFromAddress('smtp');
+  const from = fromAddress('smtp', orgSettings);
   for (const recipient of recipients) {
     try {
       await transporter.sendMail({ from, to: recipient, subject, html });
@@ -178,7 +178,7 @@ function row(label: string, value: string) {
   return `<tr><td style="padding:4px 12px 4px 0;color:#64748b;font-size:13px;white-space:nowrap">${label}</td><td style="padding:4px 0;font-size:13px;font-weight:600">${value}</td></tr>`;
 }
 
-function layout(title: string, body: string, accentColor = '#4f46e5') {
+function layout(title: string, body: string, accentColor = '#4f46e5', footerText = 'Mirsad Operations Platform · Automated notification') {
   return `<!DOCTYPE html><html><body style="font-family:sans-serif;background:#f8fafc;padding:32px;margin:0">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden">
   <div style="background:${accentColor};padding:20px 24px">
@@ -186,7 +186,7 @@ function layout(title: string, body: string, accentColor = '#4f46e5') {
   </div>
   <div style="padding:24px">${body}</div>
   <div style="padding:12px 24px;background:#f1f5f9;border-top:1px solid #e2e8f0">
-    <p style="margin:0;font-size:11px;color:#94a3b8">Mirsad Operations Platform · Automated notification</p>
+    <p style="margin:0;font-size:11px;color:#94a3b8">${footerText}</p>
   </div>
 </div></body></html>`;
 }
@@ -197,6 +197,10 @@ function actionButton(label: string, href: string, color = '#4f46e5') {
 
 function appLink(path: string) {
   return `${env.CLIENT_URL}${path}`;
+}
+
+function orgFooter(s: IOrganizationSettings): string {
+  return `${s.siteName || 'Mirsad'} · Automated notification`;
 }
 
 // ─── Client Request emails ────────────────────────────────────────────────────
@@ -217,9 +221,10 @@ export interface RequestEmailData {
   building?: string;
 }
 
-export async function sendRequestCreated(data: RequestEmailData) {
-  if (!await isAlertEnabled('clientRequestCreated')) return;
-  const link = appLink(`/client-requests/${data.requestId}`);
+export async function sendRequestCreated(data: RequestEmailData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('clientRequestCreated', s)) return;
+  const link     = appLink(`/client-requests/${data.requestId}`);
   const location = [data.building, data.floor, data.room].filter(Boolean).join(' › ');
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A new client request has been submitted:</p>
@@ -233,11 +238,12 @@ export async function sendRequestCreated(data: RequestEmailData) {
       ${data.itemCount ? row('Items', String(data.itemCount)) : ''}
     </table>
     ${actionButton('View Request', link)}`;
-  await send(data.to, `New Request: ${data.requestTitle}`, layout('New Client Request', body), 'clientRequestCreated');
+  await send(data.to, `New Request: ${data.requestTitle}`, layout('New Client Request', body, s.primaryColor || '#4f46e5', orgFooter(s)), 'clientRequestCreated', orgId, s);
 }
 
-export async function sendRequestAssigned(data: RequestEmailData & { assigneeName: string }) {
-  if (!await isAlertEnabled('clientRequestAssigned')) return;
+export async function sendRequestAssigned(data: RequestEmailData & { assigneeName: string }, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('clientRequestAssigned', s)) return;
   const link = appLink(`/client-requests/${data.requestId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">Your request has been assigned and is being processed:</p>
@@ -246,11 +252,12 @@ export async function sendRequestAssigned(data: RequestEmailData & { assigneeNam
       ${row('Assigned to', data.assigneeName)}
     </table>
     ${actionButton('View Request', link)}`;
-  await send(data.to, `Request Assigned: ${data.requestTitle}`, layout('Request Assigned', body), 'clientRequestAssigned');
+  await send(data.to, `Request Assigned: ${data.requestTitle}`, layout('Request Assigned', body, s.primaryColor || '#4f46e5', orgFooter(s)), 'clientRequestAssigned', orgId, s);
 }
 
-export async function sendRequestDelivered(data: RequestEmailData) {
-  if (!await isAlertEnabled('clientRequestDelivered')) return;
+export async function sendRequestDelivered(data: RequestEmailData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('clientRequestDelivered', s)) return;
   const link = appLink(`/client-requests/${data.requestId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">Your request has been delivered. Please confirm receipt:</p>
@@ -258,11 +265,12 @@ export async function sendRequestDelivered(data: RequestEmailData) {
       ${row('Request', data.requestTitle)}
     </table>
     ${actionButton('Confirm Delivery →', link, '#059669')}`;
-  await send(data.to, `Delivered: ${data.requestTitle}`, layout('Request Delivered', body, '#059669'), 'clientRequestDelivered');
+  await send(data.to, `Delivered: ${data.requestTitle}`, layout('Request Delivered', body, '#059669', orgFooter(s)), 'clientRequestDelivered', orgId, s);
 }
 
-export async function sendRequestConfirmed(data: RequestEmailData) {
-  if (!await isAlertEnabled('clientRequestConfirmed')) return;
+export async function sendRequestConfirmed(data: RequestEmailData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('clientRequestConfirmed', s)) return;
   const link = appLink(`/client-requests/${data.requestId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">The client has confirmed delivery:</p>
@@ -271,7 +279,7 @@ export async function sendRequestConfirmed(data: RequestEmailData) {
       ${row('Confirmed by', data.requesterName)}
     </table>
     ${actionButton('View Record', link)}`;
-  await send(data.to, `Confirmed: ${data.requestTitle}`, layout('Delivery Confirmed', body), 'clientRequestConfirmed');
+  await send(data.to, `Confirmed: ${data.requestTitle}`, layout('Delivery Confirmed', body, s.primaryColor || '#4f46e5', orgFooter(s)), 'clientRequestConfirmed', orgId, s);
 }
 
 // ─── Inventory alert emails ───────────────────────────────────────────────────
@@ -287,8 +295,9 @@ export interface StockAlertData {
   period: string;
 }
 
-export async function sendLowStockAlert(data: StockAlertData) {
-  if (!await isAlertEnabled('lowStock')) return;
+export async function sendLowStockAlert(data: StockAlertData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('lowStock', s)) return;
   const link = appLink('/inventory/food');
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">An inventory item is running low:</p>
@@ -301,11 +310,12 @@ export async function sendLowStockAlert(data: StockAlertData) {
       ${row('Monthly limit', `${data.monthlyLimit} ${data.unit}`)}
     </table>
     ${actionButton('View Inventory', link, '#d97706')}`;
-  await send(data.to, `⚠ Low Stock: ${data.itemName}`, layout('Low Stock Alert', body, '#d97706'), 'lowStock');
+  await send(data.to, `⚠ Low Stock: ${data.itemName}`, layout('Low Stock Alert', body, '#d97706', orgFooter(s)), 'lowStock', orgId, s);
 }
 
-export async function sendOutOfStockAlert(data: StockAlertData) {
-  if (!await isAlertEnabled('outOfStock')) return;
+export async function sendOutOfStockAlert(data: StockAlertData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('outOfStock', s)) return;
   const link = appLink('/inventory/food');
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">An inventory item has run out of stock:</p>
@@ -317,7 +327,7 @@ export async function sendOutOfStockAlert(data: StockAlertData) {
       ${row('Remaining', `${data.remainingQty} ${data.unit}`)}
     </table>
     ${actionButton('View Inventory', link, '#dc2626')}`;
-  await send(data.to, `🚨 Out of Stock: ${data.itemName}`, layout('Out of Stock Alert', body, '#dc2626'), 'outOfStock');
+  await send(data.to, `🚨 Out of Stock: ${data.itemName}`, layout('Out of Stock Alert', body, '#dc2626', orgFooter(s)), 'outOfStock', orgId, s);
 }
 
 // ─── Purchase Order emails ────────────────────────────────────────────────────
@@ -331,8 +341,9 @@ export interface POEmailData {
   poId: string;
 }
 
-export async function sendNewPurchaseOrder(data: POEmailData) {
-  if (!await isAlertEnabled('newPurchaseOrder')) return;
+export async function sendNewPurchaseOrder(data: POEmailData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('newPurchaseOrder', s)) return;
   const link = appLink(`/purchase-orders/${data.poId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A new purchase order has been created:</p>
@@ -343,7 +354,7 @@ export async function sendNewPurchaseOrder(data: POEmailData) {
       ${row('Line items', String(data.lineCount))}
     </table>
     ${actionButton('View Purchase Order', link)}`;
-  await send(data.to, `New PO: ${data.poNumber}`, layout('New Purchase Order', body), 'newPurchaseOrder');
+  await send(data.to, `New PO: ${data.poNumber}`, layout('New Purchase Order', body, s.primaryColor || '#4f46e5', orgFooter(s)), 'newPurchaseOrder', orgId, s);
 }
 
 // ─── Receiving emails ─────────────────────────────────────────────────────────
@@ -356,8 +367,9 @@ export interface ReceivingEmailData {
   receivingId: string;
 }
 
-export async function sendReceivingCompleted(data: ReceivingEmailData) {
-  if (!await isAlertEnabled('receivingCompleted')) return;
+export async function sendReceivingCompleted(data: ReceivingEmailData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('receivingCompleted', s)) return;
   const link = appLink(`/receiving/${data.receivingId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A receiving record has been confirmed and inventory updated:</p>
@@ -367,7 +379,7 @@ export async function sendReceivingCompleted(data: ReceivingEmailData) {
       ${row('Items received', String(data.lineCount))}
     </table>
     ${actionButton('View Receiving', link, '#0d9488')}`;
-  await send(data.to, `Receiving Confirmed: ${data.invoiceNumber || data.receivingId}`, layout('Receiving Completed', body, '#0d9488'), 'receivingCompleted');
+  await send(data.to, `Receiving Confirmed: ${data.invoiceNumber || data.receivingId}`, layout('Receiving Completed', body, '#0d9488', orgFooter(s)), 'receivingCompleted', orgId, s);
 }
 
 // ─── Maintenance emails ───────────────────────────────────────────────────────
@@ -382,8 +394,9 @@ export interface MaintenanceEmailData {
   reporterName?: string;
 }
 
-export async function sendMaintenanceOpened(data: MaintenanceEmailData) {
-  if (!await isAlertEnabled('maintenanceOpened')) return;
+export async function sendMaintenanceOpened(data: MaintenanceEmailData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('maintenanceOpened', s)) return;
   const link = appLink(`/maintenance/${data.maintenanceId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A new maintenance request has been submitted:</p>
@@ -395,11 +408,12 @@ export async function sendMaintenanceOpened(data: MaintenanceEmailData) {
       ${data.reporterName ? row('Reported by', data.reporterName) : ''}
     </table>
     ${actionButton('View Request', link, '#7c3aed')}`;
-  await send(data.to, `Maintenance: ${data.title}`, layout('New Maintenance Request', body, '#7c3aed'), 'maintenanceOpened');
+  await send(data.to, `Maintenance: ${data.title}`, layout('New Maintenance Request', body, '#7c3aed', orgFooter(s)), 'maintenanceOpened', orgId, s);
 }
 
-export async function sendMaintenanceCompleted(data: MaintenanceEmailData) {
-  if (!await isAlertEnabled('maintenanceCompleted')) return;
+export async function sendMaintenanceCompleted(data: MaintenanceEmailData, orgId: string) {
+  const s = await loadOrgSettings(orgId);
+  if (!alertEnabled('maintenanceCompleted', s)) return;
   const link = appLink(`/maintenance/${data.maintenanceId}`);
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A maintenance request has been resolved:</p>
@@ -409,5 +423,5 @@ export async function sendMaintenanceCompleted(data: MaintenanceEmailData) {
       ${row('Priority', data.priority)}
     </table>
     ${actionButton('View Record', link, '#059669')}`;
-  await send(data.to, `Resolved: ${data.title}`, layout('Maintenance Resolved', body, '#059669'), 'maintenanceCompleted');
+  await send(data.to, `Resolved: ${data.title}`, layout('Maintenance Resolved', body, '#059669', orgFooter(s)), 'maintenanceCompleted', orgId, s);
 }

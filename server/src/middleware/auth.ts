@@ -47,3 +47,16 @@ export function requireRole(...roles: string[]) {
     next();
   };
 }
+
+export function requireOrganization(req: Request, _res: Response, next: NextFunction): void {
+  if (!req.organizationId) {
+    return next(new AppError('Organization context required — please log in again', 403));
+  }
+  next();
+}
+
+export function requireSuperAdmin(req: Request, _res: Response, next: NextFunction): void {
+  if (!req.user) return next(new AppError('Not authenticated', 401));
+  if (req.user.role !== 'superadmin') return next(new AppError('Super admin access required', 403));
+  next();
+}

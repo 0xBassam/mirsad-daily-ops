@@ -133,11 +133,11 @@ async function seed() {
   ]);
 
   await db.collection('projects').insertMany([
-    { _id: projectId, name: 'CDMDNA Building Operations', clientName: 'Ministry of Defense', locationCode: 'CDMDNA-01', status: 'active', createdBy: adminId, createdAt: now, updatedAt: now },
+    { _id: projectId, name: 'Demo Building Operations', clientName: 'Demo Client', locationCode: 'DEMO-01', status: 'active', createdBy: adminId, createdAt: now, updatedAt: now },
   ]);
 
   await db.collection('buildings').insertMany([
-    { _id: buildingId, project: projectId, name: 'CDMDNA Main Building', status: 'active', createdAt: now, updatedAt: now },
+    { _id: buildingId, project: projectId, name: 'Demo Main Building', status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   const floorNames = ['2 Floor', '3 Floor', '4 Floor', '19 Floor', 'MAKASSB', 'SECURITY', 'KAFAA-1', 'KAFAA-2'];

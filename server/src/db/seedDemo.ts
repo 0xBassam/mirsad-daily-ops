@@ -1,7 +1,7 @@
 /**
  * Seeds the embedded in-memory MongoDB with demo data.
  * Called automatically when no real MONGODB_URI is set.
- * Data reflects Ministry of Energy cafeteria operations (real item names, real floor structure).
+ * Generic demo data for Mirsad platform evaluation.
  */
 import mongoose from 'mongoose';
 import { ObjectId } from 'bson';
@@ -29,6 +29,7 @@ export async function seedDemo(): Promise<void> {
   const now = new Date();
 
   // ── IDs ──────────────────────────────────────────────────────────────────────
+  const orgId        = oid();
   const adminId      = oid(), supervisorId = oid(), assistantId = oid();
   const managerId    = oid(), clientId     = oid();
   const projectId    = oid();
@@ -69,45 +70,60 @@ export async function seedDemo(): Promise<void> {
                        iWhiteSugar, iBrownSugar, iDietSugar, iWoodenStick, iSyrup, iHotChoc, iCondMilk, iBonyMilk,
                        iDigestive, iChips, iPaperCupHot, iEspressoCup, iPaperPlate, iSingleSpoon, iSingleKnife, iSingleFork, iCutlery];
 
+  // ── Organization ────────────────────────────────────────────────────────────────
+  await db.collection('organizations').insertOne({
+    _id: orgId, name: 'Demo Organization', slug: 'demo',
+    plan: 'enterprise', status: 'active',
+    maxUsers: 999, maxProjects: 99, storageLimitMb: 102400,
+    featureFlags: new Map(Object.entries({
+      dailyPlans: true, floorChecks: true, inventory: true, purchaseOrders: true,
+      suppliers: true, batches: true, transfers: true, receiving: true,
+      maintenance: true, clientRequests: true, fridgeChecks: true,
+      correctiveActions: true, advancedReports: true, export: true, whiteLabel: false,
+    })),
+    settings: {},
+    createdAt: now, updatedAt: now,
+  });
+
   // ── Users ─────────────────────────────────────────────────────────────────────
   await db.collection('users').insertMany([
-    { _id: adminId,      fullName: 'Ahmed Al-Rashidi',   email: 'admin@mirsad.demo',      password: DEMO_PASS, role: 'admin',               status: 'active', createdAt: now, updatedAt: now },
-    { _id: supervisorId, fullName: 'Khalid Al-Otaibi',   email: 'supervisor@mirsad.demo', password: DEMO_PASS, role: 'supervisor',           project: projectId, status: 'active', createdAt: now, updatedAt: now },
-    { _id: assistantId,  fullName: 'Fatima Al-Zahrani',  email: 'assistant@mirsad.demo',  password: DEMO_PASS, role: 'assistant_supervisor', project: projectId, status: 'active', createdAt: now, updatedAt: now },
-    { _id: managerId,    fullName: 'Mohammed Al-Ghamdi', email: 'manager@mirsad.demo',    password: DEMO_PASS, role: 'project_manager',      project: projectId, status: 'active', createdAt: now, updatedAt: now },
-    { _id: clientId,     fullName: 'Nora Al-Shehri',     email: 'client@mirsad.demo',     password: DEMO_PASS, role: 'client',               project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: adminId,      fullName: 'Ahmed Al-Rashidi',   email: 'admin@demo.mirsad.app',      password: DEMO_PASS, role: 'admin',               organization: orgId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: supervisorId, fullName: 'Khalid Al-Otaibi',   email: 'supervisor@demo.mirsad.app', password: DEMO_PASS, role: 'supervisor',           organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: assistantId,  fullName: 'Fatima Al-Zahrani',  email: 'assistant@demo.mirsad.app',  password: DEMO_PASS, role: 'assistant_supervisor', organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: managerId,    fullName: 'Mohammed Al-Ghamdi', email: 'manager@demo.mirsad.app',    password: DEMO_PASS, role: 'project_manager',      organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: clientId,     fullName: 'Nora Al-Shehri',     email: 'client@demo.mirsad.app',     password: DEMO_PASS, role: 'client',               organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   // ── Project & Buildings ───────────────────────────────────────────────────────
   await db.collection('projects').insertOne({
-    _id: projectId, name: 'Ministry of Energy — Cafeteria Operations',
-    clientName: 'Ministry of Energy (وزارة الطاقة)', locationCode: 'MOE-MAIN-01',
+    _id: projectId, organization: orgId, name: 'Demo Organization — Cafeteria Operations',
+    clientName: 'Demo Organization', locationCode: 'DEMO-MAIN-01',
     status: 'active', createdBy: adminId, createdAt: now, updatedAt: now,
   });
 
   await db.collection('buildings').insertMany([
-    { _id: mainBldgId,  project: projectId, name: 'Main Building',   locationCode: 'MOE-MAIN',   status: 'active', floors: 18, createdAt: now, updatedAt: now },
-    { _id: rdBldgId,    project: projectId, name: 'RD Building',     locationCode: 'MOE-RD',     status: 'active', floors: 2,  createdAt: now, updatedAt: now },
-    { _id: kafaaBldgId, project: projectId, name: 'Kafaa Building',  locationCode: 'MOE-KAFAA',  status: 'active', floors: 4,  createdAt: now, updatedAt: now },
-    { _id: svcBldgId,   project: projectId, name: 'Service Areas',   locationCode: 'MOE-SVC',    status: 'active', floors: 3,  createdAt: now, updatedAt: now },
+    { _id: mainBldgId,  organization: orgId, project: projectId, name: 'Main Building',   locationCode: 'DEMO-MAIN',   status: 'active', floors: 18, createdAt: now, updatedAt: now },
+    { _id: rdBldgId,    organization: orgId, project: projectId, name: 'RD Building',     locationCode: 'DEMO-RD',     status: 'active', floors: 2,  createdAt: now, updatedAt: now },
+    { _id: kafaaBldgId, organization: orgId, project: projectId, name: 'Kafaa Building',  locationCode: 'DEMO-KAFAA',  status: 'active', floors: 4,  createdAt: now, updatedAt: now },
+    { _id: svcBldgId,   organization: orgId, project: projectId, name: 'Service Areas',   locationCode: 'DEMO-SVC',    status: 'active', floors: 3,  createdAt: now, updatedAt: now },
   ]);
 
   // ── Floors ────────────────────────────────────────────────────────────────────
   await db.collection('floors').insertMany([
     ...floorIds.map((fid, i) => ({
-      _id: fid, building: mainBldgId, project: projectId,
+      _id: fid, organization: orgId, building: mainBldgId, project: projectId,
       name: mainFloorNames[i], locationCode: `MAIN-${mainFloorNames[i]}`,
       status: 'active', createdAt: now, updatedAt: now,
     })),
-    { _id: rdFloor1Id,  building: rdBldgId,    project: projectId, name: 'RD 1&2',   locationCode: 'RD-1-2',   status: 'active', createdAt: now, updatedAt: now },
-    { _id: rdFloor2Id,  building: rdBldgId,    project: projectId, name: 'RD 3&4',   locationCode: 'RD-3-4',   status: 'active', createdAt: now, updatedAt: now },
-    { _id: kafaa1Id,    building: kafaaBldgId, project: projectId, name: 'KAFAA-1',  locationCode: 'KF-1',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: kafaa2Id,    building: kafaaBldgId, project: projectId, name: 'KAFAA-2',  locationCode: 'KF-2',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: kafaa3Id,    building: kafaaBldgId, project: projectId, name: 'KAFAA-3',  locationCode: 'KF-3',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: kafaa4Id,    building: kafaaBldgId, project: projectId, name: 'KAFAA-4',  locationCode: 'KF-4',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: makassbId,   building: svcBldgId,   project: projectId, name: 'MAKASSB',  locationCode: 'SVC-MAK',  status: 'active', createdAt: now, updatedAt: now },
-    { _id: oldId,       building: svcBldgId,   project: projectId, name: 'OLD',      locationCode: 'SVC-OLD',  status: 'active', createdAt: now, updatedAt: now },
-    { _id: securityId,  building: svcBldgId,   project: projectId, name: 'SECURITY', locationCode: 'SVC-SEC',  status: 'active', createdAt: now, updatedAt: now },
+    { _id: rdFloor1Id,  organization: orgId, building: rdBldgId,    project: projectId, name: 'RD 1&2',   locationCode: 'RD-1-2',   status: 'active', createdAt: now, updatedAt: now },
+    { _id: rdFloor2Id,  organization: orgId, building: rdBldgId,    project: projectId, name: 'RD 3&4',   locationCode: 'RD-3-4',   status: 'active', createdAt: now, updatedAt: now },
+    { _id: kafaa1Id,    organization: orgId, building: kafaaBldgId, project: projectId, name: 'KAFAA-1',  locationCode: 'KF-1',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: kafaa2Id,    organization: orgId, building: kafaaBldgId, project: projectId, name: 'KAFAA-2',  locationCode: 'KF-2',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: kafaa3Id,    organization: orgId, building: kafaaBldgId, project: projectId, name: 'KAFAA-3',  locationCode: 'KF-3',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: kafaa4Id,    organization: orgId, building: kafaaBldgId, project: projectId, name: 'KAFAA-4',  locationCode: 'KF-4',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: makassbId,   organization: orgId, building: svcBldgId,   project: projectId, name: 'MAKASSB',  locationCode: 'SVC-MAK',  status: 'active', createdAt: now, updatedAt: now },
+    { _id: oldId,       organization: orgId, building: svcBldgId,   project: projectId, name: 'OLD',      locationCode: 'SVC-OLD',  status: 'active', createdAt: now, updatedAt: now },
+    { _id: securityId,  organization: orgId, building: svcBldgId,   project: projectId, name: 'SECURITY', locationCode: 'SVC-SEC',  status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   // ── Item Categories ───────────────────────────────────────────────────────────
@@ -118,105 +134,105 @@ export async function seedDemo(): Promise<void> {
 
   await db.collection('itemcategories').insertMany([
     // Food
-    { _id: catBrSand,   name: 'Breakfast Sandwiches', type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catLuSand,   name: 'Lunch Sandwiches',     type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catLuMeal,   name: 'Lunch Meals',          type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catBrMeal,   name: 'Breakfast Meals',      type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSalad,    name: 'Salads',               type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSoup,     name: 'Soups',                type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catFruit,    name: 'Fresh Fruits',         type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSwBake,   name: "Sweet Bakery's",       type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSaltBake, name: "Salted Bakery's",      type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catYogurt,   name: 'Yogurts',              type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catNuts,     name: 'Nuts / Dates',         type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catCakes,    name: 'Sweets & Cakes',       type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catGranola,  name: 'Granola',              type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catJuice,    name: 'Fresh Juices',         type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSideStation, name: 'Side Station',      type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catBrSand, organization: orgId, name: 'Breakfast Sandwiches', type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catLuSand, organization: orgId, name: 'Lunch Sandwiches',     type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catLuMeal, organization: orgId, name: 'Lunch Meals',          type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catBrMeal, organization: orgId, name: 'Breakfast Meals',      type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSalad, organization: orgId, name: 'Salads',               type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSoup, organization: orgId, name: 'Soups',                type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catFruit, organization: orgId, name: 'Fresh Fruits',         type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSwBake, organization: orgId, name: "Sweet Bakery's",       type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSaltBake, organization: orgId, name: "Salted Bakery's",      type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catYogurt, organization: orgId, name: 'Yogurts',              type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catNuts, organization: orgId, name: 'Nuts / Dates',         type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catCakes, organization: orgId, name: 'Sweets & Cakes',       type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catGranola, organization: orgId, name: 'Granola',              type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catJuice, organization: orgId, name: 'Fresh Juices',         type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSideStation, organization: orgId, name: 'Side Station',      type: 'food',     status: 'active', createdAt: now, updatedAt: now },
     // Materials
-    { _id: catCoffee,   name: 'Coffee',               type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catMilk,     name: 'Milk',                 type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catTea,      name: 'Tea',                  type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catWater,    name: 'Water',                type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catDrinks,   name: 'Drinks & Juices',      type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSugar,    name: 'Sugar & Condiments',   type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSyrup,    name: 'Syrups & Mixes',       type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catDisposable, name: 'Disposables',        type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSnack,    name: 'Snacks',               type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catCoffee, organization: orgId, name: 'Coffee',               type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catMilk, organization: orgId, name: 'Milk',                 type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catTea, organization: orgId, name: 'Tea',                  type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catWater, organization: orgId, name: 'Water',                type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catDrinks, organization: orgId, name: 'Drinks & Juices',      type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSugar, organization: orgId, name: 'Sugar & Condiments',   type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSyrup, organization: orgId, name: 'Syrups & Mixes',       type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catDisposable, organization: orgId, name: 'Disposables',        type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSnack, organization: orgId, name: 'Snacks',               type: 'material', status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   // ── Items ─────────────────────────────────────────────────────────────────────
   await db.collection('items').insertMany([
-    // Food items — real names from Ministry of Energy FOODS 2026
-    { _id: iBrSand,   name: 'Breakfast Sandwiches',      category: catBrSand,    type: 'food',     unit: 'pcs',    limitQty: 19635, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iLuSand,   name: 'Lunch Sandwiches',          category: catLuSand,    type: 'food',     unit: 'pcs',    limitQty: 11235, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iGluFree,  name: 'Gluten Free Breads',        category: catBrSand,    type: 'food',     unit: 'pcs',    limitQty: 2100,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iBrMeal,   name: 'Breakfast Meals',           category: catBrMeal,    type: 'food',     unit: 'box',    limitQty: 3213,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iLuMeal,   name: 'Lunch Meals',               category: catLuMeal,    type: 'food',     unit: 'box',    limitQty: 17157, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iFruit,    name: 'Fresh Fruits',              category: catFruit,     type: 'food',     unit: 'pcs',    limitQty: 10500, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSoup,     name: "Soup's",                    category: catSoup,      type: 'food',     unit: 'cup',    limitQty: 5040,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSalad,    name: 'Salads',                    category: catSalad,     type: 'food',     unit: 'bowl',   limitQty: 10080, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSwBake,   name: "Sweet Bakery's",            category: catSwBake,    type: 'food',     unit: 'pcs',    limitQty: 8400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSaltBake, name: "Salted Bakery's",           category: catSaltBake,  type: 'food',     unit: 'pcs',    limitQty: 8400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iYogurt,   name: 'Yogurts',                   category: catYogurt,    type: 'food',     unit: 'cup',    limitQty: 5040,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iNuts,     name: 'Nuts / Dates',              category: catNuts,      type: 'food',     unit: 'pack',   limitQty: 10500, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iCakes,    name: 'Sweets Cakes',              category: catCakes,     type: 'food',     unit: 'pcs',    limitQty: 3360,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iGranola,  name: 'Granola',                   category: catGranola,   type: 'food',     unit: 'bar',    limitQty: 4830,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iJuice,    name: 'Fresh Juices',              category: catJuice,     type: 'food',     unit: 'bottle', limitQty: 10500, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iWaraqnab, name: 'Waraqnab / Fattah',         category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSamoli,   name: 'Samoli',                    category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 1000,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iPizza,    name: 'Pizza',                     category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iZaatar,   name: 'Zaatar Bread',              category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iOmAli,    name: 'Om Ali',                    category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 300,   status: 'active', createdAt: now, updatedAt: now },
-    // Material items — real names from Ministry of Energy MATERIALS 2026
-    { _id: iOrigBlend,  name: 'Original Blend Coffee',     category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iHouseBlend, name: 'House Blend Coffee',        category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iCamelCoffee,name: 'Camel Coffee (Rwanda Cvanza)', category: catCoffee, type: 'material', unit: 'kg',   limitQty: 50,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSiwarCoffee,name: 'Siwar Coffee (Mananasi Uganda)', category: catCoffee, type: 'material', unit: 'kg', limitQty: 50,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iShovelCoffee,name: 'Shovel Coffee (Hambela)',  category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 30,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iBica,       name: 'Bica Coffee',               category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 20,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iTurkish,    name: 'Turkish Coffee',            category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 20,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iCardamom,   name: 'Cardamom',                  category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 10,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSaffron,    name: 'Saffron',                   category: catCoffee,  type: 'material', unit: 'gr',     limitQty: 250,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSaudiCoffee,name: 'Saudi Coffee (Dallah)',     category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 90,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iFreshMilk,  name: 'Fresh Milk (Lactose Free)', category: catMilk,   type: 'material', unit: 'L',      limitQty: 3082,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iVegMilk,    name: 'Vegetarian Milk',           category: catMilk,   type: 'material', unit: 'L',      limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iBlackTea,   name: 'Black Tea',                 category: catTea,    type: 'material', unit: 'carton', limitQty: 319,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iGreenTea,   name: 'Green Tea',                 category: catTea,    type: 'material', unit: 'carton', limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iCamomileTea,name: 'Camomile Tea',              category: catTea,    type: 'material', unit: 'box',    limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iKarakTea,   name: 'Karak Tea',                 category: catTea,    type: 'material', unit: 'box',    limitQty: 80,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iNovaWater,  name: 'Nova Water (Small)',        category: catWater,  type: 'material', unit: 'carton', limitQty: 5016,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iTaniaWater, name: 'Tania Gallons Water',       category: catWater,  type: 'material', unit: 'gallon', limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSodaWater,  name: 'Soda Water',                category: catWater,  type: 'material', unit: 'carton', limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSoftDrinks, name: 'Soft Drinks',               category: catDrinks, type: 'material', unit: 'carton', limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iAlmarai,    name: "Almarai Juice's",           category: catDrinks, type: 'material', unit: 'carton', limitQty: 300,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iWhiteSugar, name: 'White Sugar',               category: catSugar,  type: 'material', unit: 'kg',     limitQty: 120,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iBrownSugar, name: 'Brown Sugar',               category: catSugar,  type: 'material', unit: 'kg',     limitQty: 60,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iDietSugar,  name: 'Diet Sugar',                category: catSugar,  type: 'material', unit: 'kg',     limitQty: 30,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iWoodenStick,name: 'Wooden Stir Sticks',        category: catSugar,  type: 'material', unit: 'pcs',    limitQty: 5000,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSyrup,      name: 'Multi-Flavor Syrup',        category: catSyrup,  type: 'material', unit: 'bottle', limitQty: 80,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iHotChoc,    name: 'Hot Chocolate Mix',         category: catSyrup,  type: 'material', unit: 'kg',     limitQty: 20,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: iCondMilk,   name: 'Condensed Milk',            category: catSyrup,  type: 'material', unit: 'can',    limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iBonyMilk,   name: 'Bony Milk',                 category: catSyrup,  type: 'material', unit: 'can',    limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iDigestive,  name: 'Digestive Biscuits',        category: catSnack,  type: 'material', unit: 'pack',   limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iChips,      name: 'Chips',                     category: catSnack,  type: 'material', unit: 'pack',   limitQty: 300,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: iPaperCupHot,name: 'Paper Cups (Hot)',          category: catDisposable, type: 'material', unit: 'pcs', limitQty: 30000, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iEspressoCup,name: 'Espresso Cups',             category: catDisposable, type: 'material', unit: 'pcs', limitQty: 5000,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: iPaperPlate, name: 'Paper Plates',              category: catDisposable, type: 'material', unit: 'pcs', limitQty: 10000, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSingleSpoon,name: 'Single Spoon',              category: catDisposable, type: 'material', unit: 'pcs', limitQty: 15000, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSingleKnife,name: 'Single Knife',              category: catDisposable, type: 'material', unit: 'pcs', limitQty: 10000, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iSingleFork, name: 'Single Fork',               category: catDisposable, type: 'material', unit: 'pcs', limitQty: 10000, status: 'active', createdAt: now, updatedAt: now },
-    { _id: iCutlery,    name: 'Cutlery Sets',              category: catDisposable, type: 'material', unit: 'set', limitQty: 5000,  status: 'active', createdAt: now, updatedAt: now },
+    // Food items
+    { _id: iBrSand, organization: orgId, name: 'Breakfast Sandwiches',      category: catBrSand,    type: 'food',     unit: 'pcs',    limitQty: 19635, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iLuSand, organization: orgId, name: 'Lunch Sandwiches',          category: catLuSand,    type: 'food',     unit: 'pcs',    limitQty: 11235, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iGluFree, organization: orgId, name: 'Gluten Free Breads',        category: catBrSand,    type: 'food',     unit: 'pcs',    limitQty: 2100,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iBrMeal, organization: orgId, name: 'Breakfast Meals',           category: catBrMeal,    type: 'food',     unit: 'box',    limitQty: 3213,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iLuMeal, organization: orgId, name: 'Lunch Meals',               category: catLuMeal,    type: 'food',     unit: 'box',    limitQty: 17157, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iFruit, organization: orgId, name: 'Fresh Fruits',              category: catFruit,     type: 'food',     unit: 'pcs',    limitQty: 10500, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSoup, organization: orgId, name: "Soup's",                    category: catSoup,      type: 'food',     unit: 'cup',    limitQty: 5040,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSalad, organization: orgId, name: 'Salads',                    category: catSalad,     type: 'food',     unit: 'bowl',   limitQty: 10080, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSwBake, organization: orgId, name: "Sweet Bakery's",            category: catSwBake,    type: 'food',     unit: 'pcs',    limitQty: 8400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSaltBake, organization: orgId, name: "Salted Bakery's",           category: catSaltBake,  type: 'food',     unit: 'pcs',    limitQty: 8400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iYogurt, organization: orgId, name: 'Yogurts',                   category: catYogurt,    type: 'food',     unit: 'cup',    limitQty: 5040,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iNuts, organization: orgId, name: 'Nuts / Dates',              category: catNuts,      type: 'food',     unit: 'pack',   limitQty: 10500, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iCakes, organization: orgId, name: 'Sweets Cakes',              category: catCakes,     type: 'food',     unit: 'pcs',    limitQty: 3360,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iGranola, organization: orgId, name: 'Granola',                   category: catGranola,   type: 'food',     unit: 'bar',    limitQty: 4830,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iJuice, organization: orgId, name: 'Fresh Juices',              category: catJuice,     type: 'food',     unit: 'bottle', limitQty: 10500, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iWaraqnab, organization: orgId, name: 'Waraqnab / Fattah',         category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSamoli, organization: orgId, name: 'Samoli',                    category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 1000,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iPizza, organization: orgId, name: 'Pizza',                     category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iZaatar, organization: orgId, name: 'Zaatar Bread',              category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iOmAli, organization: orgId, name: 'Om Ali',                    category: catSideStation, type: 'food',   unit: 'pcs',    limitQty: 300,   status: 'active', createdAt: now, updatedAt: now },
+    // Material items
+    { _id: iOrigBlend, organization: orgId, name: 'Original Blend Coffee',     category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iHouseBlend, organization: orgId, name: 'House Blend Coffee',        category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iCamelCoffee, organization: orgId, name: 'Camel Coffee (Rwanda Cvanza)', category: catCoffee, type: 'material', unit: 'kg',   limitQty: 50,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSiwarCoffee, organization: orgId, name: 'Siwar Coffee (Mananasi Uganda)', category: catCoffee, type: 'material', unit: 'kg', limitQty: 50,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iShovelCoffee, organization: orgId, name: 'Shovel Coffee (Hambela)',  category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 30,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iBica, organization: orgId, name: 'Bica Coffee',               category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 20,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iTurkish, organization: orgId, name: 'Turkish Coffee',            category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 20,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iCardamom, organization: orgId, name: 'Cardamom',                  category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 10,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSaffron, organization: orgId, name: 'Saffron',                   category: catCoffee,  type: 'material', unit: 'gr',     limitQty: 250,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSaudiCoffee, organization: orgId, name: 'Saudi Coffee (Dallah)',     category: catCoffee,  type: 'material', unit: 'kg',     limitQty: 90,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iFreshMilk, organization: orgId, name: 'Fresh Milk (Lactose Free)', category: catMilk,   type: 'material', unit: 'L',      limitQty: 3082,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iVegMilk, organization: orgId, name: 'Vegetarian Milk',           category: catMilk,   type: 'material', unit: 'L',      limitQty: 500,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iBlackTea, organization: orgId, name: 'Black Tea',                 category: catTea,    type: 'material', unit: 'carton', limitQty: 319,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iGreenTea, organization: orgId, name: 'Green Tea',                 category: catTea,    type: 'material', unit: 'carton', limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iCamomileTea, organization: orgId, name: 'Camomile Tea',              category: catTea,    type: 'material', unit: 'box',    limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iKarakTea, organization: orgId, name: 'Karak Tea',                 category: catTea,    type: 'material', unit: 'box',    limitQty: 80,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iNovaWater, organization: orgId, name: 'Nova Water (Small)',        category: catWater,  type: 'material', unit: 'carton', limitQty: 5016,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iTaniaWater, organization: orgId, name: 'Tania Gallons Water',       category: catWater,  type: 'material', unit: 'gallon', limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSodaWater, organization: orgId, name: 'Soda Water',                category: catWater,  type: 'material', unit: 'carton', limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSoftDrinks, organization: orgId, name: 'Soft Drinks',               category: catDrinks, type: 'material', unit: 'carton', limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iAlmarai, organization: orgId, name: "Almarai Juice's",           category: catDrinks, type: 'material', unit: 'carton', limitQty: 300,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iWhiteSugar, organization: orgId, name: 'White Sugar',               category: catSugar,  type: 'material', unit: 'kg',     limitQty: 120,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iBrownSugar, organization: orgId, name: 'Brown Sugar',               category: catSugar,  type: 'material', unit: 'kg',     limitQty: 60,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iDietSugar, organization: orgId, name: 'Diet Sugar',                category: catSugar,  type: 'material', unit: 'kg',     limitQty: 30,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iWoodenStick, organization: orgId, name: 'Wooden Stir Sticks',        category: catSugar,  type: 'material', unit: 'pcs',    limitQty: 5000,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSyrup, organization: orgId, name: 'Multi-Flavor Syrup',        category: catSyrup,  type: 'material', unit: 'bottle', limitQty: 80,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iHotChoc, organization: orgId, name: 'Hot Chocolate Mix',         category: catSyrup,  type: 'material', unit: 'kg',     limitQty: 20,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: iCondMilk, organization: orgId, name: 'Condensed Milk',            category: catSyrup,  type: 'material', unit: 'can',    limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iBonyMilk, organization: orgId, name: 'Bony Milk',                 category: catSyrup,  type: 'material', unit: 'can',    limitQty: 100,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iDigestive, organization: orgId, name: 'Digestive Biscuits',        category: catSnack,  type: 'material', unit: 'pack',   limitQty: 200,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iChips, organization: orgId, name: 'Chips',                     category: catSnack,  type: 'material', unit: 'pack',   limitQty: 300,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: iPaperCupHot, organization: orgId, name: 'Paper Cups (Hot)',          category: catDisposable, type: 'material', unit: 'pcs', limitQty: 30000, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iEspressoCup, organization: orgId, name: 'Espresso Cups',             category: catDisposable, type: 'material', unit: 'pcs', limitQty: 5000,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: iPaperPlate, organization: orgId, name: 'Paper Plates',              category: catDisposable, type: 'material', unit: 'pcs', limitQty: 10000, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSingleSpoon, organization: orgId, name: 'Single Spoon',              category: catDisposable, type: 'material', unit: 'pcs', limitQty: 15000, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSingleKnife, organization: orgId, name: 'Single Knife',              category: catDisposable, type: 'material', unit: 'pcs', limitQty: 10000, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iSingleFork, organization: orgId, name: 'Single Fork',               category: catDisposable, type: 'material', unit: 'pcs', limitQty: 10000, status: 'active', createdAt: now, updatedAt: now },
+    { _id: iCutlery, organization: orgId, name: 'Cutlery Sets',              category: catDisposable, type: 'material', unit: 'set', limitQty: 5000,  status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   // ── Suppliers ─────────────────────────────────────────────────────────────────
   const sup1Id = oid(), sup2Id = oid(), sup3Id = oid(), sup4Id = oid(), sup5Id = oid();
   await db.collection('suppliers').insertMany([
-    { _id: sup1Id, name: 'Al-Mawrid Food Trading',       nameAr: 'شركة المورد للتجارة الغذائية',     category: 'food',     contactName: 'Faisal Al-Amri',    phone: '+966512345678', email: 'contact@almawrid.sa',  rating: 4.5, status: 'active', licenseNumber: 'SA-F-2023-001', address: 'Riyadh Industrial City', createdAt: daysAgo(90), updatedAt: now },
-    { _id: sup2Id, name: 'Arabian Fresh Produce',        nameAr: 'شركة الجزيرة للمنتجات الطازجة',   category: 'food',     contactName: 'Nasser Al-Qahtani', phone: '+966523456789', email: 'info@arabianfresh.sa', rating: 4.2, status: 'active', licenseNumber: 'SA-F-2022-045', address: 'Jeddah Food Market',     createdAt: daysAgo(85), updatedAt: now },
-    { _id: sup3Id, name: 'Gulf Coffee & Beverages',      nameAr: 'الخليج للقهوة والمشروبات',        category: 'material', contactName: 'Reem Al-Harbi',     phone: '+966534567890', email: 'orders@gulfcoffee.sa', rating: 4.8, status: 'active', licenseNumber: 'SA-M-2021-112', address: 'Riyadh',                 createdAt: daysAgo(80), updatedAt: now },
-    { _id: sup4Id, name: 'Kingdom Hospitality Supplies', nameAr: 'مستلزمات الضيافة للمملكة',        category: 'both',     contactName: 'Mansour Al-Ghamdi', phone: '+966545678901', email: 'contact@khsupplies.sa', rating: 4.0, status: 'active', licenseNumber: 'SA-B-2023-078', address: 'Riyadh',                 createdAt: daysAgo(75), updatedAt: now },
-    { _id: sup5Id, name: 'Saudi Dairy & Nutrition',      nameAr: 'الألبان والتغذية السعودية',        category: 'food',     contactName: 'Hana Al-Otaibi',    phone: '+966578901234', email: 'supply@saudinutrition.sa', rating: 3.9, status: 'active', licenseNumber: 'SA-F-2022-089', address: 'Dammam', createdAt: daysAgo(60), updatedAt: now },
+    { _id: sup1Id, organization: orgId, name: 'Al-Mawrid Food Trading',       nameAr: 'شركة المورد للتجارة الغذائية',     category: 'food',     contactName: 'Faisal Al-Amri',    phone: '+966512345678', email: 'contact@almawrid.sa',  rating: 4.5, status: 'active', licenseNumber: 'SA-F-2023-001', address: 'Riyadh Industrial City', createdAt: daysAgo(90), updatedAt: now },
+    { _id: sup2Id, organization: orgId, name: 'Arabian Fresh Produce',        nameAr: 'شركة الجزيرة للمنتجات الطازجة',   category: 'food',     contactName: 'Nasser Al-Qahtani', phone: '+966523456789', email: 'info@arabianfresh.sa', rating: 4.2, status: 'active', licenseNumber: 'SA-F-2022-045', address: 'Jeddah Food Market',     createdAt: daysAgo(85), updatedAt: now },
+    { _id: sup3Id, organization: orgId, name: 'Gulf Coffee & Beverages',      nameAr: 'الخليج للقهوة والمشروبات',        category: 'material', contactName: 'Reem Al-Harbi',     phone: '+966534567890', email: 'orders@gulfcoffee.sa', rating: 4.8, status: 'active', licenseNumber: 'SA-M-2021-112', address: 'Riyadh',                 createdAt: daysAgo(80), updatedAt: now },
+    { _id: sup4Id, organization: orgId, name: 'Kingdom Hospitality Supplies', nameAr: 'مستلزمات الضيافة للمملكة',        category: 'both',     contactName: 'Mansour Al-Ghamdi', phone: '+966545678901', email: 'contact@khsupplies.sa', rating: 4.0, status: 'active', licenseNumber: 'SA-B-2023-078', address: 'Riyadh',                 createdAt: daysAgo(75), updatedAt: now },
+    { _id: sup5Id, organization: orgId, name: 'Saudi Dairy & Nutrition',      nameAr: 'الألبان والتغذية السعودية',        category: 'food',     contactName: 'Hana Al-Otaibi',    phone: '+966578901234', email: 'supply@saudinutrition.sa', rating: 3.9, status: 'active', licenseNumber: 'SA-F-2022-089', address: 'Dammam', createdAt: daysAgo(60), updatedAt: now },
   ]);
 
   // ── Daily Plans ────────────────────────────────────────────────────────────────
@@ -225,6 +241,7 @@ export async function seedDemo(): Promise<void> {
   const sampleFloors = [floorIds[0], floorIds[2], floorIds[4], floorIds[8], kafaa1Id, makassbId];
 
   await db.collection('dailyplans').insertMany(planIds.map((pid, i) => ({
+      organization: orgId,
     _id: pid, date: daysAgo(6 - i), project: projectId, building: mainBldgId,
     shift: 'morning', status: planStatuses[i], createdBy: adminId,
     createdAt: daysAgo(7 - i), updatedAt: daysAgo(7 - i),
@@ -238,7 +255,7 @@ export async function seedDemo(): Promise<void> {
   for (const pid of planIds) {
     for (const fid of sampleFloors) {
       for (const iid of samplePlanItems) {
-        planLines.push({ _id: oid(), dailyPlan: pid, floor: fid, item: iid, plannedQty: Math.floor(Math.random() * 20) + 10, createdAt: now, updatedAt: now });
+        planLines.push({ organization: orgId, _id: oid(), dailyPlan: pid, floor: fid, item: iid, plannedQty: Math.floor(Math.random() * 20) + 10, createdAt: now, updatedAt: now });
       }
     }
   }
@@ -267,35 +284,35 @@ export async function seedDemo(): Promise<void> {
       const approvalRecs: ObjectId[] = [];
       if (['submitted','approved','under_review','returned'].includes(status)) {
         const r = oid(); approvalRecs.push(r);
-        approvalRecordDocs.push({ _id: r, entityType: 'floor_check', entityId: checkId, step: 'supervisor', action: 'submit', actor: supervisorId, comment: 'Daily check completed', version: 1, createdAt: new Date(checkDate.getTime() + 3600000) });
+        approvalRecordDocs.push({ organization: orgId, _id: r, entityType: 'floor_check', entityId: checkId, step: 'supervisor', action: 'submit', actor: supervisorId, comment: 'Daily check completed', version: 1, createdAt: new Date(checkDate.getTime() + 3600000) });
       }
       if (['under_review','approved'].includes(status)) {
         const r = oid(); approvalRecs.push(r);
-        approvalRecordDocs.push({ _id: r, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'review', actor: assistantId, comment: 'Reviewed — forwarding for approval', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
+        approvalRecordDocs.push({ organization: orgId, _id: r, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'review', actor: assistantId, comment: 'Reviewed — forwarding for approval', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
       }
       if (status === 'returned') {
         const r = oid(); approvalRecs.push(r);
-        approvalRecordDocs.push({ _id: r, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'return', actor: assistantId, comment: 'Quantities need verification on 3F', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
+        approvalRecordDocs.push({ organization: orgId, _id: r, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'return', actor: assistantId, comment: 'Quantities need verification on 3F', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
       }
       if (status === 'approved') {
         const r = oid(); approvalRecs.push(r);
-        approvalRecordDocs.push({ _id: r, entityType: 'floor_check', entityId: checkId, step: 'project_manager', action: 'approve', actor: managerId, comment: 'Approved', version: 3, createdAt: new Date(checkDate.getTime() + 10800000) });
+        approvalRecordDocs.push({ organization: orgId, _id: r, entityType: 'floor_check', entityId: checkId, step: 'project_manager', action: 'approve', actor: managerId, comment: 'Approved', version: 3, createdAt: new Date(checkDate.getTime() + 10800000) });
         for (const line of checkLines) {
           if (line.actualQty > 0) {
             const isFood = sampleFoodForPlan.some(fi => fi.equals(line.item));
             const movType = isFood ? 'CONSUMPTION' : 'ISSUE';
             const key = `${projectId}-${line.item.toString()}-${period}`;
             if (!inventoryMap[key]) {
-              inventoryMap[key] = { _id: oid(), project: projectId, item: line.item, period, monthlyLimit: 500, openingBalance: 200, receivedQty: 300, consumedQty: 0, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: 500, status: 'available', updatedAt: now };
+              inventoryMap[key] = { _id: oid(), organization: orgId, project: projectId, item: line.item, period, monthlyLimit: 500, openingBalance: 200, receivedQty: 300, consumedQty: 0, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: 500, status: 'available', updatedAt: now };
             }
             if (movType === 'CONSUMPTION') inventoryMap[key].consumedQty += line.actualQty;
             else inventoryMap[key].issuedQty += line.actualQty;
-            stockMovementDocs.push({ _id: oid(), project: projectId, item: line.item, movementType: movType, quantity: line.actualQty, movementDate: checkDate, sourceType: 'floor_check', sourceRef: checkId, notes: 'Auto from floor check approval', createdBy: supervisorId, createdAt: new Date(checkDate.getTime() + 11000000) });
+            stockMovementDocs.push({ organization: orgId, _id: oid(), project: projectId, item: line.item, movementType: movType, quantity: line.actualQty, movementDate: checkDate, sourceType: 'floor_check', sourceRef: checkId, notes: 'Auto from floor check approval', createdBy: supervisorId, createdAt: new Date(checkDate.getTime() + 11000000) });
           }
         }
       }
       const currentStep = status === 'draft' ? 'supervisor' : status === 'submitted' ? 'assistant_supervisor' : status === 'under_review' ? 'project_manager' : status === 'returned' ? 'supervisor' : status === 'approved' ? 'client' : 'supervisor';
-      floorCheckDocs.push({ _id: checkId, dailyPlan: planId, date: checkDate, project: projectId, building: mainBldgId, floor: floorId, shift: 'morning', supervisor: supervisorId, checkTime: new Date(checkDate.getTime() + 1800000), status, notes: fi === 0 ? 'Floor inspection completed on schedule' : undefined, approvalRecords: approvalRecs, currentApprovalStep: currentStep, createdAt: checkDate, updatedAt: checkDate });
+      floorCheckDocs.push({ organization: orgId, _id: checkId, dailyPlan: planId, date: checkDate, project: projectId, building: mainBldgId, floor: floorId, shift: 'morning', supervisor: supervisorId, checkTime: new Date(checkDate.getTime() + 1800000), status, notes: fi === 0 ? 'Floor inspection completed on schedule' : undefined, approvalRecords: approvalRecs, currentApprovalStep: currentStep, createdAt: checkDate, updatedAt: checkDate });
     }
   }
 
@@ -326,7 +343,7 @@ export async function seedDemo(): Promise<void> {
     const statusVal = remaining <= 0 ? 'out_of_stock' : remaining / lim < 0.2 ? 'low_stock' : 'available';
     const key = `${projectId}-${iid.toString()}-${period}`;
     if (!inventoryMap[key]) {
-      inventoryMap[key] = { _id: oid(), project: projectId, item: iid, period, monthlyLimit: lim, openingBalance: Math.floor(lim * 0.05), receivedQty: lim, consumedQty: consumed, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: remaining, status: statusVal, updatedAt: now };
+      inventoryMap[key] = { _id: oid(), organization: orgId, project: projectId, item: iid, period, monthlyLimit: lim, openingBalance: Math.floor(lim * 0.05), receivedQty: lim, consumedQty: consumed, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: remaining, status: statusVal, updatedAt: now };
     }
   }
 
@@ -354,7 +371,7 @@ export async function seedDemo(): Promise<void> {
     const statusVal = remaining <= 0 ? 'out_of_stock' : remaining / lim < 0.2 ? 'low_stock' : 'available';
     const key = `${projectId}-${iid.toString()}-${period}`;
     if (!inventoryMap[key]) {
-      inventoryMap[key] = { _id: oid(), project: projectId, item: iid, period, monthlyLimit: lim, openingBalance: Math.floor(lim * 0.05), receivedQty: lim, consumedQty: consumed, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: remaining, status: statusVal, updatedAt: now };
+      inventoryMap[key] = { _id: oid(), organization: orgId, project: projectId, item: iid, period, monthlyLimit: lim, openingBalance: Math.floor(lim * 0.05), receivedQty: lim, consumedQty: consumed, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: remaining, status: statusVal, updatedAt: now };
     }
   }
 
@@ -377,7 +394,7 @@ export async function seedDemo(): Promise<void> {
 
   // ── Stock Movements ───────────────────────────────────────────────────────────
   const receives = [...foodItemIds.slice(0, 5), ...matItemIds.slice(0, 5)].map(iid => ({
-    _id: oid(), project: projectId, item: iid, movementType: 'RECEIVE', quantity: 300,
+    _id: oid(), organization: orgId, project: projectId, item: iid, movementType: 'RECEIVE', quantity: 300,
     movementDate: daysAgo(10), sourceType: 'manual', notes: 'Monthly stock replenishment',
     createdBy: managerId, createdAt: daysAgo(10),
   }));
@@ -428,7 +445,7 @@ export async function seedDemo(): Promise<void> {
       poNumber: `PO-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-001`,
       supplier: sup1Id, project: projectId, month: currentMonth,
       startDate: soMonth, endDate: eoMonth, status: 'partially_received',
-      notes: 'Monthly food allocation — Ministry of Energy Cafeteria',
+      notes: 'Monthly food allocation — Demo Organization Cafeteria',
       lines: [
         { _id: oid(), item: iBrSand,   unit: 'pcs',    approvedQty: 20570, receivedQty: 12000, distributedQty: 8400,  consumedQty: 0, remainingQty: 12170, variance: 0 },
         { _id: oid(), item: iLuSand,   unit: 'pcs',    approvedQty: 11770, receivedQty: 7000,  distributedQty: 4800,  consumedQty: 0, remainingQty: 6970,  variance: 0 },
@@ -446,7 +463,7 @@ export async function seedDemo(): Promise<void> {
       poNumber: `PO-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-002`,
       supplier: sup3Id, project: projectId, month: currentMonth,
       startDate: soMonth, endDate: eoMonth, status: 'active',
-      notes: 'Monthly coffee & beverages — Ministry of Energy Cafeteria',
+      notes: 'Monthly coffee & beverages — Demo Organization Cafeteria',
       lines: [
         { _id: oid(), item: iOrigBlend,  unit: 'kg',     approvedQty: 200,  receivedQty: 0,    distributedQty: 0,  consumedQty: 0, remainingQty: 200,  variance: 0 },
         { _id: oid(), item: iHouseBlend, unit: 'kg',     approvedQty: 200,  receivedQty: 0,    distributedQty: 0,  consumedQty: 0, remainingQty: 200,  variance: 0 },
@@ -462,7 +479,7 @@ export async function seedDemo(): Promise<void> {
       poNumber: `PO-${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-003`,
       supplier: sup4Id, project: projectId, month: currentMonth,
       startDate: soMonth, endDate: eoMonth, status: 'partially_received',
-      notes: 'Monthly disposables & water — Ministry of Energy Cafeteria',
+      notes: 'Monthly disposables & water — Demo Organization Cafeteria',
       lines: [
         { _id: oid(), item: iNovaWater,   unit: 'carton', approvedQty: 5016, receivedQty: 3000, distributedQty: 2000, consumedQty: 0, remainingQty: 3016, variance: 0 },
         { _id: oid(), item: iPaperCupHot, unit: 'pcs',    approvedQty: 30000,receivedQty: 15000,distributedQty: 10000,consumedQty: 0, remainingQty: 20000,variance: 0 },
@@ -476,7 +493,7 @@ export async function seedDemo(): Promise<void> {
       poNumber: 'PO-2024-11-001',
       supplier: sup1Id, project: projectId, month: '2024-11',
       startDate: soNov24, endDate: eoNov24, status: 'fully_received',
-      notes: 'Monthly food allocation — November 2024 — Ministry of Energy Cafeteria',
+      notes: 'Monthly food allocation — November 2024 — Demo Organization Cafeteria',
       lines: [
         { _id: oid(), item: iBrSand,  unit: 'pcs',  approvedQty: 20570, receivedQty: 20570, distributedQty: 20200, consumedQty: 0, remainingQty: 0, variance: 0 },
         { _id: oid(), item: iLuSand,  unit: 'pcs',  approvedQty: 11770, receivedQty: 11770, distributedQty: 11500, consumedQty: 0, remainingQty: 0, variance: 0 },
@@ -497,7 +514,7 @@ export async function seedDemo(): Promise<void> {
       poNumber: 'PO-2024-11-002',
       supplier: sup3Id, project: projectId, month: '2024-11',
       startDate: soNov24, endDate: eoNov24, status: 'fully_received',
-      notes: 'Monthly beverages & materials — November 2024 — Ministry of Energy Cafeteria',
+      notes: 'Monthly beverages & materials — November 2024 — Demo Organization Cafeteria',
       lines: [
         { _id: oid(), item: iOrigBlend,   unit: 'kg',     approvedQty: 200,  receivedQty: 200,  distributedQty: 195,  consumedQty: 0, remainingQty: 0, variance: 0 },
         { _id: oid(), item: iHouseBlend,  unit: 'kg',     approvedQty: 300,  receivedQty: 300,  distributedQty: 295,  consumedQty: 0, remainingQty: 0, variance: 0 },
@@ -668,7 +685,7 @@ export async function seedDemo(): Promise<void> {
 
   await db.collection('clientrequests').insertMany(
     opReqTitles.map((title, i) => ({
-      _id: oid(), title,
+      _id: oid(), organization: orgId, title,
       description: `${title} — requested from operations team`,
       requestType: 'operation_request', priority: i === 1 ? 'high' : i === 4 ? 'high' : 'medium',
       project: projectId, building: i < 4 ? mainBldgId : i === 4 ? mainBldgId : svcBldgId,
@@ -700,7 +717,7 @@ export async function seedDemo(): Promise<void> {
 
   await db.collection('clientrequests').insertMany(
     cbReqTitles.map((title, i) => ({
-      _id: oid(), title,
+      _id: oid(), organization: orgId, title,
       description: `Coffee break service for ${cbPax[i]} attendees`,
       requestType: 'coffee_break_request', priority: i === 2 ? 'high' : i === 0 ? 'high' : 'medium',
       project: projectId, building: i < 4 ? mainBldgId : i === 4 ? rdBldgId : kafaaBldgId,
@@ -728,7 +745,7 @@ export async function seedDemo(): Promise<void> {
   const mEnd2  = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
   await db.collection('reports').insertMany([
     { _id: oid(), reportType: 'daily_floor_check',     title: 'Daily Floor Check Report — 2F',                   project: projectId, building: mainBldgId, floor: floorIds[0], dateFrom: daysAgo(1), dateTo: daysAgo(1), generatedBy: managerId,  status: 'generated', createdAt: daysAgo(1) },
-    { _id: oid(), reportType: 'daily_project_summary', title: 'Daily Summary — Ministry of Energy Cafeteria',     project: projectId, building: mainBldgId,                  dateFrom: daysAgo(1), dateTo: daysAgo(1), generatedBy: managerId,  status: 'generated', createdAt: daysAgo(1) },
+    { _id: oid(), reportType: 'daily_project_summary', title: 'Daily Summary — Demo Organization Cafeteria',     project: projectId, building: mainBldgId,                  dateFrom: daysAgo(1), dateTo: daysAgo(1), generatedBy: managerId,  status: 'generated', createdAt: daysAgo(1) },
     { _id: oid(), reportType: 'weekly_warehouse',      title: 'Weekly Warehouse & Inventory Report',               project: projectId,                                         dateFrom: daysAgo(7), dateTo: daysAgo(1), generatedBy: managerId,  status: 'generated', createdAt: daysAgo(2) },
     { _id: oid(), reportType: 'monthly_food_inventory',title: `Monthly Food Inventory — May 2026`,                project: projectId, dateFrom: mStart, dateTo: mEnd2,           generatedBy: adminId, status: 'generated', createdAt: daysAgo(3) },
     { _id: oid(), reportType: 'monthly_materials',     title: `Monthly Materials Inventory — May 2026`,           project: projectId, dateFrom: mStart, dateTo: mEnd2,           generatedBy: adminId, status: 'generated', createdAt: daysAgo(3) },
@@ -852,5 +869,5 @@ export async function seedDemo(): Promise<void> {
     { _id: oid(), user: supervisorId, action: 'update', entityType: 'client_request',    createdAt: now },
   ]);
 
-  console.log('Demo seeded: Ministry of Energy | 5 users · 27 floors · 20 food items · 38 material items · 5 suppliers · 6 operation requests · 6 coffee break requests · 5 POs (incl. Nov 2024 historical) · 3 receivings · 4 maintenance · 4 fridge checks · 4 corrective actions · 7 reports');
+  console.log('Demo seeded: Demo Organization | 5 users · 27 floors · 20 food items · 38 material items · 5 suppliers · 6 operation requests · 6 coffee break requests · 5 POs (incl. Nov 2024 historical) · 3 receivings · 4 maintenance · 4 fridge checks · 4 corrective actions · 7 reports');
 }

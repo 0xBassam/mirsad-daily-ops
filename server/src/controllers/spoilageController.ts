@@ -8,8 +8,9 @@ import { logAction } from '../services/auditService';
 
 // Manual spoilage recordings
 export const getSpoilageRecords = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.project) filter.project = req.query.project;
   if (req.query.reason)  filter.reason  = req.query.reason;
 
@@ -26,8 +27,10 @@ export const getSpoilageRecords = asyncHandler(async (req: Request, res: Respons
 });
 
 export const createSpoilageRecord = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const body = {
     ...req.body,
+    organization: orgId,
     createdBy: req.user?.userId,
     detectedAt: new Date(),
     alertType: req.body.reason === 'expired' ? 'expired'
@@ -40,6 +43,7 @@ export const createSpoilageRecord = asyncHandler(async (req: Request, res: Respo
   // Create DAMAGE stock movement automatically
   if (req.body.project && req.body.item) {
     await StockMovement.create({
+      organization: orgId,
       project: req.body.project,
       item: req.body.item,
       movementType: 'DAMAGE',
@@ -58,8 +62,9 @@ export const createSpoilageRecord = asyncHandler(async (req: Request, res: Respo
 
 // Spoilage alerts (system + manual, active/resolved/dismissed)
 export const getSpoilageAlerts = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.status) filter.status = req.query.status;
 
   const [data, total] = await Promise.all([
@@ -75,8 +80,9 @@ export const getSpoilageAlerts = asyncHandler(async (req: Request, res: Response
 });
 
 export const resolveSpoilageAlert = asyncHandler(async (req: Request, res: Response) => {
-  const data = await Spoilage.findByIdAndUpdate(
-    req.params.id,
+  const orgId = req.organizationId as string;
+  const data = await Spoilage.findOneAndUpdate(
+    { _id: req.params.id, organization: orgId },
     { status: 'resolved', resolvedBy: req.user?.userId, resolvedAt: new Date() },
     { new: true }
   ).populate('item', 'name unit').populate('resolvedBy', 'fullName');

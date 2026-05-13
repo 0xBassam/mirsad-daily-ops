@@ -27,7 +27,8 @@ import {
 function parseDateOpts(req: Request) {
   const dateFrom = req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined;
   const dateTo   = req.query.dateTo   ? new Date(req.query.dateTo   as string) : undefined;
-  return { dateFrom, dateTo };
+  const organizationId = req.organizationId as string;
+  return { dateFrom, dateTo, organizationId };
 }
 
 export const exportOpRequestsPDF = asyncHandler(async (req: Request, res: Response) => {
@@ -72,14 +73,16 @@ export const exportPurchaseOrdersListExcel = asyncHandler(async (req: Request, r
 
 export const exportLowStockListPDF = asyncHandler(async (req: Request, res: Response) => {
   const period = req.query.period as string | undefined;
-  await exportLowStockPDF(res, { period });
+  const organizationId = req.organizationId as string;
+  await exportLowStockPDF(res, { period, organizationId });
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'inventory', req });
 });
 
 export const exportInventoryListExcel = asyncHandler(async (req: Request, res: Response) => {
   const period = req.query.period as string | undefined;
   const type   = (req.query.type as 'food' | 'material' | 'all') || 'all';
-  await exportLowStockExcel(res, { period, type });
+  const organizationId = req.organizationId as string;
+  await exportLowStockExcel(res, { period, type, organizationId });
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'inventory', req });
 });
 
@@ -94,12 +97,14 @@ export const exportAuditLogListExcel = asyncHandler(async (req: Request, res: Re
 });
 
 export const exportReportPDF = asyncHandler(async (req: Request, res: Response) => {
-  await exportSavedReportPDF(req.params.id, res);
+  const organizationId = req.organizationId as string;
+  await exportSavedReportPDF(req.params.id, res, organizationId);
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'report', entityId: req.params.id, req });
 });
 
 export const exportReportExcel = asyncHandler(async (req: Request, res: Response) => {
-  await exportSavedReportExcel(req.params.id, res);
+  const organizationId = req.organizationId as string;
+  await exportSavedReportExcel(req.params.id, res, organizationId);
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'report', entityId: req.params.id, req });
 });
 
@@ -125,12 +130,14 @@ export const exportDailyPlansListExcel = asyncHandler(async (req: Request, res: 
 
 export const exportFoodInventoryListPDF = asyncHandler(async (req: Request, res: Response) => {
   const period = req.query.period as string | undefined;
-  await exportFoodInventoryPDF(res, { period });
+  const organizationId = req.organizationId as string;
+  await exportFoodInventoryPDF(res, { period, organizationId });
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'inventory', req });
 });
 
 export const exportMaterialsInventoryListPDF = asyncHandler(async (req: Request, res: Response) => {
   const period = req.query.period as string | undefined;
-  await exportMaterialsInventoryPDF(res, { period });
+  const organizationId = req.organizationId as string;
+  await exportMaterialsInventoryPDF(res, { period, organizationId });
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'inventory', req });
 });

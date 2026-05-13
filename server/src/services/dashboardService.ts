@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { format, addDays } from 'date-fns';
 import { FloorCheck } from '../models/FloorCheck';
 import { FloorCheckLine } from '../models/FloorCheckLine';
@@ -16,7 +17,8 @@ import { AuditLog } from '../models/AuditLog';
 import { StockMovement } from '../models/StockMovement';
 import { Receiving } from '../models/Receiving';
 
-export async function getDashboardStats() {
+export async function getDashboardStats(organizationId: string) {
+  const org = new mongoose.Types.ObjectId(organizationId);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const tomorrow = new Date(today);
@@ -46,26 +48,26 @@ export async function getDashboardStats() {
     coffeeBreakRequestsOpen,
     receivingTodayCount,
   ] = await Promise.all([
-    FloorCheck.countDocuments({ date: { $gte: today, $lt: tomorrow } }),
-    FloorCheck.countDocuments({ date: { $gte: today, $lt: tomorrow }, status: { $in: ['approved', 'closed'] } }),
-    FloorCheck.countDocuments({ date: { $gte: today, $lt: tomorrow }, status: 'draft' }),
-    FloorCheck.countDocuments({ status: 'submitted' }),
-    FloorCheck.countDocuments({ status: 'approved' }),
-    FloorCheck.countDocuments({ status: 'rejected' }),
-    FloorCheckLine.countDocuments({ lineStatus: 'shortage' }),
-    InventoryBalance.countDocuments({ period, status: 'low_stock' }),
-    FloorCheck.countDocuments({ status: { $in: ['submitted', 'under_review'] } }),
-    InventoryBalance.countDocuments({ period, status: 'out_of_stock' }),
-    Batch.countDocuments({ status: 'active', expiryDate: { $gte: today, $lte: in3Days } }),
-    CorrectiveAction.countDocuments({ status: { $in: ['open', 'in_progress'] } }),
-    FridgeCheck.countDocuments({ date: { $gte: today, $lt: tomorrow } }),
-    Spoilage.countDocuments({ status: 'active' }),
-    PurchaseOrder.countDocuments({ status: { $nin: ['fully_received', 'closed'] } }),
-    Transfer.countDocuments({ status: 'draft' }),
-    MaintenanceRequest.countDocuments({ status: { $in: ['open', 'assigned'] } }),
-    ClientRequest.countDocuments({ requestType: 'operation_request', status: { $in: ['submitted', 'assigned', 'in_progress'] } }),
-    ClientRequest.countDocuments({ requestType: 'coffee_break_request', status: { $in: ['submitted', 'assigned', 'in_progress'] } }),
-    Receiving.countDocuments({ deliveryDate: { $gte: today, $lt: tomorrow } }),
+    FloorCheck.countDocuments({ organization: org, date: { $gte: today, $lt: tomorrow } }),
+    FloorCheck.countDocuments({ organization: org, date: { $gte: today, $lt: tomorrow }, status: { $in: ['approved', 'closed'] } }),
+    FloorCheck.countDocuments({ organization: org, date: { $gte: today, $lt: tomorrow }, status: 'draft' }),
+    FloorCheck.countDocuments({ organization: org, status: 'submitted' }),
+    FloorCheck.countDocuments({ organization: org, status: 'approved' }),
+    FloorCheck.countDocuments({ organization: org, status: 'rejected' }),
+    FloorCheckLine.countDocuments({ organization: org, lineStatus: 'shortage' }),
+    InventoryBalance.countDocuments({ organization: org, period, status: 'low_stock' }),
+    FloorCheck.countDocuments({ organization: org, status: { $in: ['submitted', 'under_review'] } }),
+    InventoryBalance.countDocuments({ organization: org, period, status: 'out_of_stock' }),
+    Batch.countDocuments({ organization: org, status: 'active', expiryDate: { $gte: today, $lte: in3Days } }),
+    CorrectiveAction.countDocuments({ organization: org, status: { $in: ['open', 'in_progress'] } }),
+    FridgeCheck.countDocuments({ organization: org, date: { $gte: today, $lt: tomorrow } }),
+    Spoilage.countDocuments({ organization: org, status: 'active' }),
+    PurchaseOrder.countDocuments({ organization: org, status: { $nin: ['fully_received', 'closed'] } }),
+    Transfer.countDocuments({ organization: org, status: 'draft' }),
+    MaintenanceRequest.countDocuments({ organization: org, status: { $in: ['open', 'assigned'] } }),
+    ClientRequest.countDocuments({ organization: org, requestType: 'operation_request', status: { $in: ['submitted', 'assigned', 'in_progress'] } }),
+    ClientRequest.countDocuments({ organization: org, requestType: 'coffee_break_request', status: { $in: ['submitted', 'assigned', 'in_progress'] } }),
+    Receiving.countDocuments({ organization: org, deliveryDate: { $gte: today, $lt: tomorrow } }),
   ]);
 
   const [
@@ -82,7 +84,7 @@ export async function getDashboardStats() {
     lowStockItemsList,
   ] = await Promise.all([
     InventoryBalance.aggregate([
-      { $match: { period } },
+      { $match: { organization: org, period } },
       { $lookup: { from: 'items', localField: 'item', foreignField: '_id', as: 'item' } },
       { $unwind: '$item' },
       { $match: { 'item.type': 'food' } },
@@ -98,7 +100,7 @@ export async function getDashboardStats() {
     ]),
 
     InventoryBalance.aggregate([
-      { $match: { period } },
+      { $match: { organization: org, period } },
       { $lookup: { from: 'items', localField: 'item', foreignField: '_id', as: 'item' } },
       { $unwind: '$item' },
       { $match: { 'item.type': 'material' } },
@@ -113,7 +115,7 @@ export async function getDashboardStats() {
     ]),
 
     StockMovement.aggregate([
-      { $match: { movementType: { $in: ['CONSUMPTION', 'ISSUE'] } } },
+      { $match: { organization: org, movementType: { $in: ['CONSUMPTION', 'ISSUE'] } } },
       { $group: { _id: '$item', consumed: { $sum: '$quantity' } } },
       { $sort: { consumed: -1 } },
       { $limit: 5 },
@@ -122,13 +124,13 @@ export async function getDashboardStats() {
       { $project: { _id: 0, name: { $ifNull: ['$item.name', 'Unknown'] }, consumed: 1 } },
     ]),
 
-    // Today's consumption total
     StockMovement.aggregate([
-      { $match: { movementType: { $in: ['CONSUMPTION', 'ISSUE'] }, movementDate: { $gte: today, $lt: tomorrow } } },
+      { $match: { organization: org, movementType: { $in: ['CONSUMPTION', 'ISSUE'] }, movementDate: { $gte: today, $lt: tomorrow } } },
       { $group: { _id: null, totalQty: { $sum: '$quantity' }, totalTxns: { $sum: 1 } } },
     ]),
 
     FloorCheck.aggregate([
+      { $match: { organization: org } },
       { $group: { _id: '$floor', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 8 },
@@ -137,45 +139,40 @@ export async function getDashboardStats() {
       { $project: { _id: 0, name: { $ifNull: ['$floor.name', 'Unknown'] }, count: 1 } },
     ]),
 
-    AuditLog.find()
+    AuditLog.find({ organization: org })
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('user', 'fullName role')
       .lean(),
 
-    // Latest operation requests
-    ClientRequest.find({ requestType: 'operation_request' })
+    ClientRequest.find({ organization: org, requestType: 'operation_request' })
       .sort({ createdAt: -1 })
       .limit(6)
       .populate('floor', 'name')
       .populate('requestedBy', 'fullName')
       .lean(),
 
-    // Latest coffee break requests
-    ClientRequest.find({ requestType: 'coffee_break_request' })
+    ClientRequest.find({ organization: org, requestType: 'coffee_break_request' })
       .sort({ createdAt: -1 })
       .limit(6)
       .populate('floor', 'name')
       .populate('requestedBy', 'fullName')
       .lean(),
 
-    // Latest receiving records
-    Receiving.find()
+    Receiving.find({ organization: org })
       .sort({ deliveryDate: -1, createdAt: -1 })
       .limit(5)
       .populate('supplier', 'name')
       .lean(),
 
-    // Recent purchase orders
-    PurchaseOrder.find()
+    PurchaseOrder.find({ organization: org })
       .sort({ createdAt: -1 })
       .limit(5)
       .populate('supplier', 'name')
       .lean(),
 
-    // Low stock items list (top 8)
     InventoryBalance.aggregate([
-      { $match: { period, status: { $in: ['low_stock', 'out_of_stock'] } } },
+      { $match: { organization: org, period, status: { $in: ['low_stock', 'out_of_stock'] } } },
       { $lookup: { from: 'items', localField: 'item', foreignField: '_id', as: 'itemData' } },
       { $unwind: { path: '$itemData', preserveNullAndEmptyArrays: true } },
       { $sort: { remainingQty: 1 } },
@@ -271,7 +268,6 @@ export async function getDashboardStats() {
     openPurchaseOrders: openPurchaseOrdersCount,
     pendingTransfers: pendingTransfersCount,
     openMaintenanceRequests: openMaintenanceCount,
-    // New fields
     operationRequestsOpen,
     coffeeBreakRequestsOpen,
     receivingToday: receivingTodayCount,

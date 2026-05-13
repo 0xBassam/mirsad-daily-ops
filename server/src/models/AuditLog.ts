@@ -37,7 +37,7 @@ const auditLogSchema = new Schema<IAuditLog>(
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     action: {
       type: String,
-      enum: ['login', 'logout', 'create', 'update', 'delete', 'submit', 'review', 'approve', 'reject', 'return', 'export'],
+      enum: ['login', 'logout', 'create', 'update', 'delete', 'submit', 'review', 'approve', 'reject', 'return', 'export', 'confirm', 'cancel', 'assign', 'resolve', 'deliver'],
       required: true,
     },
     entityType: { type: String },

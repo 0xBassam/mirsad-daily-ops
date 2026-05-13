@@ -16,13 +16,17 @@ export async function applyMovementToBalance(params: {
   movementType: MovementType;
   quantity: number;
   date?: Date;
+  organizationId?: string | null;
 }): Promise<void> {
-  const { project, item, movementType, quantity, date = new Date() } = params;
+  const { project, item, movementType, quantity, date = new Date(), organizationId } = params;
   const period = format(date, 'yyyy-MM');
 
+  const filter: Record<string, unknown> = { project, item, period };
+  if (organizationId) filter.organization = organizationId;
+
   const balance = await InventoryBalance.findOneAndUpdate(
-    { project, item, period },
-    { $setOnInsert: { openingBalance: 0, monthlyLimit: 0 } },
+    filter,
+    { $setOnInsert: { openingBalance: 0, monthlyLimit: 0, ...(organizationId ? { organization: organizationId } : {}) } },
     { upsert: true, new: true }
   );
   if (!balance) return;
@@ -51,7 +55,7 @@ export async function applyMovementToBalance(params: {
           Item.findById(item).select('name unit type').lean() as any,
           Project.findById(project).select('name').lean() as any,
         ]);
-        const recipients = await getNotificationRecipients();
+        const recipients = await getNotificationRecipients(organizationId || '');
         if (recipients.length) {
           const alertData = {
             itemName: itemDoc?.name || String(item),
@@ -63,9 +67,9 @@ export async function applyMovementToBalance(params: {
             period,
           };
           if (newStatus === 'out_of_stock') {
-            await sendOutOfStockAlert({ to: recipients, ...alertData });
+            await sendOutOfStockAlert({ to: recipients, ...alertData }, organizationId || '');
           } else {
-            await sendLowStockAlert({ to: recipients, ...alertData });
+            await sendLowStockAlert({ to: recipients, ...alertData }, organizationId || '');
           }
         }
       } catch { /* silent */ }
@@ -81,6 +85,7 @@ export async function updateOnApproval(floorCheckId: string): Promise<void> {
     const floorCheck = await FloorCheck.findById(floorCheckId).session(session);
     if (!floorCheck) throw new Error('Floor check not found');
 
+    const organizationId = floorCheck.organization ? String(floorCheck.organization) : null;
     const lines = await FloorCheckLine.find({ floorCheck: floorCheckId }).populate('item').session(session);
     const period = format(floorCheck.date, 'yyyy-MM');
 
@@ -94,6 +99,7 @@ export async function updateOnApproval(floorCheckId: string): Promise<void> {
       await StockMovement.create(
         [
           {
+            organization: organizationId ? new mongoose.Types.ObjectId(organizationId) : undefined,
             project: floorCheck.project,
             item: line.item,
             movementType,
@@ -108,9 +114,16 @@ export async function updateOnApproval(floorCheckId: string): Promise<void> {
         { session }
       );
 
+      const balanceFilter: Record<string, unknown> = {
+        project: floorCheck.project,
+        item: line.item,
+        period,
+      };
+      if (organizationId) balanceFilter.organization = new mongoose.Types.ObjectId(organizationId);
+
       const balance = await InventoryBalance.findOneAndUpdate(
-        { project: floorCheck.project, item: line.item, period },
-        { $setOnInsert: { openingBalance: 0, receivedQty: 0, monthlyLimit: 0 } },
+        balanceFilter,
+        { $setOnInsert: { openingBalance: 0, receivedQty: 0, monthlyLimit: 0, ...(organizationId ? { organization: new mongoose.Types.ObjectId(organizationId) } : {}) } },
         { upsert: true, new: true, session }
       );
 

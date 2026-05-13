@@ -4,8 +4,9 @@ import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 
 export const getAuditLogs = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
   const { page, limit, skip } = getPaginationParams(req);
-  const filter: Record<string, unknown> = {};
+  const filter: Record<string, unknown> = { organization: orgId };
   if (req.query.user) filter.user = req.query.user;
   if (req.query.action) filter.action = req.query.action;
   if (req.query.entityType) filter.entityType = req.query.entityType;
