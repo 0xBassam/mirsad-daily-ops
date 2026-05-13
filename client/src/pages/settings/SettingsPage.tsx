@@ -94,7 +94,36 @@ export function SettingsPage() {
   const [showPass, setShowPass] = useState(false);
   const [showApiKey, setShowApiKey] = useState(false);
   const [testEmail, setTestEmail] = useState('');
+  const [testEmailError, setTestEmailError] = useState<string | null>(null);
+  const [testSubject, setTestSubject] = useState('');
+  const [testSubjectError, setTestSubjectError] = useState<string | null>(null);
+  const [testMessage, setTestMessage] = useState('');
+  const [testMessageError, setTestMessageError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+
+  // Parse comma-separated input into trimmed, non-empty array
+  function parseRecipients(raw: string): string[] {
+    return raw.split(',').map(s => s.trim()).filter(Boolean);
+  }
+
+  // Returns error message or null if valid
+  function validateRecipients(raw: string): string | null {
+    if (!raw.trim()) return null;
+    if (/;/.test(raw)) return t('settings.testEmailErrorSemicolon');
+    if (/"/.test(raw) || /</.test(raw) || />/.test(raw))
+      return t('settings.testEmailErrorQuoted');
+    const emails = parseRecipients(raw);
+    if (emails.length === 0) return t('settings.testEmailRequired');
+    const emailRe = /^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]{2,}$/;
+    const bad = emails.filter(e => !emailRe.test(e));
+    if (bad.length > 0) return `${t('settings.testEmailErrorInvalid')}: ${bad.join(', ')}`;
+    return null;
+  }
+
+  function handleTestEmailChange(value: string) {
+    setTestEmail(value);
+    setTestEmailError(validateRecipients(value));
+  }
 
   const { isLoading, data: settingsData } = useQuery({
     queryKey: ['system-settings'],
@@ -108,6 +137,13 @@ export function SettingsPage() {
     }
   }, [settingsData]);
 
+  // Set i18n-dependent defaults once translations are ready
+  useEffect(() => {
+    if (!testSubject) setTestSubject(t('settings.testEmailSubjectDefault'));
+    if (!testMessage) setTestMessage(t('settings.testEmailMessageDefault'));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [t]);
+
   const saveMutation = useMutation({
     mutationFn: (body: Settings) => apiClient.put('/settings', body),
     onSuccess: () => toast.success(t('settings.settingsSaved')),
@@ -115,7 +151,10 @@ export function SettingsPage() {
   });
 
   const testMutation = useMutation({
-    mutationFn: () => apiClient.post('/settings/test-email', { to: testEmail }, { timeout: 12_000 }),
+    mutationFn: () => {
+      const recipients = parseRecipients(testEmail);
+      return apiClient.post('/settings/test-email', { to: recipients, subject: testSubject, message: testMessage }, { timeout: 12_000 });
+    },
     onSuccess: (res) => toast.success(res.data?.message || t('settings.testEmailSent')),
     onError: (e: any) => {
       const msg = e.response?.data?.message
@@ -200,7 +239,7 @@ export function SettingsPage() {
                 className={inputCls}
                 value={form.resendFromEmail}
                 onChange={e => set('resendFromEmail', e.target.value)}
-                placeholder="alerts@yourdomain.com"
+                placeholder="alerts@stdsec.sa"
               />
             </Field>
             <Field label={t('settings.smtpFromName')}>
@@ -266,32 +305,98 @@ export function SettingsPage() {
 
       {/* Test Email */}
       <SectionCard title={t('settings.testEmail')} icon={Send}>
-        <div className="space-y-3">
+        <div className="space-y-4">
           <p className="text-xs text-slate-500">
             {isResend ? t('settings.testViaResend') : t('settings.testViaSmtp')}
           </p>
-          <div className="flex items-center gap-3">
-            <input
-              className={inputCls + ' flex-1'}
-              type="email"
-              value={testEmail}
-              onChange={e => setTestEmail(e.target.value)}
-              placeholder={t('settings.testEmailTo')}
-              disabled={testMutation.isPending}
-            />
-            <button
-              onClick={() => testMutation.mutate()}
-              disabled={!testEmail || testMutation.isPending}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-            >
-              {testMutation.isPending
-                ? <><Loader2 className="h-4 w-4 animate-spin" />{t('settings.testEmailSending')}</>
-                : <><Send className="h-4 w-4" />{t('settings.testEmail')}</>}
-            </button>
+
+          {/* Recipients */}
+          <Field label={t('settings.testEmailTo')}>
+            <div className="space-y-1">
+              <input
+                className={inputCls + (testEmailError ? ' border-red-400 focus:ring-red-400' : '')}
+                type="text"
+                value={testEmail}
+                onChange={e => handleTestEmailChange(e.target.value)}
+                placeholder="m.assaf@kuzama.co, Sultan.Naif@KUZAMA.CO"
+                disabled={testMutation.isPending}
+                autoComplete="off"
+              />
+              {testEmailError && (
+                <p className="text-xs text-red-600 font-medium">{testEmailError}</p>
+              )}
+              {!testEmailError && testEmail && (
+                <p className="text-xs text-slate-400">
+                  {parseRecipients(testEmail).length} {t('settings.testEmailRecipientCount')}
+                </p>
+              )}
+              {!testEmailError && !testEmail && (
+                <p className="text-xs text-slate-400">{t('settings.testEmailHint')}</p>
+              )}
+            </div>
+          </Field>
+
+          {/* Subject */}
+          <Field label={t('settings.testEmailSubjectLabel')}>
+            <div className="space-y-1">
+              <input
+                className={inputCls + (testSubjectError ? ' border-red-400 focus:ring-red-400' : '')}
+                type="text"
+                value={testSubject}
+                onChange={e => {
+                  setTestSubject(e.target.value);
+                  setTestSubjectError(e.target.value.trim() ? null : t('settings.testEmailSubjectRequired'));
+                }}
+                disabled={testMutation.isPending}
+              />
+              {testSubjectError && (
+                <p className="text-xs text-red-600 font-medium">{testSubjectError}</p>
+              )}
+            </div>
+          </Field>
+
+          {/* Message */}
+          <Field label={t('settings.testEmailMessageLabel')}>
+            <div className="space-y-1">
+              <textarea
+                className={inputCls + ' resize-y min-h-[80px]' + (testMessageError ? ' border-red-400 focus:ring-red-400' : '')}
+                value={testMessage}
+                onChange={e => {
+                  setTestMessage(e.target.value);
+                  setTestMessageError(e.target.value.trim() ? null : t('settings.testEmailMessageRequired'));
+                }}
+                disabled={testMutation.isPending}
+                rows={3}
+              />
+              {testMessageError && (
+                <p className="text-xs text-red-600 font-medium">{testMessageError}</p>
+              )}
+            </div>
+          </Field>
+
+          <div className="flex items-center justify-between pt-1">
+            {testMutation.isPending && (
+              <p className="text-xs text-slate-500">{t('settings.testEmailWait')}</p>
+            )}
+            <div className="ms-auto">
+              <button
+                onClick={() => {
+                  let hasError = false;
+                  if (!testEmail) { setTestEmailError(t('settings.testEmailRequired')); hasError = true; }
+                  if (!testSubject.trim()) { setTestSubjectError(t('settings.testEmailSubjectRequired')); hasError = true; }
+                  if (!testMessage.trim()) { setTestMessageError(t('settings.testEmailMessageRequired')); hasError = true; }
+                  if (hasError || !!testEmailError || !!testSubjectError || !!testMessageError) return;
+                  testMutation.mutate();
+                }}
+                disabled={testMutation.isPending}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {testMutation.isPending
+                  ? <><Loader2 className="h-4 w-4 animate-spin" />{t('settings.testEmailSending')}</>
+                  : <><Send className="h-4 w-4" />{t('settings.testEmail')}</>}
+              </button>
+            </div>
           </div>
-          {testMutation.isPending && (
-            <p className="text-xs text-slate-500">{t('settings.testEmailWait')}</p>
-          )}
         </div>
       </SectionCard>
 

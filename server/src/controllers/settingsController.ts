@@ -78,9 +78,34 @@ function readableSmtpError(err: unknown): string {
 
 // ─── Test email ───────────────────────────────────────────────────────────────
 
+const EMAIL_RE = /^[^\s@,;'"<>]+@[^\s@,;'"<>]+\.[^\s@,;'"<>]{2,}$/;
+
+function parseAndValidateRecipients(raw: unknown): string[] {
+  // Accept either a pre-parsed array from the client or a raw string
+  const list: string[] = Array.isArray(raw)
+    ? raw.map(String).map(s => s.trim()).filter(Boolean)
+    : String(raw).split(',').map(s => s.trim()).filter(Boolean);
+
+  if (list.length === 0) throw new AppError('Recipient email is required', 400);
+
+  const invalid = list.filter(e => !EMAIL_RE.test(e));
+  if (invalid.length > 0)
+    throw new AppError(`Invalid email address${invalid.length > 1 ? 'es' : ''}: ${invalid.join(', ')}`, 400);
+
+  return list;
+}
+
+function validateTestEmailBody(body: Record<string, unknown>): { subject: string; message: string } {
+  const subject = typeof body.subject === 'string' ? body.subject.trim() : '';
+  const message = typeof body.message === 'string' ? body.message.trim() : '';
+  if (!subject) throw new AppError('Subject is required', 400);
+  if (!message) throw new AppError('Message is required', 400);
+  return { subject, message };
+}
+
 export const testEmail = asyncHandler(async (req: Request, res: Response) => {
-  const { to } = req.body;
-  if (!to) throw new AppError('Recipient email is required', 400);
+  const recipients = parseAndValidateRecipients(req.body.to);
+  const { subject, message } = validateTestEmailBody(req.body);
 
   // Always load fresh — no cache
   const settings = await getSystemSettings();
@@ -108,9 +133,9 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
     const client = new Resend(apiKey);
     const result = await client.emails.send({
       from,
-      to,
-      subject: 'Mirsad – Resend Test',
-      html: `<p>Resend delivery test from Mirsad. From: <strong>${from}</strong>. If you received this, your Resend configuration is correct.</p>`,
+      to: recipients,
+      subject,
+      html: `<p>${message}</p>`,
     });
 
     if (result.error) {
@@ -118,7 +143,7 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
       throw new AppError(`Resend error: ${result.error.message}`, 502);
     }
 
-    return res.json({ success: true, message: `Test email sent via Resend to ${to}`, id: result.data?.id });
+    return res.json({ success: true, message: `Test email sent via Resend to ${recipients.join(', ')}`, id: result.data?.id });
   }
 
   // ── SMTP path ─────────────────────────────────────────────────────────────────
@@ -150,9 +175,9 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
     await Promise.race([
       transporter.sendMail({
         from: `"${settings.smtpFromName || 'Mirsad'}" <${settings.smtpFromEmail || settings.smtpUser}>`,
-        to,
-        subject: 'Mirsad – SMTP Test',
-        html: `<p>SMTP test from Mirsad. Host: <strong>${settings.smtpHost}:${port}</strong>. If you received this, your settings are correct.</p>`,
+        to: recipients,
+        subject,
+        html: `<p>${message}</p>`,
       }),
       timeout,
     ]);
@@ -161,5 +186,5 @@ export const testEmail = asyncHandler(async (req: Request, res: Response) => {
     throw new AppError(readableSmtpError(err), 502);
   }
 
-  res.json({ success: true, message: `Test email sent via SMTP to ${to}` });
+  res.json({ success: true, message: `Test email sent via SMTP to ${recipients.join(', ')}` });
 });
