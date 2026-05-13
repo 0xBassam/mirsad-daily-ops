@@ -2,6 +2,8 @@ export type UserRole = 'superadmin' | 'admin' | 'supervisor' | 'assistant_superv
 
 export type OrgPlan = 'trial' | 'starter' | 'professional' | 'enterprise';
 
+export type OrgPlan = 'trial' | 'starter' | 'professional' | 'enterprise';
+
 export interface User {
   _id: string;
   fullName: string;
