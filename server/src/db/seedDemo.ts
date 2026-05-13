@@ -75,12 +75,12 @@ export async function seedDemo(): Promise<void> {
     _id: orgId, name: 'Demo Organization', slug: 'demo',
     plan: 'enterprise', status: 'active',
     maxUsers: 999, maxProjects: 99, storageLimitMb: 102400,
-    featureFlags: new Map(Object.entries({
+    featureFlags: {
       dailyPlans: true, floorChecks: true, inventory: true, purchaseOrders: true,
       suppliers: true, batches: true, transfers: true, receiving: true,
       maintenance: true, clientRequests: true, fridgeChecks: true,
       correctiveActions: true, advancedReports: true, export: true, whiteLabel: false,
-    })),
+    },
     settings: {},
     createdAt: now, updatedAt: now,
   });

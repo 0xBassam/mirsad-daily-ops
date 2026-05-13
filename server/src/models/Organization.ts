@@ -141,7 +141,6 @@ const organizationSchema = new Schema<IOrganization>(
   { timestamps: true }
 );
 
-organizationSchema.index({ slug: 1 }, { unique: true });
 organizationSchema.index({ status: 1 });
 organizationSchema.index({ plan: 1 });
 
