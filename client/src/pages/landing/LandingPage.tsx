@@ -209,6 +209,7 @@ const plans = [
     name: 'Trial',
     price: 'Free',
     period: '14 days',
+    note: 'No credit card required',
     description: 'Full platform access to evaluate fit for your team.',
     cta: 'Start Free Trial',
     ctaTo: '/signup',
@@ -217,8 +218,9 @@ const plans = [
   },
   {
     name: 'Starter',
-    price: '$99',
-    period: '/month',
+    price: '36,000',
+    period: ' SAR/yr',
+    note: '3,000 SAR/month',
     description: 'For small teams running a single location.',
     cta: 'Get Started',
     ctaTo: '/signup',
@@ -227,8 +229,9 @@ const plans = [
   },
   {
     name: 'Professional',
-    price: '$299',
-    period: '/month',
+    price: '72,000',
+    period: ' SAR/yr',
+    note: '6,000 SAR/month',
     description: 'Multi-site teams with advanced workflows.',
     cta: 'Start Trial',
     ctaTo: '/signup',
@@ -238,13 +241,14 @@ const plans = [
   },
   {
     name: 'Enterprise',
-    price: 'Custom',
-    period: '',
+    price: '180,000+',
+    period: ' SAR/yr',
+    note: 'Custom terms available',
     description: 'Large-scale hospitality and facility groups.',
     cta: 'Contact Us',
     ctaTo: '/signup',
     highlight: false,
-    features: ['Unlimited users', 'Unlimited sites', '100 GB storage', 'Everything in Professional', 'Maintenance requests', 'Client request lifecycle', 'White-label & custom domain', 'Dedicated support'],
+    features: ['Unlimited users', 'Unlimited sites', '100 GB storage', 'Everything in Professional', 'Maintenance requests', 'Client request lifecycle', 'SLA & dedicated support', 'Custom onboarding'],
   },
 ];
 
@@ -268,10 +272,13 @@ function Pricing() {
               )}
               <div className="mb-5">
                 <p className={`text-sm font-semibold mb-2 ${plan.highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{plan.name}</p>
-                <div className="flex items-end gap-1 mb-2">
+                <div className="flex items-end gap-1 mb-1">
                   <span className={`text-4xl font-extrabold ${plan.highlight ? 'text-white' : 'text-white'}`}>{plan.price}</span>
                   {plan.period && <span className={`text-sm pb-1 ${plan.highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{plan.period}</span>}
                 </div>
+                {plan.note && (
+                  <p className={`text-xs mb-2 ${plan.highlight ? 'text-indigo-300' : 'text-slate-500'}`}>{plan.note}</p>
+                )}
                 <p className={`text-sm ${plan.highlight ? 'text-indigo-200' : 'text-slate-400'}`}>{plan.description}</p>
               </div>
 
