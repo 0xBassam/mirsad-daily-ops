@@ -6,6 +6,7 @@ import apiClient from '../../api/client';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { Plus, Trash2, ArrowLeft } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface PlanLine { floor: string; item: string; plannedQty: number; notes: string; }
 
@@ -13,10 +14,12 @@ export function DailyPlanFormPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const userProject = (user as any)?.project;
   const qc = useQueryClient();
   const isEdit = !!id;
 
-  const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], project: '', building: '', shift: 'morning', status: 'draft', notes: '' });
+  const [form, setForm] = useState({ date: new Date().toISOString().split('T')[0], building: '', shift: 'morning', status: 'draft', notes: '' });
   const [lines, setLines] = useState<PlanLine[]>([{ floor: '', item: '', plannedQty: 10, notes: '' }]);
   const [initialized, setInitialized] = useState(false);
 
@@ -29,7 +32,6 @@ export function DailyPlanFormPage() {
   if (isEdit && planData && !initialized) {
     setForm({
       date: planData.date?.split('T')[0] || '',
-      project: typeof planData.project === 'object' ? planData.project._id : planData.project,
       building: typeof planData.building === 'object' ? planData.building._id : planData.building,
       shift: planData.shift,
       status: planData.status,
@@ -46,8 +48,7 @@ export function DailyPlanFormPage() {
     setInitialized(true);
   }
 
-  const { data: projects } = useQuery({ queryKey: ['projects-all'], queryFn: () => apiClient.get('/projects', { params: { limit: 100 } }).then(r => r.data) });
-  const { data: buildings } = useQuery({ queryKey: ['buildings-all'], queryFn: () => apiClient.get('/buildings', { params: { limit: 100 } }).then(r => r.data) });
+  const { data: buildings } = useQuery({ queryKey: ['buildings-all', userProject], queryFn: () => apiClient.get('/buildings', { params: { limit: 100, project: userProject || undefined } }).then(r => r.data) });
   const { data: floors } = useQuery({ queryKey: ['floors-all'], queryFn: () => apiClient.get('/floors', { params: { limit: 100, status: 'active' } }).then(r => r.data) });
   const { data: items } = useQuery({ queryKey: ['items-all'], queryFn: () => apiClient.get('/items', { params: { limit: 200, status: 'active' } }).then(r => r.data) });
 
@@ -69,7 +70,7 @@ export function DailyPlanFormPage() {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    saveMutation.mutate({ ...form, lines });
+    saveMutation.mutate({ ...form, project: userProject || undefined, lines });
   }
 
   return (
@@ -88,13 +89,6 @@ export function DailyPlanFormPage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.date')}</label>
               <input type="date" className="input" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} required />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.project')}</label>
-              <select className="input" value={form.project} onChange={e => setForm({ ...form, project: e.target.value })} required>
-                <option value="">{t('common.selectProject')}</option>
-                {projects?.data?.map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
-              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.building')}</label>

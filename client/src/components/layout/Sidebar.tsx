@@ -31,30 +31,30 @@ interface NavSection {
 const navSections: NavSection[] = [
   {
     items: [
-      { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'client'] },
+      { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'client'] },
     ],
   },
   {
     labelKey: 'nav.section.operations',
     items: [
-      { to: '/daily-plans',        icon: ClipboardList,  labelKey: 'nav.dailyPlans',        roles: ['admin', 'supervisor', 'project_manager'] },
-      { to: '/floor-checks',       icon: CheckSquare,    labelKey: 'nav.floorChecks',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
+      { to: '/daily-plans',        icon: ClipboardList,  labelKey: 'nav.dailyPlans',        roles: ['admin', 'supervisor', 'project_manager', 'operations'] },
+      { to: '/floor-checks',       icon: CheckSquare,    labelKey: 'nav.floorChecks',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations'] },
       { to: '/approvals',          icon: GitBranch,      labelKey: 'nav.approvals',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/purchase-orders',    icon: ShoppingCart,   labelKey: 'nav.purchaseOrders',    roles: ['admin', 'project_manager', 'assistant_supervisor'] },
-      { to: '/spoilage',           icon: Trash2,           labelKey: 'nav.spoilageRecording', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/corrective-actions', icon: ShieldCheck,    labelKey: 'nav.correctiveActions', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/transfers',          icon: ArrowRightLeft,  labelKey: 'nav.transfers',         roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/receiving',          icon: Truck,           labelKey: 'nav.receiving',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/maintenance',        icon: Wrench,          labelKey: 'nav.maintenance',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/client-requests',    icon: MessageSquare,   labelKey: 'nav.clientRequests', roleLabelKeys: { client: 'nav.myRequests' }, roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'client'] },
-      { to: '/menu',               icon: UtensilsCrossed, labelKey: 'nav.menu',              roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager'] },
+      { to: '/purchase-orders',    icon: ShoppingCart,   labelKey: 'nav.purchaseOrders',    roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse'] },
+      { to: '/spoilage',           icon: Trash2,           labelKey: 'nav.spoilageRecording', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations', 'warehouse', 'kitchen'] },
+      { to: '/corrective-actions', icon: ShieldCheck,    labelKey: 'nav.correctiveActions', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations'] },
+      { to: '/transfers',          icon: ArrowRightLeft,  labelKey: 'nav.transfers',         roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'warehouse'] },
+      { to: '/receiving',          icon: Truck,           labelKey: 'nav.receiving',         roles: ['assistant_supervisor', 'project_manager', 'admin', 'warehouse'] },
+      { to: '/maintenance',        icon: Wrench,          labelKey: 'nav.maintenance',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations'] },
+      { to: '/client-requests',    icon: MessageSquare,   labelKey: 'nav.clientRequests', roleLabelKeys: { client: 'nav.myRequests' }, roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations', 'client'] },
+      { to: '/menu',               icon: UtensilsCrossed, labelKey: 'nav.menu',              roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations'] },
     ],
   },
   {
     labelKey: 'nav.section.inventory',
     items: [
       {
-        to: '/inventory', icon: Utensils, labelKey: 'nav.inventory', roles: ['admin', 'project_manager', 'assistant_supervisor'],
+        to: '/inventory', icon: Utensils, labelKey: 'nav.inventory', roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse', 'kitchen'],
         children: [
           { to: '/inventory/food',      labelKey: 'nav.foodInventory' },
           { to: '/inventory/materials', labelKey: 'nav.materialsWarehouse' },
@@ -62,7 +62,7 @@ const navSections: NavSection[] = [
         ],
       },
       {
-        to: '/food-safety', icon: Thermometer, labelKey: 'nav.foodSafety', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'],
+        to: '/food-safety', icon: Thermometer, labelKey: 'nav.foodSafety', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'warehouse'],
         children: [
           { to: '/fridge-checks',   labelKey: 'nav.fridgeChecks' },
           { to: '/expiry-tracking', labelKey: 'nav.expiryTracking' },
@@ -70,7 +70,7 @@ const navSections: NavSection[] = [
         ],
       },
       {
-        to: '/traceability', icon: Boxes, labelKey: 'nav.traceability', roles: ['admin', 'project_manager', 'assistant_supervisor'],
+        to: '/traceability', icon: Boxes, labelKey: 'nav.traceability', roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse'],
         children: [
           { to: '/batches',   labelKey: 'nav.batches' },
           { to: '/suppliers', labelKey: 'nav.suppliers' },
@@ -103,7 +103,7 @@ const navSections: NavSection[] = [
   {
     labelKey: 'nav.section.reportsGov',
     items: [
-      { to: '/reports',    icon: FileText, labelKey: 'nav.reports',   roles: ['admin', 'project_manager', 'client'] },
+      { to: '/reports',    icon: FileText, labelKey: 'nav.reports',   roles: ['admin', 'project_manager', 'supervisor', 'operations', 'warehouse', 'client'] },
       { to: '/audit-logs', icon: BookOpen, labelKey: 'nav.auditLogs', roles: ['admin'] },
     ],
   },

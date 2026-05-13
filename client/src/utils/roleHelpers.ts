@@ -5,7 +5,10 @@ export const ROLE_LABELS: Record<UserRole, string> = {
   supervisor: 'Supervisor',
   assistant_supervisor: 'Assistant Supervisor',
   project_manager: 'Project Manager',
-  client: 'Client / Ministry',
+  client: 'Client',
+  operations: 'Operations',
+  warehouse: 'Warehouse',
+  kitchen: 'Kitchen',
 };
 
 export function canAccess(userRole: UserRole, allowedRoles: UserRole[]): boolean {
