@@ -20,9 +20,10 @@ export function DailyPlansPage() {
   const [page, setPage] = useState(1);
   const qc = useQueryClient();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ['daily-plans', page],
     queryFn: () => apiClient.get('/daily-plans', { params: { page, limit: 20 } }).then(r => r.data),
+    retry: false,
   });
 
   const copyMutation = useMutation({
@@ -42,6 +43,12 @@ export function DailyPlansPage() {
   });
 
   if (isLoading) return <PageLoader />;
+  if (isError) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3 text-center">
+      <p className="text-slate-500">{t('common.loadError')}</p>
+      <Link to="/dashboard" className="btn-secondary text-sm">{t('common.backToDashboard')}</Link>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
@@ -70,9 +77,9 @@ export function DailyPlansPage() {
             )}
             {data?.data?.map((p: DailyPlan) => (
               <tr key={p._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/daily-plans/${p._id}`)}>
-                <td className="px-4 py-3 font-medium text-slate-900">{formatDate(p.date)}</td>
-                <td className="px-4 py-3 text-slate-500">{typeof p.project === 'object' ? p.project.name : '-'}</td>
-                <td className="px-4 py-3 text-slate-500">{typeof p.building === 'object' ? p.building.name : '-'}</td>
+                <td className="px-4 py-3 font-medium text-slate-900">{p.date ? formatDate(p.date) : '—'}</td>
+                <td className="px-4 py-3 text-slate-500">{p.project && typeof p.project === 'object' ? p.project.name : '—'}</td>
+                <td className="px-4 py-3 text-slate-500">{p.building && typeof p.building === 'object' ? p.building.name : '—'}</td>
                 <td className="px-4 py-3 text-slate-500">{p.shift ? t(`status.${p.shift}`) : '-'}</td>
                 <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
                 <td className="px-4 py-3 text-slate-500">{p.createdBy?.fullName || '—'}</td>

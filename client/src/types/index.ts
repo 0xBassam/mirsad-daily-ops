@@ -61,7 +61,7 @@ export interface DailyPlan {
   project: { _id: string; name: string } | string;
   building: { _id: string; name: string } | string;
   shift: 'morning' | 'afternoon' | 'evening' | 'night';
-  status: 'draft' | 'published' | 'closed';
+  status: 'draft' | 'published' | 'in_progress' | 'completed' | 'closed';
   notes?: string;
   createdBy?: { _id: string; fullName: string };
   createdAt: string;

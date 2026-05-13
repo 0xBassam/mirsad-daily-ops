@@ -108,7 +108,7 @@ export function DailyPlanFormPage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.status')}</label>
               <select className="input" value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}>
-                {['draft', 'published', 'closed'].map(s => (
+                {['draft', 'published', 'in_progress', 'completed', 'closed'].map(s => (
                   <option key={s} value={s}>{t(`status.${s}`)}</option>
                 ))}
               </select>

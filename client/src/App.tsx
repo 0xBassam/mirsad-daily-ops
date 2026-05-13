@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
@@ -6,6 +6,16 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { ClientDashboardPage } from './pages/dashboard/ClientDashboardPage';
 import { useAuth } from './contexts/AuthContext';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+
+function PageBoundary() {
+  const location = useLocation();
+  return (
+    <ErrorBoundary key={location.pathname}>
+      <Outlet />
+    </ErrorBoundary>
+  );
+}
 
 function DashboardRouter() {
   const { user } = useAuth();
@@ -69,6 +79,7 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
+              <Route element={<PageBoundary />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardRouter />} />
               <Route path="/users" element={<UsersPage />} />
@@ -123,6 +134,7 @@ export default function App() {
               <Route path="/audit-logs" element={<AuditLogsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Route>{/* PageBoundary */}
             </Route>
           </Route>
         </Routes>

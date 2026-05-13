@@ -5,7 +5,7 @@ export interface IDailyPlan extends Document {
   project: mongoose.Types.ObjectId;
   building: mongoose.Types.ObjectId;
   shift: 'morning' | 'afternoon' | 'evening' | 'night';
-  status: 'draft' | 'published' | 'closed';
+  status: 'draft' | 'published' | 'in_progress' | 'completed' | 'closed';
   notes?: string;
   copiedFromDate?: Date;
   createdBy?: mongoose.Types.ObjectId;
@@ -23,7 +23,7 @@ const dailyPlanSchema = new Schema<IDailyPlan>(
       enum: ['morning', 'afternoon', 'evening', 'night'],
       default: 'morning',
     },
-    status: { type: String, enum: ['draft', 'published', 'closed'], default: 'draft' },
+    status: { type: String, enum: ['draft', 'published', 'in_progress', 'completed', 'closed'], default: 'draft' },
     notes: { type: String },
     copiedFromDate: { type: Date },
     createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
