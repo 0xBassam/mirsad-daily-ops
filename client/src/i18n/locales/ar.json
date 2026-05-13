@@ -42,7 +42,9 @@
     "menu": "المنيو",
     "settings": "الإعدادات",
     "projectsLocations": "المشاريع والمواقع",
-    "itemsMaster": "قائمة الأصناف",
+    "itemsMaster": "تعريف الأصناف",
+    "itemsMasterSubtitle": "تعريف أسماء الأصناف وأنواعها وفئاتها والحدود الشهرية",
+    "inventory": "أرصدة المخزون",
     "section": {
       "operations": "العمليات",
       "inventory": "المخزون",
@@ -137,6 +139,7 @@
     "addBuilding": "إضافة مبنى",
     "addFloor": "إضافة طابق",
     "addItem": "إضافة صنف",
+    "editItem": "تعديل صنف",
     "addCategory": "إضافة فئة",
     "addUser": "إضافة مستخدم",
     "newPlan": "خطة جديدة",

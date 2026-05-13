@@ -42,7 +42,9 @@
     "menu": "Menu",
     "settings": "Settings",
     "projectsLocations": "Projects & Locations",
-    "itemsMaster": "Items Master",
+    "itemsMaster": "Item Master",
+    "itemsMasterSubtitle": "Define item names, types, categories, and monthly thresholds",
+    "inventory": "Stock Balances",
     "section": {
       "operations": "Operations",
       "inventory": "Inventory",
@@ -137,6 +139,7 @@
     "addBuilding": "Add Building",
     "addFloor": "Add Floor",
     "addItem": "Add Item",
+    "editItem": "Edit Item",
     "addCategory": "Add Category",
     "addUser": "Add User",
     "newPlan": "New Plan",
