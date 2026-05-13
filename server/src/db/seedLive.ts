@@ -22,6 +22,7 @@ export async function seedLive(): Promise<void> {
   const DEMO_PASS = await hashPassword('demo1234');
 
   // ─── IDs ──────────────────────────────────────────────────────────────────────
+  const orgId = id();
   const adminId = id(), supervisorId = id(), assistantId = id(), managerId = id(), clientId = id();
   const projectId = id(), buildingId = id();
 
@@ -132,28 +133,43 @@ export async function seedLive(): Promise<void> {
   const foodItemIds = [item_sw1, item_sw2, item_sw3, item_ml1, item_ml2, item_ml3, item_sl1, item_sl2, item_fr1, item_bk1, item_bk2, item_sn1, item_sn2, item_sn3, item_sn4, item_sn5, item_sn6, item_sn7];
   const matItemIds  = [item_cf1, item_cf2, item_cf3, item_cf4, item_cf5, item_cf6, item_tea1, item_tea2, item_tea3, item_tea4, item_tea5, item_mk1, item_mk2, item_mk3, item_mk4, item_mk5, item_mk6, item_mk7, item_mk8, item_w1, item_w2, item_w3, item_w4, item_j1, item_j2, item_cp1, item_cp2, item_cp3, item_cp4, item_cp5];
 
+  // ─── Organization ────────────────────────────────────────────────────────────────
+  await db.collection('organizations').insertOne({
+    _id: orgId, name: 'Demo Organization', slug: 'demo',
+    plan: 'enterprise', status: 'active',
+    maxUsers: 999, maxProjects: 99, storageLimitMb: 102400,
+    featureFlags: new Map(Object.entries({
+      dailyPlans: true, floorChecks: true, inventory: true, purchaseOrders: true,
+      suppliers: true, batches: true, transfers: true, receiving: true,
+      maintenance: true, clientRequests: true, fridgeChecks: true,
+      correctiveActions: true, advancedReports: true, export: true, whiteLabel: false,
+    })),
+    settings: {},
+    createdAt: now, updatedAt: now,
+  });
+
   // ─── Users ────────────────────────────────────────────────────────────────────
   await db.collection('users').insertMany([
-    { _id: adminId,      fullName: 'أحمد الراشدي',    email: 'admin@mirsad.com',      password: DEMO_PASS, role: 'admin',               status: 'active', createdAt: now, updatedAt: now },
-    { _id: supervisorId, fullName: 'خالد العتيبي',    email: 'supervisor@mirsad.com', password: DEMO_PASS, role: 'supervisor',           project: projectId, status: 'active', createdAt: now, updatedAt: now },
-    { _id: assistantId,  fullName: 'فاطمة الزهراني',  email: 'assistant@mirsad.com',  password: DEMO_PASS, role: 'assistant_supervisor', project: projectId, status: 'active', createdAt: now, updatedAt: now },
-    { _id: managerId,    fullName: 'محمد الغامدي',    email: 'manager@mirsad.com',    password: DEMO_PASS, role: 'project_manager',      project: projectId, status: 'active', createdAt: now, updatedAt: now },
-    { _id: clientId,     fullName: 'نورة الشهري',     email: 'client@mirsad.com',     password: DEMO_PASS, role: 'client',               project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: adminId,      fullName: 'أحمد الراشدي',    email: 'admin@mirsad.com',      password: DEMO_PASS, role: 'admin',               organization: orgId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: supervisorId, fullName: 'خالد العتيبي',    email: 'supervisor@mirsad.com', password: DEMO_PASS, role: 'supervisor',           organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: assistantId,  fullName: 'فاطمة الزهراني',  email: 'assistant@mirsad.com',  password: DEMO_PASS, role: 'assistant_supervisor', organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: managerId,    fullName: 'محمد الغامدي',    email: 'manager@mirsad.com',    password: DEMO_PASS, role: 'project_manager',      organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
+    { _id: clientId,     fullName: 'نورة الشهري',     email: 'client@mirsad.com',     password: DEMO_PASS, role: 'client',               organization: orgId, project: projectId, status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   // ─── Project / Building / Floors ─────────────────────────────────────────────
   await db.collection('projects').insertMany([
-    { _id: projectId, name: 'CDMDNA Building Operations', clientName: 'وزارة الدفاع', locationCode: 'CDMDNA-01', status: 'active', createdBy: adminId, createdAt: now, updatedAt: now },
+    { _id: projectId, organization: orgId, name: 'Demo Building Operations', clientName: 'Demo Client', locationCode: 'DEMO-01', status: 'active', createdBy: adminId, createdAt: now, updatedAt: now },
   ]);
 
   await db.collection('buildings').insertMany([
-    { _id: buildingId, project: projectId, name: 'CDMDNA Main Building', status: 'active', createdAt: now, updatedAt: now },
+    { _id: buildingId, organization: orgId, project: projectId, name: 'Demo Main Building', status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   const floorNames = ['2 Floor', '3 Floor', '4 Floor', '19 Floor', 'MAKASSB', 'SECURITY', 'KAFAA-1', 'KAFAA-2'];
   await db.collection('floors').insertMany(
     floorIds.map((fid, i) => ({
-      _id: fid, building: buildingId, project: projectId,
+      _id: fid, organization: orgId, building: buildingId, project: projectId,
       name: floorNames[i], locationCode: `FL-${floorNames[i].replace(/\s/g, '-')}`,
       status: 'active', createdAt: now, updatedAt: now,
     }))
@@ -161,111 +177,111 @@ export async function seedLive(): Promise<void> {
 
   // ─── Categories ───────────────────────────────────────────────────────────────
   await db.collection('itemcategories').insertMany([
-    { _id: catSandwichId,  name: 'ساندويتشات',            type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catMealsId,     name: 'وجبات',                  type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSaladId,     name: 'سلطات وخضار',            type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catFruitId,     name: 'فواكه',                  type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catBakeryId,    name: 'مخبوزات ومعجنات',        type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catSnacksId,    name: 'وجبات خفيفة',            type: 'food',     status: 'active', createdAt: now, updatedAt: now },
-    { _id: catCoffeeId,    name: 'قهوة',                   type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catTeaId,       name: 'شاي ومشروبات ساخنة',    type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catMilkId,      name: 'حليب وإضافات',          type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catWaterId,     name: 'مياه ومشروبات باردة',   type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catJuiceId,     name: 'عصائر',                  type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catCupsId,      name: 'أكواب وأطباق',          type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catEquipmentId, name: 'معدات',                  type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catMeetingId,   name: 'خدمات الاجتماعات',      type: 'material', status: 'active', createdAt: now, updatedAt: now },
-    { _id: catHRId,        name: 'موارد بشرية',            type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSandwichId, organization: orgId, name: 'ساندويتشات',            type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catMealsId, organization: orgId, name: 'وجبات',                  type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSaladId, organization: orgId, name: 'سلطات وخضار',            type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catFruitId, organization: orgId, name: 'فواكه',                  type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catBakeryId, organization: orgId, name: 'مخبوزات ومعجنات',        type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catSnacksId, organization: orgId, name: 'وجبات خفيفة',            type: 'food',     status: 'active', createdAt: now, updatedAt: now },
+    { _id: catCoffeeId, organization: orgId, name: 'قهوة',                   type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catTeaId, organization: orgId, name: 'شاي ومشروبات ساخنة',    type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catMilkId, organization: orgId, name: 'حليب وإضافات',          type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catWaterId, organization: orgId, name: 'مياه ومشروبات باردة',   type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catJuiceId, organization: orgId, name: 'عصائر',                  type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catCupsId, organization: orgId, name: 'أكواب وأطباق',          type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catEquipmentId, organization: orgId, name: 'معدات',                  type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catMeetingId, organization: orgId, name: 'خدمات الاجتماعات',      type: 'material', status: 'active', createdAt: now, updatedAt: now },
+    { _id: catHRId, organization: orgId, name: 'موارد بشرية',            type: 'material', status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   // ─── Items ────────────────────────────────────────────────────────────────────
   await db.collection('items').insertMany([
     // Sandwiches
-    { _id: item_sw1,  name: 'ساندويتش فطور',                              category: catSandwichId,  type: 'food',     unit: 'قطعة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sw2,  name: 'ساندويتش',                                   category: catSandwichId,  type: 'food',     unit: 'قطعة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sw3,  name: 'ساندويتش خالي من الغلوتين',                  category: catSandwichId,  type: 'food',     unit: 'قطعة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sw1, organization: orgId, name: 'ساندويتش فطور',                              category: catSandwichId,  type: 'food',     unit: 'قطعة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sw2, organization: orgId, name: 'ساندويتش',                                   category: catSandwichId,  type: 'food',     unit: 'قطعة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sw3, organization: orgId, name: 'ساندويتش خالي من الغلوتين',                  category: catSandwichId,  type: 'food',     unit: 'قطعة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
     // Meals
-    { _id: item_ml1,  name: 'وجبة إفطار خفيفة',                          category: catMealsId,     type: 'food',     unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_ml2,  name: 'وجبة غداء خفيفة',                           category: catMealsId,     type: 'food',     unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_ml3,  name: 'وجبة رئيسية',                               category: catMealsId,     type: 'food',     unit: 'علبة',    limitQty: 250,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_ml1, organization: orgId, name: 'وجبة إفطار خفيفة',                          category: catMealsId,     type: 'food',     unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_ml2, organization: orgId, name: 'وجبة غداء خفيفة',                           category: catMealsId,     type: 'food',     unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_ml3, organization: orgId, name: 'وجبة رئيسية',                               category: catMealsId,     type: 'food',     unit: 'علبة',    limitQty: 250,  status: 'active', createdAt: now, updatedAt: now },
     // Salads & Vegetables
-    { _id: item_sl1,  name: 'سلطه',                                       category: catSaladId,     type: 'food',     unit: 'طبق',     limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sl2,  name: 'خضار منوعة',                                 category: catSaladId,     type: 'food',     unit: 'كجم',     limitQty: 150,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sl1, organization: orgId, name: 'سلطه',                                       category: catSaladId,     type: 'food',     unit: 'طبق',     limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sl2, organization: orgId, name: 'خضار منوعة',                                 category: catSaladId,     type: 'food',     unit: 'كجم',     limitQty: 150,  status: 'active', createdAt: now, updatedAt: now },
     // Fruits
-    { _id: item_fr1,  name: 'فواكه متنوعة',                              category: catFruitId,     type: 'food',     unit: 'كجم',     limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_fr1, organization: orgId, name: 'فواكه متنوعة',                              category: catFruitId,     type: 'food',     unit: 'كجم',     limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
     // Bakery
-    { _id: item_bk1,  name: 'معجنات صغيرة',                              category: catBakeryId,    type: 'food',     unit: 'قطعة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_bk2,  name: 'مخبوزات صغيرة',                             category: catBakeryId,    type: 'food',     unit: 'قطعة',    limitQty: 350,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_bk1, organization: orgId, name: 'معجنات صغيرة',                              category: catBakeryId,    type: 'food',     unit: 'قطعة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_bk2, organization: orgId, name: 'مخبوزات صغيرة',                             category: catBakeryId,    type: 'food',     unit: 'قطعة',    limitQty: 350,  status: 'active', createdAt: now, updatedAt: now },
     // Snacks
-    { _id: item_sn1,  name: 'زبادي (يوناني)',                             category: catSnacksId,    type: 'food',     unit: 'حبة',     limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sn2,  name: 'مكسرات منوعة',                              category: catSnacksId,    type: 'food',     unit: 'كيس',     limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sn3,  name: 'الواح شوفان',                               category: catSnacksId,    type: 'food',     unit: 'قطعة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sn4,  name: 'بسكويت',                                    category: catSnacksId,    type: 'food',     unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sn5,  name: 'جرانولا',                                   category: catSnacksId,    type: 'food',     unit: 'علبة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sn6,  name: 'حلويات قليلة السعرات',                      category: catSnacksId,    type: 'food',     unit: 'قطعة',    limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_sn7,  name: 'رقائق بطاطس صحية',                          category: catSnacksId,    type: 'food',     unit: 'كيس',     limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sn1, organization: orgId, name: 'زبادي (يوناني)',                             category: catSnacksId,    type: 'food',     unit: 'حبة',     limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sn2, organization: orgId, name: 'مكسرات منوعة',                              category: catSnacksId,    type: 'food',     unit: 'كيس',     limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sn3, organization: orgId, name: 'الواح شوفان',                               category: catSnacksId,    type: 'food',     unit: 'قطعة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sn4, organization: orgId, name: 'بسكويت',                                    category: catSnacksId,    type: 'food',     unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sn5, organization: orgId, name: 'جرانولا',                                   category: catSnacksId,    type: 'food',     unit: 'علبة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sn6, organization: orgId, name: 'حلويات قليلة السعرات',                      category: catSnacksId,    type: 'food',     unit: 'قطعة',    limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_sn7, organization: orgId, name: 'رقائق بطاطس صحية',                          category: catSnacksId,    type: 'food',     unit: 'كيس',     limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
     // Coffee
-    { _id: item_cf1,  name: 'قهوة إسبريسو',                              category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cf2,  name: 'قهوة سوداء',                                category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 80,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cf3,  name: 'قهوة تركية',                                category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 50,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cf4,  name: 'قهوة سعودية',                               category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 120,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cf5,  name: 'هيل',                                        category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cf6,  name: 'زعفران',                                     category: catCoffeeId,    type: 'material', unit: 'جرام',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cf1, organization: orgId, name: 'قهوة إسبريسو',                              category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cf2, organization: orgId, name: 'قهوة سوداء',                                category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 80,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cf3, organization: orgId, name: 'قهوة تركية',                                category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 50,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cf4, organization: orgId, name: 'قهوة سعودية',                               category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 120,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cf5, organization: orgId, name: 'هيل',                                        category: catCoffeeId,    type: 'material', unit: 'كيلو',    limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cf6, organization: orgId, name: 'زعفران',                                     category: catCoffeeId,    type: 'material', unit: 'جرام',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
     // Tea & Hot Drinks
-    { _id: item_tea1, name: 'شاهي اسود ممتاز',                           category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_tea2, name: 'شاهي اخضر ممتاز',                           category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_tea3, name: 'شاي زهور',                                   category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_tea4, name: 'أظرف شاهي كرك',                             category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_tea5, name: 'خليط الشوكولاتة الساخنة',                   category: catTeaId,       type: 'material', unit: 'كيلو',    limitQty: 50,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_tea1, organization: orgId, name: 'شاهي اسود ممتاز',                           category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_tea2, organization: orgId, name: 'شاهي اخضر ممتاز',                           category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_tea3, organization: orgId, name: 'شاي زهور',                                   category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_tea4, organization: orgId, name: 'أظرف شاهي كرك',                             category: catTeaId,       type: 'material', unit: 'علبة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_tea5, organization: orgId, name: 'خليط الشوكولاتة الساخنة',                   category: catTeaId,       type: 'material', unit: 'كيلو',    limitQty: 50,   status: 'active', createdAt: now, updatedAt: now },
     // Milk & Additives
-    { _id: item_mk1,  name: 'حليب طازج',                                 category: catMilkId,      type: 'material', unit: 'لتر',     limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mk2,  name: 'حليب نباتي',                                category: catMilkId,      type: 'material', unit: 'لتر',     limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mk3,  name: 'حليب مكثف',                                 category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mk4,  name: 'حليب مبخر',                                 category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mk5,  name: 'سيروب بنكهات متعددة',                       category: catMilkId,      type: 'material', unit: 'زجاجة',   limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mk6,  name: 'كرتون أظرف سكر ابيض',                       category: catMilkId,      type: 'material', unit: 'كرتون',   limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mk7,  name: 'سكر دايت',                                  category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 150,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mk8,  name: 'أعواد خشبية',                               category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk1, organization: orgId, name: 'حليب طازج',                                 category: catMilkId,      type: 'material', unit: 'لتر',     limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk2, organization: orgId, name: 'حليب نباتي',                                category: catMilkId,      type: 'material', unit: 'لتر',     limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk3, organization: orgId, name: 'حليب مكثف',                                 category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk4, organization: orgId, name: 'حليب مبخر',                                 category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk5, organization: orgId, name: 'سيروب بنكهات متعددة',                       category: catMilkId,      type: 'material', unit: 'زجاجة',   limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk6, organization: orgId, name: 'كرتون أظرف سكر ابيض',                       category: catMilkId,      type: 'material', unit: 'كرتون',   limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk7, organization: orgId, name: 'سكر دايت',                                  category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 150,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mk8, organization: orgId, name: 'أعواد خشبية',                               category: catMilkId,      type: 'material', unit: 'علبة',    limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
     // Water & Cold Drinks
-    { _id: item_w1,   name: 'ماء',                                        category: catWaterId,     type: 'material', unit: 'زجاجة',   limitQty: 2000, status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_w2,   name: 'جالون مياه',                                category: catWaterId,     type: 'material', unit: 'جالون',   limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_w3,   name: 'مياه غازية',                                category: catWaterId,     type: 'material', unit: 'علبة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_w4,   name: 'مشروبات غازية',                             category: catWaterId,     type: 'material', unit: 'علبة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_w1, organization: orgId, name: 'ماء',                                        category: catWaterId,     type: 'material', unit: 'زجاجة',   limitQty: 2000, status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_w2, organization: orgId, name: 'جالون مياه',                                category: catWaterId,     type: 'material', unit: 'جالون',   limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_w3, organization: orgId, name: 'مياه غازية',                                category: catWaterId,     type: 'material', unit: 'علبة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_w4, organization: orgId, name: 'مشروبات غازية',                             category: catWaterId,     type: 'material', unit: 'علبة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
     // Juices
-    { _id: item_j1,   name: 'عصيرات طازجة يومية',                        category: catJuiceId,     type: 'material', unit: 'كوب',     limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_j2,   name: 'عصيرات طبيعية يومية',                       category: catJuiceId,     type: 'material', unit: 'كوب',     limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_j1, organization: orgId, name: 'عصيرات طازجة يومية',                        category: catJuiceId,     type: 'material', unit: 'كوب',     limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_j2, organization: orgId, name: 'عصيرات طبيعية يومية',                       category: catJuiceId,     type: 'material', unit: 'كوب',     limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
     // Cups & Plates
-    { _id: item_cp1,  name: 'اكواب بلاستيك',                             category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cp2,  name: 'اكواب ورقية',                               category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cp3,  name: 'اكواب ورقية صغيرة',                         category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cp4,  name: 'اطباق ورقية',                               category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_cp5,  name: 'مجموعة الطعام',                             category: catCupsId,      type: 'material', unit: 'مجموعة',  limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cp1, organization: orgId, name: 'اكواب بلاستيك',                             category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cp2, organization: orgId, name: 'اكواب ورقية',                               category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 500,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cp3, organization: orgId, name: 'اكواب ورقية صغيرة',                         category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 400,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cp4, organization: orgId, name: 'اطباق ورقية',                               category: catCupsId,      type: 'material', unit: 'عبوة',    limitQty: 300,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_cp5, organization: orgId, name: 'مجموعة الطعام',                             category: catCupsId,      type: 'material', unit: 'مجموعة',  limitQty: 200,  status: 'active', createdAt: now, updatedAt: now },
     // Equipment
-    { _id: item_eq1,  name: 'مكينة اسبريسو',                            category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq2,  name: 'طاحونة اسبريسو',                           category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq3,  name: 'غلاية ماء',                                category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 20,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq4,  name: 'محطة تحلية صغيرة الحجم',                  category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 5,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq5,  name: 'محضر القهوة السوداء',                      category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq6,  name: 'محضر القهوة التركية',                      category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq7,  name: 'طاحونة قهوة سوداء',                       category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq8,  name: 'ميزان معايرة القهوة والمشروبات',           category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq9,  name: 'صانعة القهوة عربية',                       category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq10, name: 'صانعة ثلج',                                category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 5,    status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq11, name: 'اناء تبخير الحليب',                        category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 15,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq12, name: 'وعاء القهوة المستخلصة',                    category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 15,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq13, name: 'مكبس قهوة',                                category: catEquipmentId, type: 'material', unit: 'قطعة',    limitQty: 20,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq14, name: 'موزع قهوة',                                category: catEquipmentId, type: 'material', unit: 'قطعة',    limitQty: 20,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq15, name: 'ثلاجة عرض واقفة للخدمة الذاتية',          category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq16, name: 'ميكرويف لتسخين الساندويتش',               category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_eq17, name: 'محمصة الخبز',                              category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq1, organization: orgId, name: 'مكينة اسبريسو',                            category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq2, organization: orgId, name: 'طاحونة اسبريسو',                           category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq3, organization: orgId, name: 'غلاية ماء',                                category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 20,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq4, organization: orgId, name: 'محطة تحلية صغيرة الحجم',                  category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 5,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq5, organization: orgId, name: 'محضر القهوة السوداء',                      category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq6, organization: orgId, name: 'محضر القهوة التركية',                      category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq7, organization: orgId, name: 'طاحونة قهوة سوداء',                       category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq8, organization: orgId, name: 'ميزان معايرة القهوة والمشروبات',           category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq9, organization: orgId, name: 'صانعة القهوة عربية',                       category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq10, organization: orgId, name: 'صانعة ثلج',                                category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 5,    status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq11, organization: orgId, name: 'اناء تبخير الحليب',                        category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 15,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq12, organization: orgId, name: 'وعاء القهوة المستخلصة',                    category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 15,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq13, organization: orgId, name: 'مكبس قهوة',                                category: catEquipmentId, type: 'material', unit: 'قطعة',    limitQty: 20,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq14, organization: orgId, name: 'موزع قهوة',                                category: catEquipmentId, type: 'material', unit: 'قطعة',    limitQty: 20,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq15, organization: orgId, name: 'ثلاجة عرض واقفة للخدمة الذاتية',          category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq16, organization: orgId, name: 'ميكرويف لتسخين الساندويتش',               category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_eq17, organization: orgId, name: 'محمصة الخبز',                              category: catEquipmentId, type: 'material', unit: 'جهاز',    limitQty: 10,   status: 'active', createdAt: now, updatedAt: now },
     // Meeting Services
-    { _id: item_mt1,  name: 'خدمة الاجتماعات A',                        category: catMeetingId,   type: 'material', unit: 'خدمة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mt2,  name: 'خدمة الاجتماعات B',                        category: catMeetingId,   type: 'material', unit: 'خدمة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_mt3,  name: 'خدمة الاجتماعات C',                        category: catMeetingId,   type: 'material', unit: 'خدمة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mt1, organization: orgId, name: 'خدمة الاجتماعات A',                        category: catMeetingId,   type: 'material', unit: 'خدمة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mt2, organization: orgId, name: 'خدمة الاجتماعات B',                        category: catMeetingId,   type: 'material', unit: 'خدمة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_mt3, organization: orgId, name: 'خدمة الاجتماعات C',                        category: catMeetingId,   type: 'material', unit: 'خدمة',    limitQty: 100,  status: 'active', createdAt: now, updatedAt: now },
     // HR
-    { _id: item_hr1,  name: 'مقدم خدمات الضيافة',                       category: catHRId,        type: 'material', unit: 'يوم',     limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_hr2,  name: 'مقدم قهوة وشاي سعودي لخدمات VIP باليومية', category: catHRId,       type: 'material', unit: 'يوم',     limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
-    { _id: item_hr3,  name: 'مفرغ اطعمة',                               category: catHRId,        type: 'material', unit: 'يوم',     limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_hr1, organization: orgId, name: 'مقدم خدمات الضيافة',                       category: catHRId,        type: 'material', unit: 'يوم',     limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_hr2, organization: orgId, name: 'مقدم قهوة وشاي سعودي لخدمات VIP باليومية', category: catHRId,       type: 'material', unit: 'يوم',     limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
+    { _id: item_hr3, organization: orgId, name: 'مفرغ اطعمة',                               category: catHRId,        type: 'material', unit: 'يوم',     limitQty: 30,   status: 'active', createdAt: now, updatedAt: now },
   ]);
 
   // ─── Daily Plans ──────────────────────────────────────────────────────────────
@@ -287,7 +303,7 @@ export async function seedLive(): Promise<void> {
   for (const pid of planIds) {
     for (const fid of floorIds) {
       for (const iid of sampleItems) {
-        planLines.push({ _id: id(), dailyPlan: pid, floor: fid, item: iid, plannedQty: Math.floor(Math.random() * 20) + 10, createdAt: now, updatedAt: now });
+        planLines.push({ organization: orgId, _id: id(), dailyPlan: pid, floor: fid, item: iid, plannedQty: Math.floor(Math.random() * 20) + 10, createdAt: now, updatedAt: now });
       }
     }
   }
@@ -327,19 +343,19 @@ export async function seedLive(): Promise<void> {
 
       if (['submitted', 'approved', 'under_review', 'returned'].includes(status)) {
         const rec = id(); approvalRefs.push(rec);
-        approvalRecords.push({ _id: rec, entityType: 'floor_check', entityId: checkId, step: 'supervisor', action: 'submit', actor: supervisorId, comment: 'تم الانتهاء من الجولة اليومية', version: 1, createdAt: new Date(checkDate.getTime() + 3600000) });
+        approvalRecords.push({ organization: orgId, _id: rec, entityType: 'floor_check', entityId: checkId, step: 'supervisor', action: 'submit', actor: supervisorId, comment: 'تم الانتهاء من الجولة اليومية', version: 1, createdAt: new Date(checkDate.getTime() + 3600000) });
       }
       if (['under_review', 'approved'].includes(status)) {
         const rec = id(); approvalRefs.push(rec);
-        approvalRecords.push({ _id: rec, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'review', actor: assistantId, comment: 'تمت المراجعة — إحالة للاعتماد', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
+        approvalRecords.push({ organization: orgId, _id: rec, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'review', actor: assistantId, comment: 'تمت المراجعة — إحالة للاعتماد', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
       }
       if (status === 'returned') {
         const rec = id(); approvalRefs.push(rec);
-        approvalRecords.push({ _id: rec, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'return', actor: assistantId, comment: 'الكميات تحتاج مراجعة', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
+        approvalRecords.push({ organization: orgId, _id: rec, entityType: 'floor_check', entityId: checkId, step: 'assistant_supervisor', action: 'return', actor: assistantId, comment: 'الكميات تحتاج مراجعة', version: 2, createdAt: new Date(checkDate.getTime() + 7200000) });
       }
       if (status === 'approved') {
         const rec = id(); approvalRefs.push(rec);
-        approvalRecords.push({ _id: rec, entityType: 'floor_check', entityId: checkId, step: 'project_manager', action: 'approve', actor: managerId, comment: 'معتمد', version: 3, createdAt: new Date(checkDate.getTime() + 10800000) });
+        approvalRecords.push({ organization: orgId, _id: rec, entityType: 'floor_check', entityId: checkId, step: 'project_manager', action: 'approve', actor: managerId, comment: 'معتمد', version: 3, createdAt: new Date(checkDate.getTime() + 10800000) });
 
         for (const line of lines as any[]) {
           if (line.actualQty > 0) {
@@ -348,17 +364,17 @@ export async function seedLive(): Promise<void> {
             const period  = monthPeriod(0);
             const key     = `${projectId}-${line.item}-${period}`;
             if (!inventoryMap[key]) {
-              inventoryMap[key] = { _id: id(), project: projectId, item: line.item, period, monthlyLimit: 500, openingBalance: 200, receivedQty: 300, consumedQty: 0, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: 500, status: 'available', updatedAt: now };
+              inventoryMap[key] = { organization: orgId, _id: id(), project: projectId, item: line.item, period, monthlyLimit: 500, openingBalance: 200, receivedQty: 300, consumedQty: 0, issuedQty: 0, damagedQty: 0, returnedQty: 0, remainingQty: 500, status: 'available', updatedAt: now };
             }
             if (isFood) inventoryMap[key].consumedQty += line.actualQty;
             else        inventoryMap[key].issuedQty   += line.actualQty;
-            stockMovements.push({ _id: id(), project: projectId, item: line.item, movementType: movType, quantity: line.actualQty, movementDate: checkDate, sourceType: 'floor_check', sourceRef: checkId, notes: 'تلقائي من اعتماد جولة الطابق', createdBy: supervisorId, createdAt: new Date(checkDate.getTime() + 11000000) });
+            stockMovements.push({ organization: orgId, _id: id(), project: projectId, item: line.item, movementType: movType, quantity: line.actualQty, movementDate: checkDate, sourceType: 'floor_check', sourceRef: checkId, notes: 'تلقائي من اعتماد جولة الطابق', createdBy: supervisorId, createdAt: new Date(checkDate.getTime() + 11000000) });
           }
         }
       }
 
       const currentStep = status === 'draft' ? 'supervisor' : status === 'submitted' ? 'assistant_supervisor' : status === 'under_review' ? 'project_manager' : status === 'returned' ? 'supervisor' : 'client';
-      floorCheckDocs.push({ _id: checkId, dailyPlan: planId, date: checkDate, project: projectId, building: buildingId, floor: floorId, shift: 'morning', supervisor: supervisorId, status, notes: floorIdx === 0 ? 'تمت جولة التفتيش في الموعد المحدد' : undefined, approvalRecords: approvalRefs, currentApprovalStep: currentStep, createdAt: checkDate, updatedAt: checkDate });
+      floorCheckDocs.push({ organization: orgId, _id: checkId, dailyPlan: planId, date: checkDate, project: projectId, building: buildingId, floor: floorId, shift: 'morning', supervisor: supervisorId, status, notes: floorIdx === 0 ? 'تمت جولة التفتيش في الموعد المحدد' : undefined, approvalRecords: approvalRefs, currentApprovalStep: currentStep, createdAt: checkDate, updatedAt: checkDate });
     }
   }
 
