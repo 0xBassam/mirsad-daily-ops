@@ -30,6 +30,7 @@ export function FoodInventoryPage() {
     queryKey: ['food-inventory', page, period],
     queryFn: () => apiClient.get('/inventory/food', { params: { page, limit: 25, period } }).then(r => r.data),
     enabled: isAllowed,
+    retry: false,
   });
 
   if (!isAllowed) {

@@ -40,7 +40,7 @@ router.use('/auth', authRoutes);
 const ADMIN_PM     = requireRole('admin', 'project_manager');
 const OPS_ROLES    = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations');
 const WH_ROLES     = requireRole('admin', 'project_manager', 'assistant_supervisor', 'warehouse');
-const STOCK_ROLES  = requireRole('admin', 'project_manager', 'assistant_supervisor', 'warehouse', 'kitchen');
+const STOCK_ROLES  = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'warehouse', 'kitchen');
 const ALL_OPS      = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'warehouse');
 const CR_ROLES     = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'client');
 const RPT_ROLES    = requireRole('admin', 'project_manager', 'supervisor', 'operations', 'warehouse', 'client');

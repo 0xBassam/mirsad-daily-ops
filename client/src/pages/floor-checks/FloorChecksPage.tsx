@@ -26,6 +26,7 @@ export function FloorChecksPage() {
     queryKey: ['floor-checks', page, statusFilter],
     queryFn: () => apiClient.get('/floor-checks', { params: { page, limit: 20, ...(statusFilter && { status: statusFilter }) } }).then(r => r.data),
     enabled: isAllowed,
+    retry: false,
   });
 
   if (!isAllowed) {
@@ -93,10 +94,10 @@ export function FloorChecksPage() {
               </tr>
             ) : checks.map((c: FloorCheck) => (
               <tr key={c._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/floor-checks/${c._id}`)}>
-                <td className="px-4 py-3 font-medium text-slate-900">{formatDate(c.date)}</td>
-                <td className="px-4 py-3 text-slate-600">{typeof c.floor === 'object' ? c.floor.name : '-'}</td>
-                <td className="px-4 py-3 text-slate-500">{typeof c.building === 'object' ? c.building.name : '-'}</td>
-                <td className="px-4 py-3 text-slate-500">{typeof c.supervisor === 'object' ? c.supervisor.fullName : '-'}</td>
+                <td className="px-4 py-3 font-medium text-slate-900">{c.date ? formatDate(c.date) : '-'}</td>
+                <td className="px-4 py-3 text-slate-600">{c.floor && typeof c.floor === 'object' ? c.floor.name : '-'}</td>
+                <td className="px-4 py-3 text-slate-500">{c.building && typeof c.building === 'object' ? c.building.name : '-'}</td>
+                <td className="px-4 py-3 text-slate-500">{c.supervisor && typeof c.supervisor === 'object' ? c.supervisor.fullName : '-'}</td>
                 <td className="px-4 py-3 text-slate-500">{c.shift ? t(`status.${c.shift}`) : '-'}</td>
                 <td className="px-4 py-3"><StatusBadge status={c.status} /></td>
                 <td className="px-4 py-3 text-slate-500 text-xs">{c.currentApprovalStep?.replace(/_/g, ' ') ?? '-'}</td>
