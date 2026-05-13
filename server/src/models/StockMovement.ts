@@ -50,5 +50,6 @@ const stockMovementSchema = new Schema<IStockMovement>(
 
 stockMovementSchema.index({ organization: 1, project: 1, movementDate: -1 });
 stockMovementSchema.index({ project: 1, item: 1, movementDate: -1 });
+stockMovementSchema.index({ organization: 1, movementType: 1, movementDate: -1 });
 
 export const StockMovement = mongoose.model<IStockMovement>('StockMovement', stockMovementSchema);

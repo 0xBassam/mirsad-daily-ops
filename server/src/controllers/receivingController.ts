@@ -77,16 +77,18 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
   receiving.confirmedAt = new Date();
   await receiving.save();
 
-  for (const line of goodLines) {
-    await StockMovement.create({
+  if (goodLines.length > 0) {
+    await StockMovement.insertMany(goodLines.map(line => ({
       organization: orgId,
       project: receiving.project, item: line.item, movementType: 'RECEIVE',
       quantity: line.quantityReceived, movementDate: receiving.deliveryDate,
       sourceType: 'receiving', sourceRef: receiving._id,
       notes: receiving.invoiceNumber ? `Invoice ${receiving.invoiceNumber}` : 'Delivery received',
       createdBy: req.user?.userId,
-    });
-    await applyMovementToBalance({ project: receiving.project as any, item: line.item as any, movementType: 'RECEIVE', quantity: line.quantityReceived, date: receiving.deliveryDate, organizationId: orgId });
+    })));
+    await Promise.all(goodLines.map(line =>
+      applyMovementToBalance({ project: receiving.project as any, item: line.item as any, movementType: 'RECEIVE', quantity: line.quantityReceived, date: receiving.deliveryDate, organizationId: orgId })
+    ));
   }
 
   // Update linked PO receivedQty
@@ -109,7 +111,7 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
 
   (async () => {
     try {
-      const populated = await Receiving.findById(receiving._id).populate('supplier', 'name').lean() as any;
+      const populated = await Receiving.findOne({ _id: receiving._id, organization: orgId }).populate('supplier', 'name').lean() as any;
       const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
         await sendReceivingCompleted({ to: recipients, invoiceNumber: receiving.invoiceNumber || '', supplierName: populated?.supplier?.name || '—', lineCount: receiving.lines?.length || 0, receivingId: String(receiving._id) }, orgId);

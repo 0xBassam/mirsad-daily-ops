@@ -70,20 +70,18 @@ export const confirmTransfer = asyncHandler(async (req: Request, res: Response) 
   transfer.confirmedAt = new Date();
   await transfer.save();
 
-  for (const line of transfer.lines) {
-    await StockMovement.create({
-      organization: orgId,
-      project: transfer.project,
-      item: line.item,
-      movementType: 'ISSUE',
-      quantity: line.quantity,
-      movementDate: transfer.transferDate,
-      sourceType: 'transfer',
-      sourceRef: transfer._id,
-      notes: `Transfer to floor`,
-      createdBy: req.user?.userId,
-    });
-  }
+  await StockMovement.insertMany(transfer.lines.map(line => ({
+    organization: orgId,
+    project: transfer.project,
+    item: line.item,
+    movementType: 'ISSUE',
+    quantity: line.quantity,
+    movementDate: transfer.transferDate,
+    sourceType: 'transfer',
+    sourceRef: transfer._id,
+    notes: 'Transfer to floor',
+    createdBy: req.user?.userId,
+  })));
 
   await logAction({ userId: req.user?.userId, action: 'confirm', entityType: 'transfer', entityId: transfer._id, req });
   res.json({ success: true, data: transfer });

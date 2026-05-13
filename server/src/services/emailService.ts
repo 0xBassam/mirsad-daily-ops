@@ -4,10 +4,19 @@ import { env } from '../config/env';
 import { Organization, IOrganizationSettings } from '../models/Organization';
 import { User } from '../models/User';
 
-// ─── Per-org cache ────────────────────────────────────────────────────────────
+// ─── Per-org cache with 6-hour TTL ───────────────────────────────────────────
 
-const _smtpCache   = new Map<string, nodemailer.Transporter | null>();
-const _resendCache = new Map<string, Resend | null>();
+const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+
+interface CacheEntry<T> { value: T | null; ts: number; }
+const _smtpCache   = new Map<string, CacheEntry<nodemailer.Transporter>>();
+const _resendCache = new Map<string, CacheEntry<Resend>>();
+
+function evictExpired() {
+  const now = Date.now();
+  for (const [k, v] of _smtpCache)   if (now - v.ts > CACHE_TTL) _smtpCache.delete(k);
+  for (const [k, v] of _resendCache) if (now - v.ts > CACHE_TTL) _resendCache.delete(k);
+}
 
 export function clearTransporterCache(orgId?: string) {
   if (orgId) {
@@ -58,7 +67,9 @@ function makeSmtpTransport(host: string, port: number, tls: boolean, user: strin
 }
 
 function resolveSmtpTransporter(orgId: string, s: IOrganizationSettings): nodemailer.Transporter | null {
-  if (_smtpCache.has(orgId)) return _smtpCache.get(orgId)!;
+  evictExpired();
+  const entry = _smtpCache.get(orgId);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.value;
   let t: nodemailer.Transporter | null = null;
   if (s.smtpHost && s.smtpUser && s.smtpPass) {
     t = makeSmtpTransport(s.smtpHost, s.smtpPort || 587, !!s.smtpTls, s.smtpUser, s.smtpPass);
@@ -66,17 +77,18 @@ function resolveSmtpTransporter(orgId: string, s: IOrganizationSettings): nodema
     const port = Number(env.SMTP_PORT || 587);
     t = makeSmtpTransport(env.SMTP_HOST, port, port !== 465, env.SMTP_USER, env.SMTP_PASS);
   }
-  _smtpCache.set(orgId, t);
+  _smtpCache.set(orgId, { value: t, ts: Date.now() });
   return t;
 }
 
 // ─── Resend helpers ───────────────────────────────────────────────────────────
 
 function resolveResendClient(orgId: string, s: IOrganizationSettings): Resend | null {
-  if (_resendCache.has(orgId)) return _resendCache.get(orgId)!;
+  const entry = _resendCache.get(orgId);
+  if (entry && Date.now() - entry.ts < CACHE_TTL) return entry.value;
   const key = s.resendApiKey || env.RESEND_API_KEY;
   const client = key ? new Resend(key) : null;
-  _resendCache.set(orgId, client);
+  _resendCache.set(orgId, { value: client, ts: Date.now() });
   return client;
 }
 

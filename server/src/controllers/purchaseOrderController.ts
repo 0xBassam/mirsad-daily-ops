@@ -57,7 +57,7 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
 
   (async () => {
     try {
-      const populated = await PurchaseOrder.findById(data._id).populate('supplier', 'name').lean() as any;
+      const populated = await PurchaseOrder.findOne({ _id: data._id, organization: orgId }).populate('supplier', 'name').lean() as any;
       const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
         await sendNewPurchaseOrder({ to: recipients, poNumber: data.poNumber, supplierName: populated?.supplier?.name || '—', month: data.month || '', lineCount: data.lines?.length || 0, poId: String(data._id) }, orgId);

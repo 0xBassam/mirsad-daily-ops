@@ -49,7 +49,7 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
   // Fire-and-forget email to notification recipients
   (async () => {
     try {
-      const populated = await ClientRequest.findById(data._id).populate('requestedBy', 'fullName').populate('building', 'name').populate('floor', 'name').lean() as any;
+      const populated = await ClientRequest.findOne({ _id: data._id, organization: orgId }).populate('requestedBy', 'fullName').populate('building', 'name').populate('floor', 'name').lean() as any;
       const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
         await sendRequestCreated({
@@ -95,7 +95,7 @@ export const assignClientRequest = asyncHandler(async (req: Request, res: Respon
   // Notify requester
   (async () => {
     try {
-      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').populate('assignedTo', 'fullName').lean() as any;
+      const populated = await ClientRequest.findOne({ _id: cr._id, organization: orgId }).populate('requestedBy', 'fullName email').populate('assignedTo', 'fullName').lean() as any;
       if (populated?.requestedBy?.email) {
         await sendRequestAssigned({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, assigneeName: populated.assignedTo?.fullName || 'Staff', requestId: String(cr._id) }, orgId);
       }
@@ -148,7 +148,7 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
   // Notify requester to confirm
   (async () => {
     try {
-      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').lean() as any;
+      const populated = await ClientRequest.findOne({ _id: cr._id, organization: orgId }).populate('requestedBy', 'fullName email').lean() as any;
       if (populated?.requestedBy?.email) {
         await sendRequestDelivered({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, requestId: String(cr._id) }, orgId);
       }
@@ -170,7 +170,7 @@ export const confirmClientRequest = asyncHandler(async (req: Request, res: Respo
   // Notify notification recipients of confirmation
   (async () => {
     try {
-      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName').lean() as any;
+      const populated = await ClientRequest.findOne({ _id: cr._id, organization: orgId }).populate('requestedBy', 'fullName').lean() as any;
       const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
         await sendRequestConfirmed({ to: recipients, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', requestId: String(cr._id) }, orgId);

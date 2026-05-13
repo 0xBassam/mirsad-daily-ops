@@ -45,7 +45,7 @@ export const createMaintenanceRequest = asyncHandler(async (req: Request, res: R
 
   (async () => {
     try {
-      const populated = await MaintenanceRequest.findById(data._id).populate('reportedBy', 'fullName').populate('floor', 'name').lean() as any;
+      const populated = await MaintenanceRequest.findOne({ _id: data._id, organization: orgId }).populate('reportedBy', 'fullName').populate('floor', 'name').lean() as any;
       const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
         await sendMaintenanceOpened({ to: recipients, title: data.title, category: data.category || '', priority: data.priority || '', location: populated?.floor?.name, maintenanceId: String(data._id), reporterName: populated?.reportedBy?.fullName }, orgId);

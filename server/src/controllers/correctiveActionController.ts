@@ -70,7 +70,7 @@ export const updateCorrectiveAction = asyncHandler(async (req: Request, res: Res
   await action.save();
   await logAction({ userId: userId.toString(), action: 'update', entityType: 'corrective_action', entityId: action._id, req });
 
-  const populated = await CorrectiveAction.findById(action._id)
+  const populated = await CorrectiveAction.findOne({ _id: action._id, organization: orgId })
     .populate('assignedTo', 'fullName')
     .populate('createdBy',  'fullName')
     .lean();

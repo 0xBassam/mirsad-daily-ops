@@ -189,7 +189,7 @@ export const generateReport = asyncHandler(async (req: Request, res: Response) =
   });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'report', entityId: report._id, req });
 
-  const populated = await Report.findById(report._id)
+  const populated = await Report.findOne({ _id: report._id, organization: orgId })
     .populate('project', 'name')
     .populate('generatedBy', 'fullName');
   res.status(201).json({ success: true, data: populated });
