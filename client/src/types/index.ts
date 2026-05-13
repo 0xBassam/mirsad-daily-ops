@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'supervisor' | 'assistant_supervisor' | 'project_manager' | 'client' | 'operations' | 'warehouse' | 'kitchen';
+export type UserRole = 'superadmin' | 'admin' | 'supervisor' | 'assistant_supervisor' | 'project_manager' | 'client' | 'operations' | 'warehouse' | 'kitchen';
 
 export type OrgPlan = 'trial' | 'starter' | 'professional' | 'enterprise';
 

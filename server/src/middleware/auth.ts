@@ -54,3 +54,9 @@ export function requireOrganization(req: Request, _res: Response, next: NextFunc
   }
   next();
 }
+
+export function requireSuperAdmin(req: Request, _res: Response, next: NextFunction): void {
+  if (!req.user) return next(new AppError('Not authenticated', 401));
+  if (req.user.role !== 'superadmin') return next(new AppError('Super admin access required', 403));
+  next();
+}

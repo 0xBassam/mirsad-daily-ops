@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 import { env } from './env';
 
 export async function connectDB(): Promise<void> {
@@ -26,6 +27,27 @@ export async function connectDB(): Promise<void> {
       await seedLive();
     }
   }
+
+  await ensureSuperAdmin();
+}
+
+async function ensureSuperAdmin(): Promise<void> {
+  const email = env.SUPER_ADMIN_EMAIL;
+  const pass  = env.SUPER_ADMIN_PASS;
+  if (!email || !pass) return;
+
+  const db = mongoose.connection.db!;
+  const existing = await db.collection('users').findOne({ email, role: 'superadmin' });
+  if (existing) return;
+
+  const password = await bcrypt.hash(pass, 12);
+  await db.collection('users').updateOne(
+    { email },
+    { $set: { fullName: 'Super Admin', email, password, role: 'superadmin', status: 'active', updatedAt: new Date() },
+      $setOnInsert: { createdAt: new Date() } },
+    { upsert: true },
+  );
+  console.log(`Super admin created: ${email}`);
 }
 
 export async function disconnectDB(): Promise<void> {

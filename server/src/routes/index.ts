@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { verifyJWT, requireRole, requireOrganization } from '../middleware/auth';
+import { verifyJWT, requireRole, requireOrganization, requireSuperAdmin } from '../middleware/auth';
 const ORG = requireOrganization;
 
 import authRoutes from './authRoutes';
@@ -31,6 +31,7 @@ import exportRoutes from './exportRoutes';
 import menuRoutes from './menuRoutes';
 import settingsRoutes from './settingsRoutes';
 import clientDashboardRoutes from './clientDashboardRoutes';
+import superAdminRoutes from './superAdminRoutes';
 
 const router = Router();
 
@@ -80,5 +81,6 @@ router.use('/export',            verifyJWT, ORG, exportRoutes);
 router.use('/menu',              verifyJWT, ORG, OPS_ROLES, menuRoutes);
 router.use('/settings',          verifyJWT, ORG, requireRole('admin'), settingsRoutes);
 router.use('/client-dashboard',  verifyJWT, ORG, requireRole('client'), clientDashboardRoutes);
+router.use('/super-admin',       verifyJWT, requireSuperAdmin, superAdminRoutes);
 
 export default router;

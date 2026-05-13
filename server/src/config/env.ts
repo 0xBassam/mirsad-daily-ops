@@ -22,6 +22,9 @@ const envSchema = z.object({
   RESEND_API_KEY:    z.string().optional(),
   RESEND_FROM_EMAIL: z.string().optional(),
   RESEND_FROM_NAME:  z.string().optional(),
+  // Super admin bootstrap (used by seed only — never logged or returned via API)
+  SUPER_ADMIN_EMAIL: z.string().email().optional(),
+  SUPER_ADMIN_PASS:  z.string().min(8).optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
