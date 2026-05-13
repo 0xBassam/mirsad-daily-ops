@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { Organization } from '../models/Organization';
 import { User } from '../models/User';
+import { Project } from '../models/Project';
 import { ClientRequest } from '../models/ClientRequest';
 import { asyncHandler } from '../utils/asyncHandler';
 import { AppError } from '../utils/AppError';
@@ -79,7 +80,7 @@ export const getOrganization = asyncHandler(async (req: Request, res: Response) 
   const [users, projects] = await Promise.all([
     User.find({ organization: org._id, role: { $ne: 'superadmin' } })
       .select('fullName email role status lastLoginAt createdAt').lean(),
-    (await import('../models/Project')).Project.find({ organization: org._id })
+    Project.find({ organization: org._id })
       .select('name status createdAt').lean(),
   ]);
 
