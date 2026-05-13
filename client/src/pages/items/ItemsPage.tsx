@@ -55,7 +55,10 @@ export function ItemsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900">{t('nav.itemsMaster')}</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">{t('nav.itemsMaster')}</h1>
+          <p className="text-slate-500 text-sm mt-1">{t('nav.itemsMasterSubtitle')}</p>
+        </div>
         <button onClick={() => openEdit()} className="btn-primary"><Plus className="h-4 w-4" /> {t('common.addItem')}</button>
       </div>
       <div className="flex gap-2">
@@ -87,7 +90,7 @@ export function ItemsPage() {
         </table>
         {data?.pagination && <Pagination pagination={data.pagination} onPageChange={setPage} />}
       </div>
-      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? `${t('common.edit')} ${t('nav.itemsMaster')}` : t('common.addItem')} size="lg">
+      <Modal open={showModal} onClose={() => setShowModal(false)} title={editing ? t('common.editItem') : t('common.addItem')} size="lg">
         <form onSubmit={e => { e.preventDefault(); saveMutation.mutate({ ...form, limitQty: Number(form.limitQty) }); }} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div><label className="block text-sm font-medium text-slate-700 mb-1">{t('common.name')}</label><input className="input" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} required /></div>

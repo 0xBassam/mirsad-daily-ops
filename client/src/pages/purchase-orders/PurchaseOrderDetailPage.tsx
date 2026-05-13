@@ -1,28 +1,30 @@
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
-import { ArrowLeft, Building2, Calendar, Package, TrendingDown, TrendingUp, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Building2, Calendar, Package, TrendingDown, TrendingUp, AlertTriangle, ArrowDownToLine } from 'lucide-react';
 import apiClient from '../../api/client';
 import { PurchaseOrder, POLine, POStatus } from '../../types';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { StatusBadge } from '../../components/ui/Badge';
+import toast from 'react-hot-toast';
 
-function BalanceBar({ approved, distributed, consumed, remaining }: { approved: number; distributed: number; consumed: number; remaining: number }) {
-  const usedPct  = Math.min(100, approved > 0 ? ((distributed + consumed) / approved) * 100 : 0);
-  const isOver   = remaining < 0;
+function BalanceBar({ approved, received, remaining }: { approved: number; received: number; remaining: number }) {
+  const receivedPct = Math.min(100, approved > 0 ? (received / approved) * 100 : 0);
+  const isOver = remaining < 0;
   return (
     <div className="mt-1">
       <div className="flex justify-between text-xs text-slate-500 mb-1">
-        <span>{distributed + consumed} / {approved} {isOver && <span className="text-red-600 font-semibold ms-1">▲ over</span>}</span>
-        <span className={remaining < 0 ? 'text-red-600 font-semibold' : remaining / approved < 0.15 ? 'text-amber-600 font-semibold' : 'text-green-700'}>
-          {remaining >= 0 ? remaining : Math.abs(remaining)} {remaining < 0 ? 'over' : 'left'}
+        <span>{received} / {approved} received {isOver && <span className="text-red-600 font-semibold ms-1">▲ over-delivered</span>}</span>
+        <span className={remaining < 0 ? 'text-red-600 font-semibold' : remaining / Math.max(1, approved) < 0.15 ? 'text-amber-600 font-semibold' : 'text-slate-500'}>
+          {Math.abs(remaining)} {remaining < 0 ? 'over' : 'pending'}
         </span>
       </div>
       <div className="w-full bg-slate-100 rounded-full h-2">
         <div
-          className={`h-2 rounded-full transition-all ${isOver ? 'bg-red-500' : usedPct > 85 ? 'bg-amber-500' : 'bg-indigo-500'}`}
-          style={{ width: `${Math.min(100, usedPct)}%` }}
+          className={`h-2 rounded-full transition-all ${isOver ? 'bg-red-500' : receivedPct > 85 ? 'bg-green-500' : 'bg-indigo-500'}`}
+          style={{ width: `${receivedPct}%` }}
         />
       </div>
     </div>
@@ -42,10 +44,24 @@ export function PurchaseOrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [receiveQtys, setReceiveQtys] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ['purchase-order', id],
     queryFn: () => apiClient.get(`/purchase-orders/${id}`).then(r => r.data.data as PurchaseOrder),
+  });
+
+  const receiveMutation = useMutation({
+    mutationFn: ({ lineId, quantity }: { lineId: string; quantity: number }) =>
+      apiClient.post(`/purchase-orders/${id}/lines/${lineId}/receive`, { quantity }),
+    onSuccess: (_, { lineId }) => {
+      toast.success('Stock received and inventory updated');
+      setReceiveQtys(prev => ({ ...prev, [lineId]: '' }));
+      qc.invalidateQueries({ queryKey: ['purchase-order', id] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (e: any) => toast.error(e.response?.data?.message || 'Receive failed'),
   });
 
   if (isLoading) return <PageLoader />;
@@ -66,7 +82,7 @@ export function PurchaseOrderDetailPage() {
       {/* Header */}
       <div className="flex items-start gap-4">
         <button onClick={() => navigate(-1)} className="mt-1 p-1.5 rounded-lg hover:bg-slate-100 text-slate-500">
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
@@ -105,9 +121,9 @@ export function PurchaseOrderDetailPage() {
           </div>
         </div>
         <div className="card p-4">
-          <p className="text-xs text-slate-400 uppercase font-medium">{t('purchaseOrders.totalBalance')}</p>
+          <p className="text-xs text-slate-400 uppercase font-medium">Pending Delivery</p>
           <p className="text-xl font-bold text-slate-900 mt-0.5">{totalRemaining.toLocaleString()}</p>
-          <p className="text-xs text-slate-500">{t('purchaseOrders.of')} {totalApproved.toLocaleString()} {t('purchaseOrders.approved')}</p>
+          <p className="text-xs text-slate-500">of {totalApproved.toLocaleString()} approved</p>
         </div>
       </div>
 
@@ -152,18 +168,17 @@ export function PurchaseOrderDetailPage() {
 
                 <BalanceBar
                   approved={line.approvedQty}
-                  distributed={line.distributedQty}
-                  consumed={line.consumedQty}
+                  received={line.receivedQty}
                   remaining={line.remainingQty}
                 />
 
                 <div className="mt-3 grid grid-cols-2 md:grid-cols-5 gap-3 text-xs">
                   {[
-                    { label: t('purchaseOrders.approved'), value: line.approvedQty, color: 'text-slate-600' },
-                    { label: t('purchaseOrders.received'), value: line.receivedQty, color: 'text-blue-600' },
+                    { label: t('purchaseOrders.approved'),    value: line.approvedQty,    color: 'text-slate-600' },
+                    { label: t('purchaseOrders.received'),    value: line.receivedQty,    color: 'text-blue-600' },
                     { label: t('purchaseOrders.distributed'), value: line.distributedQty, color: 'text-orange-600' },
-                    { label: t('purchaseOrders.consumed'), value: line.consumedQty, color: 'text-purple-600' },
-                    { label: t('purchaseOrders.remaining'), value: line.remainingQty, color: isOver ? 'text-red-600 font-bold' : isNear ? 'text-amber-600 font-bold' : 'text-green-700 font-bold' },
+                    { label: t('purchaseOrders.consumed'),    value: line.consumedQty,    color: 'text-purple-600' },
+                    { label: t('purchaseOrders.remaining'),   value: line.remainingQty,   color: isOver ? 'text-red-600 font-bold' : isNear ? 'text-amber-600 font-bold' : 'text-green-700 font-bold' },
                   ].map(({ label, value, color }) => (
                     <div key={label} className="bg-slate-50 rounded-lg px-3 py-2">
                       <p className="text-slate-400 mb-0.5">{label}</p>
@@ -171,6 +186,26 @@ export function PurchaseOrderDetailPage() {
                     </div>
                   ))}
                 </div>
+
+                {/* Receive stock action */}
+                {po.status !== 'closed' && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <input
+                      type="number" min="1"
+                      placeholder="Qty to receive"
+                      className="input w-36 text-sm"
+                      value={receiveQtys[line._id] || ''}
+                      onChange={e => setReceiveQtys(prev => ({ ...prev, [line._id]: e.target.value }))}
+                    />
+                    <button
+                      className="btn-primary text-sm flex items-center gap-1.5"
+                      disabled={!receiveQtys[line._id] || Number(receiveQtys[line._id]) <= 0 || receiveMutation.isPending}
+                      onClick={() => receiveMutation.mutate({ lineId: line._id, quantity: Number(receiveQtys[line._id]) })}
+                    >
+                      <ArrowDownToLine className="h-4 w-4" /> Receive
+                    </button>
+                  </div>
+                )}
               </div>
             );
           })}

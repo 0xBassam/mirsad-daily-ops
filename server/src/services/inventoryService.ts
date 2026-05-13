@@ -5,6 +5,73 @@ import { Item } from '../models/Item';
 import { InventoryBalance } from '../models/InventoryBalance';
 import { StockMovement } from '../models/StockMovement';
 import { FloorCheck } from '../models/FloorCheck';
+import { sendLowStockAlert, sendOutOfStockAlert, getNotificationRecipients } from './emailService';
+import { Project } from '../models/Project';
+
+type MovementType = 'RECEIVE' | 'ISSUE' | 'CONSUMPTION' | 'RETURN' | 'DAMAGE' | 'ADJUSTMENT' | 'TRANSFER_IN' | 'TRANSFER_OUT';
+
+export async function applyMovementToBalance(params: {
+  project: mongoose.Types.ObjectId | string;
+  item: mongoose.Types.ObjectId | string;
+  movementType: MovementType;
+  quantity: number;
+  date?: Date;
+}): Promise<void> {
+  const { project, item, movementType, quantity, date = new Date() } = params;
+  const period = format(date, 'yyyy-MM');
+
+  const balance = await InventoryBalance.findOneAndUpdate(
+    { project, item, period },
+    { $setOnInsert: { openingBalance: 0, monthlyLimit: 0 } },
+    { upsert: true, new: true }
+  );
+  if (!balance) return;
+
+  switch (movementType) {
+    case 'RECEIVE':      balance.receivedQty += quantity; break;
+    case 'RETURN':       balance.returnedQty += quantity; break;
+    case 'TRANSFER_IN':  balance.receivedQty += quantity; break;
+    case 'ISSUE':        balance.issuedQty   += quantity; break;
+    case 'CONSUMPTION':  balance.consumedQty += quantity; break;
+    case 'TRANSFER_OUT': balance.issuedQty   += quantity; break;
+    case 'DAMAGE':       balance.damagedQty  += quantity; break;
+    case 'ADJUSTMENT':   balance.receivedQty += quantity; break;
+  }
+
+  const prevStatus = balance.status;
+  (balance as any).recalculate();
+  await balance.save();
+
+  // Fire stock alert emails when status transitions into low_stock or out_of_stock
+  const newStatus = balance.status;
+  if (newStatus !== prevStatus && (newStatus === 'low_stock' || newStatus === 'out_of_stock')) {
+    (async () => {
+      try {
+        const [itemDoc, projectDoc] = await Promise.all([
+          Item.findById(item).select('name unit type').lean() as any,
+          Project.findById(project).select('name').lean() as any,
+        ]);
+        const recipients = await getNotificationRecipients();
+        if (recipients.length) {
+          const alertData = {
+            itemName: itemDoc?.name || String(item),
+            itemType: itemDoc?.type || 'unknown',
+            remainingQty: balance.remainingQty,
+            monthlyLimit: balance.monthlyLimit,
+            unit: itemDoc?.unit || '',
+            project: projectDoc?.name || String(project),
+            period,
+          };
+          if (newStatus === 'out_of_stock') {
+            await sendOutOfStockAlert({ to: recipients, ...alertData });
+          } else {
+            await sendLowStockAlert({ to: recipients, ...alertData });
+          }
+        }
+      } catch { /* silent */ }
+    })();
+  }
+}
 
 export async function updateOnApproval(floorCheckId: string): Promise<void> {
   const session = await mongoose.startSession();

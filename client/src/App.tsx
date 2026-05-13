@@ -1,9 +1,26 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/auth/LoginPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
+import { ClientDashboardPage } from './pages/dashboard/ClientDashboardPage';
+import { useAuth } from './contexts/AuthContext';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
+
+function PageBoundary() {
+  const location = useLocation();
+  return (
+    <ErrorBoundary key={location.pathname}>
+      <Outlet />
+    </ErrorBoundary>
+  );
+}
+
+function DashboardRouter() {
+  const { user } = useAuth();
+  return user?.role === 'client' ? <ClientDashboardPage /> : <DashboardPage />;
+}
 import { UsersPage } from './pages/users/UsersPage';
 import { ProjectsPage } from './pages/projects/ProjectsPage';
 import { BuildingsPage } from './pages/projects/BuildingsPage';
@@ -37,16 +54,21 @@ import { ReportDetailPage } from './pages/reports/ReportDetailPage';
 import { InventoryItemDetailPage } from './pages/inventory/InventoryItemDetailPage';
 import { PurchaseOrdersPage } from './pages/purchase-orders/PurchaseOrdersPage';
 import { PurchaseOrderDetailPage } from './pages/purchase-orders/PurchaseOrderDetailPage';
+import { PurchaseOrderFormPage } from './pages/purchase-orders/PurchaseOrderFormPage';
 import { SpoilageRecordingPage } from './pages/spoilage-records/SpoilageRecordingPage';
 import { TransfersPage } from './pages/transfers/TransfersPage';
 import { ReceivingPage } from './pages/receiving/ReceivingPage';
 import { ReceivingDetailPage } from './pages/receiving/ReceivingDetailPage';
+import { ReceivingNewPage } from './pages/receiving/ReceivingNewPage';
 import { MaintenanceRequestsPage } from './pages/maintenance/MaintenanceRequestsPage';
 import { MaintenanceDetailPage } from './pages/maintenance/MaintenanceDetailPage';
 import { MaintenanceNewPage } from './pages/maintenance/MaintenanceNewPage';
 import { ClientRequestsPage } from './pages/client-requests/ClientRequestsPage';
 import { ClientRequestDetailPage } from './pages/client-requests/ClientRequestDetailPage';
+import { MenuPage } from './pages/menu/MenuPage';
+import { MenuFormPage } from './pages/menu/MenuFormPage';
 import { ClientRequestNewPage } from './pages/client-requests/ClientRequestNewPage';
+import { SettingsPage } from './pages/settings/SettingsPage';
 
 export default function App() {
   return (
@@ -57,8 +79,9 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
+              <Route element={<PageBoundary />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard" element={<DashboardRouter />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
@@ -88,6 +111,7 @@ export default function App() {
               <Route path="/spoilage" element={<SpoilageRecordingPage />} />
               <Route path="/transfers" element={<TransfersPage />} />
               <Route path="/receiving" element={<ReceivingPage />} />
+              <Route path="/receiving/new" element={<ReceivingNewPage />} />
               <Route path="/receiving/:id" element={<ReceivingDetailPage />} />
               <Route path="/maintenance" element={<MaintenanceRequestsPage />} />
               <Route path="/maintenance/new" element={<MaintenanceNewPage />} />
@@ -96,15 +120,21 @@ export default function App() {
               <Route path="/client-requests/new" element={<ClientRequestNewPage />} />
               <Route path="/client-requests/:id" element={<ClientRequestDetailPage />} />
               <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
+              <Route path="/purchase-orders/new" element={<PurchaseOrderFormPage />} />
               <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
               <Route path="/corrective-actions" element={<CorrectiveActionsPage />} />
               <Route path="/corrective-actions/new" element={<CorrectiveActionNewPage />} />
               <Route path="/corrective-actions/:id" element={<CorrectiveActionDetailPage />} />
+              <Route path="/menu"      element={<MenuPage />} />
+              <Route path="/menu/new" element={<MenuFormPage />} />
+              <Route path="/menu/:id" element={<MenuFormPage />} />
               <Route path="/approvals" element={<ApprovalsPage />} />
               <Route path="/reports" element={<ReportsPage />} />
               <Route path="/reports/:id" element={<ReportDetailPage />} />
               <Route path="/audit-logs" element={<AuditLogsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Route>{/* PageBoundary */}
             </Route>
           </Route>
         </Routes>

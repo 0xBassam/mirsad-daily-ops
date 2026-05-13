@@ -6,7 +6,8 @@ export type ReportType =
   | 'weekly_warehouse'
   | 'monthly_food_inventory'
   | 'monthly_materials'
-  | 'approval_summary';
+  | 'approval_summary'
+  | 'food_stock_balance';
 
 export interface IReport extends Document {
   reportType: ReportType;
@@ -28,7 +29,7 @@ const reportSchema = new Schema<IReport>(
   {
     reportType: {
       type: String,
-      enum: ['daily_floor_check', 'daily_project_summary', 'weekly_warehouse', 'monthly_food_inventory', 'monthly_materials', 'approval_summary'],
+      enum: ['daily_floor_check', 'daily_project_summary', 'weekly_warehouse', 'monthly_food_inventory', 'monthly_materials', 'approval_summary', 'food_stock_balance'],
       required: true,
     },
     title: { type: String },

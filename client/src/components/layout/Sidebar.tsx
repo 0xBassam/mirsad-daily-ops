@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Building2, Package, ClipboardList,
   CheckSquare, Utensils, GitBranch,
   FileText, BookOpen, LogOut, ChevronDown, Thermometer,
-  Boxes, ShieldCheck, ShoppingCart, Trash2, ArrowRightLeft, Truck, Wrench, MessageSquare
+  Boxes, ShieldCheck, ShoppingCart, Trash2, ArrowRightLeft, Truck, Wrench, MessageSquare, UtensilsCrossed, Settings
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -18,6 +18,7 @@ interface NavItem {
   to: string;
   icon: React.ElementType;
   labelKey: string;
+  roleLabelKeys?: Partial<Record<UserRole, string>>;
   roles: UserRole[];
   children?: { to: string; labelKey: string }[];
 }
@@ -30,29 +31,30 @@ interface NavSection {
 const navSections: NavSection[] = [
   {
     items: [
-      { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'client'] },
+      { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'client'] },
     ],
   },
   {
     labelKey: 'nav.section.operations',
     items: [
-      { to: '/daily-plans',        icon: ClipboardList,  labelKey: 'nav.dailyPlans',        roles: ['admin', 'supervisor', 'project_manager'] },
-      { to: '/floor-checks',       icon: CheckSquare,    labelKey: 'nav.floorChecks',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/approvals',          icon: GitBranch,      labelKey: 'nav.approvals',         roles: ['assistant_supervisor', 'project_manager', 'client', 'admin'] },
-      { to: '/purchase-orders',    icon: ShoppingCart,   labelKey: 'nav.purchaseOrders',    roles: ['admin', 'project_manager', 'assistant_supervisor'] },
-      { to: '/spoilage',           icon: Trash2,           labelKey: 'nav.spoilageRecording', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/corrective-actions', icon: ShieldCheck,    labelKey: 'nav.correctiveActions', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/transfers',          icon: ArrowRightLeft,  labelKey: 'nav.transfers',         roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/receiving',          icon: Truck,           labelKey: 'nav.receiving',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/maintenance',        icon: Wrench,          labelKey: 'nav.maintenance',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/client-requests',    icon: MessageSquare,   labelKey: 'nav.clientRequests',    roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'client'] },
+      { to: '/daily-plans',        icon: ClipboardList,  labelKey: 'nav.dailyPlans',        roles: ['admin', 'supervisor', 'project_manager', 'operations'] },
+      { to: '/floor-checks',       icon: CheckSquare,    labelKey: 'nav.floorChecks',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations'] },
+      { to: '/approvals',          icon: GitBranch,      labelKey: 'nav.approvals',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
+      { to: '/purchase-orders',    icon: ShoppingCart,   labelKey: 'nav.purchaseOrders',    roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse'] },
+      { to: '/spoilage',           icon: Trash2,           labelKey: 'nav.spoilageRecording', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations', 'warehouse', 'kitchen'] },
+      { to: '/corrective-actions', icon: ShieldCheck,    labelKey: 'nav.correctiveActions', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations'] },
+      { to: '/transfers',          icon: ArrowRightLeft,  labelKey: 'nav.transfers',         roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'warehouse'] },
+      { to: '/receiving',          icon: Truck,           labelKey: 'nav.receiving',         roles: ['assistant_supervisor', 'project_manager', 'admin', 'warehouse'] },
+      { to: '/maintenance',        icon: Wrench,          labelKey: 'nav.maintenance',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations'] },
+      { to: '/client-requests',    icon: MessageSquare,   labelKey: 'nav.clientRequests', roleLabelKeys: { client: 'nav.myRequests' }, roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'operations', 'client'] },
+      { to: '/menu',               icon: UtensilsCrossed, labelKey: 'nav.menu',              roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations'] },
     ],
   },
   {
     labelKey: 'nav.section.inventory',
     items: [
       {
-        to: '/inventory', icon: Utensils, labelKey: 'nav.inventory', roles: ['admin', 'project_manager', 'assistant_supervisor'],
+        to: '/inventory', icon: Utensils, labelKey: 'nav.inventory', roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse', 'kitchen'],
         children: [
           { to: '/inventory/food',      labelKey: 'nav.foodInventory' },
           { to: '/inventory/materials', labelKey: 'nav.materialsWarehouse' },
@@ -60,7 +62,7 @@ const navSections: NavSection[] = [
         ],
       },
       {
-        to: '/food-safety', icon: Thermometer, labelKey: 'nav.foodSafety', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'],
+        to: '/food-safety', icon: Thermometer, labelKey: 'nav.foodSafety', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'warehouse'],
         children: [
           { to: '/fridge-checks',   labelKey: 'nav.fridgeChecks' },
           { to: '/expiry-tracking', labelKey: 'nav.expiryTracking' },
@@ -68,7 +70,7 @@ const navSections: NavSection[] = [
         ],
       },
       {
-        to: '/traceability', icon: Boxes, labelKey: 'nav.traceability', roles: ['admin', 'project_manager', 'assistant_supervisor'],
+        to: '/traceability', icon: Boxes, labelKey: 'nav.traceability', roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse'],
         children: [
           { to: '/batches',   labelKey: 'nav.batches' },
           { to: '/suppliers', labelKey: 'nav.suppliers' },
@@ -95,12 +97,13 @@ const navSections: NavSection[] = [
         ],
       },
       { to: '/users', icon: Users, labelKey: 'nav.users', roles: ['admin'] },
+      { to: '/settings', icon: Settings, labelKey: 'nav.settings', roles: ['admin'] },
     ],
   },
   {
     labelKey: 'nav.section.reportsGov',
     items: [
-      { to: '/reports',    icon: FileText, labelKey: 'nav.reports',   roles: ['admin', 'project_manager', 'client'] },
+      { to: '/reports',    icon: FileText, labelKey: 'nav.reports',   roles: ['admin', 'project_manager', 'supervisor', 'operations', 'warehouse', 'client'] },
       { to: '/audit-logs', icon: BookOpen, labelKey: 'nav.auditLogs', roles: ['admin'] },
     ],
   },
@@ -150,6 +153,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                   const Icon = item.icon;
                   const hasChildren = item.children && item.children.length > 0;
                   const isExpanded = expanded === item.to;
+                  const labelKey = (user?.role && item.roleLabelKeys?.[user.role]) ?? item.labelKey;
 
                   if (hasChildren) {
                     return (
@@ -159,7 +163,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
                         >
                           <Icon className="h-4 w-4 flex-shrink-0" />
-                          <span className="flex-1 text-start">{t(item.labelKey)}</span>
+                          <span className="flex-1 text-start">{t(labelKey)}</span>
                           <ChevronDown className={clsx('h-3.5 w-3.5 transition-transform', isExpanded && 'rotate-180')} />
                         </button>
                         {isExpanded && (
@@ -194,7 +198,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                       }
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      {t(item.labelKey)}
+                      {t(labelKey)}
                     </NavLink>
                   );
                 })}

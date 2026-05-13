@@ -9,6 +9,8 @@ import { StatusBadge, Badge } from '../../components/ui/Badge';
 import { formatDate, formatDateTime } from '../../utils/formatDate';
 import { useAuth } from '../../contexts/AuthContext';
 import { ArrowLeft, Download } from 'lucide-react';
+
+const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
 import toast from 'react-hot-toast';
 
 export function FloorCheckDetailPage() {
@@ -26,7 +28,12 @@ export function FloorCheckDetailPage() {
   const approvalMutation = useMutation({
     mutationFn: ({ action }: { action: string }) =>
       apiClient.post(`/approvals/floor_check/${id}/${action}`, { comment }),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['floor-check', id] }); toast.success(t('common.save')); setComment(''); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['floor-check', id] });
+      qc.invalidateQueries({ queryKey: ['dashboard'] });
+      toast.success(t('common.save'));
+      setComment('');
+    },
     onError: (e: any) => toast.error(e.response?.data?.message || 'Error'),
   });
 
@@ -54,7 +61,7 @@ export function FloorCheckDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/floor-checks" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to="/floor-checks" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5 rtl:rotate-180" /></Link>
         <h1 className="text-2xl font-bold text-slate-900">{t('floorChecks.detail')} — {formatDate(check.date)}</h1>
         <StatusBadge status={check.status} />
       </div>
@@ -145,7 +152,7 @@ export function FloorCheckDetailPage() {
         </div>
       )}
 
-      {check.status === 'approved' && (
+      {check.status === 'approved' && !IS_DEMO && (
         <div className="card p-5">
           <h2 className="font-semibold text-slate-800 mb-3">{t('reports.title')}</h2>
           <div className="flex gap-3">

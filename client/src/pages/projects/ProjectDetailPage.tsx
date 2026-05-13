@@ -39,7 +39,7 @@ export function ProjectDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/projects" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to="/projects" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5 rtl:rotate-180" /></Link>
         <h1 className="text-2xl font-bold text-slate-900 flex-1">{project.name}</h1>
         <StatusBadge status={project.status} />
       </div>

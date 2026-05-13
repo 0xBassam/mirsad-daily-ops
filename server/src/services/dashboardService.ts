@@ -42,7 +42,6 @@ export async function getDashboardStats() {
     openPurchaseOrdersCount,
     pendingTransfersCount,
     openMaintenanceCount,
-    // New: separate request type counts
     operationRequestsOpen,
     coffeeBreakRequestsOpen,
     receivingTodayCount,
@@ -73,6 +72,7 @@ export async function getDashboardStats() {
     foodInventory,
     materialsInventory,
     topConsumedItems,
+    todayConsumptionRaw,
     checksByFloor,
     recentActivity,
     latestOperationRequests,
@@ -113,13 +113,19 @@ export async function getDashboardStats() {
     ]),
 
     StockMovement.aggregate([
-      { $match: { movementType: 'ISSUE' } },
+      { $match: { movementType: { $in: ['CONSUMPTION', 'ISSUE'] } } },
       { $group: { _id: '$item', consumed: { $sum: '$quantity' } } },
       { $sort: { consumed: -1 } },
       { $limit: 5 },
       { $lookup: { from: 'items', localField: '_id', foreignField: '_id', as: 'item' } },
       { $unwind: { path: '$item', preserveNullAndEmptyArrays: true } },
       { $project: { _id: 0, name: { $ifNull: ['$item.name', 'Unknown'] }, consumed: 1 } },
+    ]),
+
+    // Today's consumption total
+    StockMovement.aggregate([
+      { $match: { movementType: { $in: ['CONSUMPTION', 'ISSUE'] }, movementDate: { $gte: today, $lt: tomorrow } } },
+      { $group: { _id: null, totalQty: { $sum: '$quantity' }, totalTxns: { $sum: 1 } } },
     ]),
 
     FloorCheck.aggregate([
@@ -269,6 +275,10 @@ export async function getDashboardStats() {
     operationRequestsOpen,
     coffeeBreakRequestsOpen,
     receivingToday: receivingTodayCount,
+    todayConsumption: {
+      qty:   (todayConsumptionRaw[0]?.totalQty   ?? 0) as number,
+      txns:  (todayConsumptionRaw[0]?.totalTxns  ?? 0) as number,
+    },
     latestOperationRequests: shapedOpRequests,
     latestCoffeeBreakRequests: shapedCbRequests,
     latestReceiving: shapedReceiving,
