@@ -4,6 +4,13 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/auth/LoginPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
+import { ClientDashboardPage } from './pages/dashboard/ClientDashboardPage';
+import { useAuth } from './contexts/AuthContext';
+
+function DashboardRouter() {
+  const { user } = useAuth();
+  return user?.role === 'client' ? <ClientDashboardPage /> : <DashboardPage />;
+}
 import { UsersPage } from './pages/users/UsersPage';
 import { ProjectsPage } from './pages/projects/ProjectsPage';
 import { BuildingsPage } from './pages/projects/BuildingsPage';
@@ -62,7 +69,7 @@ export default function App() {
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/dashboard" element={<DashboardRouter />} />
               <Route path="/users" element={<UsersPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />

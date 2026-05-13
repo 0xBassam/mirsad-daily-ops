@@ -33,6 +33,11 @@ export interface ISystemSettings extends Document {
   // Operational alert recipients — if empty, falls back to admin/project_manager users
   notificationRecipients: string[];
   emailAlerts:    IEmailAlerts;
+  // Client branding
+  clientName:       string;
+  clientLogoUrl:    string;
+  clientSiteName:   string;
+  clientDepartment: string;
 }
 
 const defaultAlerts: IEmailAlerts = {
@@ -61,6 +66,10 @@ const systemSettingsSchema = new Schema<ISystemSettings>({
   smtpFromName:           { type: String, default: 'Mirsad' },
   smtpTls:                { type: Boolean, default: false },
   notificationRecipients: { type: [String], default: [] },
+  clientName:       { type: String, default: '' },
+  clientLogoUrl:    { type: String, default: '' },
+  clientSiteName:   { type: String, default: '' },
+  clientDepartment: { type: String, default: '' },
   emailAlerts: {
     clientRequestCreated:   { type: Boolean, default: true },
     clientRequestAssigned:  { type: Boolean, default: true },

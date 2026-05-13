@@ -42,6 +42,7 @@ export const updateSettings = asyncHandler(async (req: Request, res: Response) =
     smtpFromEmail: string; smtpFromName: string; smtpTls: boolean;
     notificationRecipients: string | string[];
     emailAlerts: Record<string, boolean>;
+    clientName: string; clientLogoUrl: string; clientSiteName: string; clientDepartment: string;
   }>;
 
   // Set each field explicitly so Mongoose change-tracking works correctly
@@ -57,6 +58,10 @@ export const updateSettings = asyncHandler(async (req: Request, res: Response) =
   if (body.emailAlerts           !== undefined) settings.emailAlerts           = body.emailAlerts as any;
   if (body.notificationRecipients !== undefined)
     settings.notificationRecipients = parseAndValidateRecipientList(body.notificationRecipients);
+  if (body.clientName       !== undefined) (settings as any).clientName       = body.clientName;
+  if (body.clientLogoUrl    !== undefined) (settings as any).clientLogoUrl    = body.clientLogoUrl;
+  if (body.clientSiteName   !== undefined) (settings as any).clientSiteName   = body.clientSiteName;
+  if (body.clientDepartment !== undefined) (settings as any).clientDepartment = body.clientDepartment;
   // Only overwrite secrets when a real value is submitted (not the mask)
   if (body.smtpPass    && body.smtpPass    !== MASK) settings.smtpPass    = body.smtpPass;
   if (body.resendApiKey && body.resendApiKey !== MASK) settings.resendApiKey = body.resendApiKey;

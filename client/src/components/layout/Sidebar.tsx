@@ -39,7 +39,7 @@ const navSections: NavSection[] = [
     items: [
       { to: '/daily-plans',        icon: ClipboardList,  labelKey: 'nav.dailyPlans',        roles: ['admin', 'supervisor', 'project_manager'] },
       { to: '/floor-checks',       icon: CheckSquare,    labelKey: 'nav.floorChecks',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/approvals',          icon: GitBranch,      labelKey: 'nav.approvals',         roles: ['assistant_supervisor', 'project_manager', 'client', 'admin'] },
+      { to: '/approvals',          icon: GitBranch,      labelKey: 'nav.approvals',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/purchase-orders',    icon: ShoppingCart,   labelKey: 'nav.purchaseOrders',    roles: ['admin', 'project_manager', 'assistant_supervisor'] },
       { to: '/spoilage',           icon: Trash2,           labelKey: 'nav.spoilageRecording', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/corrective-actions', icon: ShieldCheck,    labelKey: 'nav.correctiveActions', roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },

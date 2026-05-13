@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { Mail, Server, Send, Save, Eye, EyeOff, Loader2, Zap } from 'lucide-react';
+import { Mail, Server, Send, Save, Eye, EyeOff, Loader2, Zap, Building2 } from 'lucide-react';
 import apiClient from '../../api/client';
 import toast from 'react-hot-toast';
 
@@ -35,6 +35,10 @@ interface Settings {
   smtpTls: boolean;
   notificationRecipients: string[];
   emailAlerts: Record<AlertKey, boolean>;
+  clientName: string;
+  clientLogoUrl: string;
+  clientSiteName: string;
+  clientDepartment: string;
 }
 
 const DEFAULTS: Settings = {
@@ -62,6 +66,10 @@ const DEFAULTS: Settings = {
     maintenanceOpened: true,
     maintenanceCompleted: true,
   },
+  clientName: '',
+  clientLogoUrl: '',
+  clientSiteName: '',
+  clientDepartment: '',
 };
 
 function SectionCard({ title, icon: Icon, children, badge }: { title: string; icon: React.ElementType; children: React.ReactNode; badge?: string }) {
@@ -463,6 +471,32 @@ export function SettingsPage() {
               </span>
             </label>
           ))}
+        </div>
+      </SectionCard>
+
+      {/* Client Branding */}
+      <SectionCard title={t('clientBranding.title')} icon={Building2}>
+        <div className="space-y-4">
+          <Field label={t('clientBranding.clientName')}>
+            <input className={inputCls} value={form.clientName} onChange={e => setForm(p => ({ ...p, clientName: e.target.value }))} placeholder="Ministry of Energy" />
+          </Field>
+          <Field label={t('clientBranding.clientSiteName')}>
+            <input className={inputCls} value={form.clientSiteName} onChange={e => setForm(p => ({ ...p, clientSiteName: e.target.value }))} placeholder="Riyadh HQ Cafeteria" />
+          </Field>
+          <Field label={t('clientBranding.clientDepartment')}>
+            <input className={inputCls} value={form.clientDepartment} onChange={e => setForm(p => ({ ...p, clientDepartment: e.target.value }))} placeholder="Facilities Management" />
+          </Field>
+          <Field label={t('clientBranding.clientLogoUrl')}>
+            <input className={inputCls} value={form.clientLogoUrl} onChange={e => setForm(p => ({ ...p, clientLogoUrl: e.target.value }))} placeholder="https://example.com/logo.png" />
+            <p className="mt-1 text-xs text-slate-400">{t('clientBranding.logoHint')}</p>
+          </Field>
+          {form.clientLogoUrl && (
+            <div className="flex items-center gap-3 mt-2">
+              <span className="text-xs text-slate-500 font-medium">{t('clientBranding.preview')}:</span>
+              <img src={form.clientLogoUrl} alt="logo preview" className="h-10 w-auto rounded-lg border border-slate-200 object-contain bg-slate-50 p-1"
+                onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+            </div>
+          )}
         </div>
       </SectionCard>
 

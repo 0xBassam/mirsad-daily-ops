@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, Plus, X } from 'lucide-react';
 import apiClient from '../../api/client';
+import { useAuth } from '../../contexts/AuthContext';
 
 const REQUEST_TYPES = ['operation_request','coffee_break_request','catering','maintenance','supplies','event','housekeeping','other'] as const;
 const PRIORITIES    = ['low','medium','high','urgent'] as const;
@@ -11,31 +12,37 @@ const PRIORITIES    = ['low','medium','high','urgent'] as const;
 interface CRForm {
   title: string; description: string;
   requestType: string; priority: string;
-  project: string; building: string; floor: string;
+  building: string; floor: string;
   room: string; locationNotes: string;
   scheduledDate: string; scheduledTime: string;
-  employeeName: string; employeeId: string;
-  department: string; mobile: string;
   notes: string;
   items: { name: string; quantity: string; unit: string }[];
 }
 
 const EMPTY: CRForm = {
   title: '', description: '', requestType: 'operation_request', priority: 'medium',
-  project: '', building: '', floor: '', room: '', locationNotes: '',
+  building: '', floor: '', room: '', locationNotes: '',
   scheduledDate: '', scheduledTime: '',
-  employeeName: '', employeeId: '', department: '', mobile: '',
   notes: '', items: [],
 };
 
 export function ClientRequestNewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [form, setForm] = useState<CRForm>(EMPTY);
 
-  const { data: projectsData } = useQuery({ queryKey: ['projects-list'], queryFn: () => apiClient.get('/projects', { params: { limit: 50 } }).then(r => r.data) });
-  const { data: buildingsData } = useQuery({ queryKey: ['buildings-list', form.project], queryFn: () => apiClient.get('/buildings', { params: { limit: 50, project: form.project || undefined } }).then(r => r.data), enabled: !!form.project });
-  const { data: floorsData }    = useQuery({ queryKey: ['floors-list', form.building],  queryFn: () => apiClient.get('/floors',    { params: { limit: 50, building: form.building || undefined } }).then(r => r.data), enabled: !!form.building });
+  const userProject = (user as any)?.project;
+
+  const { data: buildingsData } = useQuery({
+    queryKey: ['buildings-list', userProject],
+    queryFn: () => apiClient.get('/buildings', { params: { limit: 50, project: userProject || undefined } }).then(r => r.data),
+  });
+  const { data: floorsData } = useQuery({
+    queryKey: ['floors-list', form.building],
+    queryFn: () => apiClient.get('/floors', { params: { limit: 50, building: form.building || undefined } }).then(r => r.data),
+    enabled: !!form.building,
+  });
 
   const mutation = useMutation({
     mutationFn: (body: object) => apiClient.post('/client-requests', body).then(r => r.data),
@@ -59,16 +66,13 @@ export function ClientRequestNewPage() {
         e.preventDefault();
         mutation.mutate({
           ...form,
-          building: form.building || undefined,
-          floor: form.floor || undefined,
-          room: form.room || undefined,
+          project:       userProject || undefined,
+          building:      form.building      || undefined,
+          floor:         form.floor         || undefined,
+          room:          form.room          || undefined,
           locationNotes: form.locationNotes || undefined,
           scheduledDate: form.scheduledDate || undefined,
           scheduledTime: form.scheduledTime || undefined,
-          employeeName: form.employeeName || undefined,
-          employeeId: form.employeeId || undefined,
-          department: form.department || undefined,
-          mobile: form.mobile || undefined,
           items: form.items.map(item => ({ ...item, quantity: Number(item.quantity), unit: item.unit || undefined })),
         });
       }}>
@@ -115,20 +119,13 @@ export function ClientRequestNewPage() {
           </div>
         </div>
 
-        {/* Location */}
+        {/* Service Location */}
         <div className="card p-6 space-y-4">
           <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{t('clientRequests.serviceLocation')}</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.project')} *</label>
-              <select className="input w-full" value={form.project} onChange={e => { f('project', e.target.value); f('building', ''); f('floor', ''); }} required>
-                <option value="">{t('common.selectProject')}</option>
-                {(projectsData?.data || []).map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
-              </select>
-            </div>
-            <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.building')}</label>
-              <select className="input w-full" value={form.building} onChange={e => { f('building', e.target.value); f('floor', ''); }} disabled={!form.project}>
+              <select className="input w-full" value={form.building} onChange={e => { f('building', e.target.value); f('floor', ''); }}>
                 <option value="">—</option>
                 {(buildingsData?.data || []).map((b: any) => <option key={b._id} value={b._id}>{b.name}</option>)}
               </select>
@@ -144,32 +141,9 @@ export function ClientRequestNewPage() {
               <label className="block text-sm font-medium text-slate-700 mb-1">{t('clientRequests.room')}</label>
               <input className="input w-full" value={form.room} onChange={e => f('room', e.target.value)} placeholder={t('clientRequests.room')} />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.locationNotes')}</label>
-            <input className="input w-full" value={form.locationNotes} onChange={e => f('locationNotes', e.target.value)} placeholder={t('common.locationNotes')} />
-          </div>
-        </div>
-
-        {/* Employee Info */}
-        <div className="card p-6 space-y-4">
-          <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest">{t('clientRequests.employeeInfo')}</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('clientRequests.employeeName')} *</label>
-              <input className="input w-full" value={form.employeeName} onChange={e => f('employeeName', e.target.value)} required placeholder={t('clientRequests.employeeName')} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('clientRequests.employeeId')} *</label>
-              <input className="input w-full" value={form.employeeId} onChange={e => f('employeeId', e.target.value)} required placeholder={t('clientRequests.employeeId')} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('clientRequests.department')}</label>
-              <input className="input w-full" value={form.department} onChange={e => f('department', e.target.value)} placeholder={t('clientRequests.department')} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">{t('clientRequests.mobile')}</label>
-              <input className="input w-full" type="tel" value={form.mobile} onChange={e => f('mobile', e.target.value)} placeholder="+966 5x xxx xxxx" />
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.locationNotes')}</label>
+              <input className="input w-full" value={form.locationNotes} onChange={e => f('locationNotes', e.target.value)} placeholder={t('common.locationNotes')} />
             </div>
           </div>
         </div>

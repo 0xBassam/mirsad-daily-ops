@@ -29,6 +29,7 @@ import correctiveActionRoutes from './correctiveActionRoutes';
 import exportRoutes from './exportRoutes';
 import menuRoutes from './menuRoutes';
 import settingsRoutes from './settingsRoutes';
+import clientDashboardRoutes from './clientDashboardRoutes';
 
 const router = Router();
 
@@ -66,6 +67,7 @@ router.use('/fridge-checks',       verifyJWT, fridgeCheckRoutes);
 router.use('/corrective-actions',  verifyJWT, correctiveActionRoutes);
 router.use('/export',              verifyJWT, exportRoutes);
 router.use('/menu',                verifyJWT, menuRoutes);
-router.use('/settings',            verifyJWT, settingsRoutes);
+router.use('/settings',             verifyJWT, settingsRoutes);
+router.use('/client-dashboard',     verifyJWT, clientDashboardRoutes);
 
 export default router;
