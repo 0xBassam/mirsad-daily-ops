@@ -5,7 +5,7 @@ import { ClientRequest } from '../models/ClientRequest';
 import { InventoryBalance } from '../models/InventoryBalance';
 import { User } from '../models/User';
 import { asyncHandler } from '../utils/asyncHandler';
-import { getSystemSettings } from '../models/SystemSettings';
+import { Organization } from '../models/Organization';
 
 export const getClientDashboard = asyncHandler(async (req: Request, res: Response) => {
   const orgId = req.organizationId as string;
@@ -98,7 +98,7 @@ export const getClientDashboard = asyncHandler(async (req: Request, res: Respons
         ])
       : Promise.resolve([]),
 
-    getSystemSettings(),
+    Organization.findById(orgId).select('name settings').lean(),
   ]);
 
   // Stats map
@@ -133,10 +133,10 @@ export const getClientDashboard = asyncHandler(async (req: Request, res: Respons
     success: true,
     data: {
       branding: {
-        clientName:       settings.clientName       || '',
-        clientLogoUrl:    settings.clientLogoUrl    || '',
-        clientSiteName:   settings.clientSiteName   || '',
-        clientDepartment: settings.clientDepartment || '',
+        clientName:       (settings as any)?.name                    || '',
+        clientLogoUrl:    (settings as any)?.settings?.logoUrl       || '',
+        clientSiteName:   (settings as any)?.settings?.siteName      || '',
+        clientDepartment: (settings as any)?.settings?.department    || '',
       },
       stats,
       byType:  byTypeAgg.map(r => ({ type: r._id, count: r.count })),

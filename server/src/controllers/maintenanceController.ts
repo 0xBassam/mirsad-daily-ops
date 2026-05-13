@@ -46,9 +46,9 @@ export const createMaintenanceRequest = asyncHandler(async (req: Request, res: R
   (async () => {
     try {
       const populated = await MaintenanceRequest.findById(data._id).populate('reportedBy', 'fullName').populate('floor', 'name').lean() as any;
-      const recipients = await getNotificationRecipients();
+      const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
-        await sendMaintenanceOpened({ to: recipients, title: data.title, category: data.category || '', priority: data.priority || '', location: populated?.floor?.name, maintenanceId: String(data._id), reporterName: populated?.reportedBy?.fullName });
+        await sendMaintenanceOpened({ to: recipients, title: data.title, category: data.category || '', priority: data.priority || '', location: populated?.floor?.name, maintenanceId: String(data._id), reporterName: populated?.reportedBy?.fullName }, orgId);
       }
     } catch { /* silent */ }
   })();
@@ -102,9 +102,9 @@ export const resolveMaintenanceRequest = asyncHandler(async (req: Request, res: 
 
   (async () => {
     try {
-      const recipients = await getNotificationRecipients();
+      const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
-        await sendMaintenanceCompleted({ to: recipients, title: mr.title, category: (mr as any).category || '', priority: mr.priority || '', maintenanceId: String(mr._id) });
+        await sendMaintenanceCompleted({ to: recipients, title: mr.title, category: (mr as any).category || '', priority: mr.priority || '', maintenanceId: String(mr._id) }, orgId);
       }
     } catch { /* silent */ }
   })();

@@ -55,7 +55,7 @@ export async function applyMovementToBalance(params: {
           Item.findById(item).select('name unit type').lean() as any,
           Project.findById(project).select('name').lean() as any,
         ]);
-        const recipients = await getNotificationRecipients();
+        const recipients = await getNotificationRecipients(organizationId || '');
         if (recipients.length) {
           const alertData = {
             itemName: itemDoc?.name || String(item),
@@ -67,9 +67,9 @@ export async function applyMovementToBalance(params: {
             period,
           };
           if (newStatus === 'out_of_stock') {
-            await sendOutOfStockAlert({ to: recipients, ...alertData });
+            await sendOutOfStockAlert({ to: recipients, ...alertData }, organizationId || '');
           } else {
-            await sendLowStockAlert({ to: recipients, ...alertData });
+            await sendLowStockAlert({ to: recipients, ...alertData }, organizationId || '');
           }
         }
       } catch { /* silent */ }

@@ -10,6 +10,7 @@ import { AppError } from '../utils/AppError';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { generateFloorCheckPDF, generateFloorCheckExcel, generateInventoryExcel } from '../services/reportService';
 import { logAction } from '../services/auditService';
+import { Organization } from '../models/Organization';
 import { format } from 'date-fns';
 
 export const getReports = asyncHandler(async (req: Request, res: Response) => {
@@ -196,7 +197,8 @@ export const generateReport = asyncHandler(async (req: Request, res: Response) =
 
 export const exportFloorCheckPDF = asyncHandler(async (req: Request, res: Response) => {
   const orgId = req.organizationId as string;
-  await generateFloorCheckPDF(req.params.id, res, orgId);
+  const org = await Organization.findById(orgId).select('name').lean() as any;
+  await generateFloorCheckPDF(req.params.id, res, orgId, org?.name);
   await logAction({ userId: req.user?.userId, action: 'export', entityType: 'floor_check', entityId: req.params.id, req });
 });
 

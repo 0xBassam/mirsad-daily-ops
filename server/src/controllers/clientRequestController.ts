@@ -50,7 +50,7 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
   (async () => {
     try {
       const populated = await ClientRequest.findById(data._id).populate('requestedBy', 'fullName').populate('building', 'name').populate('floor', 'name').lean() as any;
-      const recipients = await getNotificationRecipients();
+      const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
         await sendRequestCreated({
           to: recipients,
@@ -66,7 +66,7 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
           scheduledTime: data.scheduledTime,
           employeeName:  data.employeeName,
           employeeId:    data.employeeId,
-        });
+        }, orgId);
       }
     } catch { /* silent */ }
   })();
@@ -97,7 +97,7 @@ export const assignClientRequest = asyncHandler(async (req: Request, res: Respon
     try {
       const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').populate('assignedTo', 'fullName').lean() as any;
       if (populated?.requestedBy?.email) {
-        await sendRequestAssigned({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, assigneeName: populated.assignedTo?.fullName || 'Staff', requestId: String(cr._id) });
+        await sendRequestAssigned({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, assigneeName: populated.assignedTo?.fullName || 'Staff', requestId: String(cr._id) }, orgId);
       }
     } catch { /* silent */ }
   })();
@@ -150,7 +150,7 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
     try {
       const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').lean() as any;
       if (populated?.requestedBy?.email) {
-        await sendRequestDelivered({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, requestId: String(cr._id) });
+        await sendRequestDelivered({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, requestId: String(cr._id) }, orgId);
       }
     } catch { /* silent */ }
   })();
@@ -171,9 +171,9 @@ export const confirmClientRequest = asyncHandler(async (req: Request, res: Respo
   (async () => {
     try {
       const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName').lean() as any;
-      const recipients = await getNotificationRecipients();
+      const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
-        await sendRequestConfirmed({ to: recipients, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', requestId: String(cr._id) });
+        await sendRequestConfirmed({ to: recipients, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', requestId: String(cr._id) }, orgId);
       }
     } catch { /* silent */ }
   })();

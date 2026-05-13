@@ -110,9 +110,9 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
   (async () => {
     try {
       const populated = await Receiving.findById(receiving._id).populate('supplier', 'name').lean() as any;
-      const recipients = await getNotificationRecipients();
+      const recipients = await getNotificationRecipients(orgId);
       if (recipients.length) {
-        await sendReceivingCompleted({ to: recipients, invoiceNumber: receiving.invoiceNumber || '', supplierName: populated?.supplier?.name || '—', lineCount: receiving.lines?.length || 0, receivingId: String(receiving._id) });
+        await sendReceivingCompleted({ to: recipients, invoiceNumber: receiving.invoiceNumber || '', supplierName: populated?.supplier?.name || '—', lineCount: receiving.lines?.length || 0, receivingId: String(receiving._id) }, orgId);
       }
     } catch { /* silent */ }
   })();
