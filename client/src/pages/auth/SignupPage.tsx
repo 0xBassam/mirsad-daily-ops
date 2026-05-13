@@ -48,8 +48,8 @@ export function SignupPage() {
                 <span className="text-white font-bold text-xl tracking-tight">M</span>
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">Create your organization</h1>
-            <p className="text-slate-500 text-sm mt-1">Mirsad · Daily Operations Platform</p>
+            <h1 className="text-2xl font-bold text-slate-900">Launch your operations platform</h1>
+            <p className="text-slate-500 text-sm mt-1">14-day free trial · No credit card required</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,7 +109,7 @@ export function SignupPage() {
               </div>
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5 mt-2">
-              {loading ? 'Creating…' : 'Create Organization'}
+              {loading ? 'Setting up your workspace…' : 'Start Free Trial →'}
             </button>
           </form>
 
@@ -117,6 +117,11 @@ export function SignupPage() {
             Already have an account?{' '}
             <Link to="/login" className="text-indigo-600 hover:text-indigo-700 font-medium">Sign in</Link>
           </p>
+          <div className="mt-3 text-center">
+            <Link to="/" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+              ← Back to home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

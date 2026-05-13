@@ -118,8 +118,15 @@ const navSections: NavSection[] = [
   },
 ];
 
+const PLAN_BADGE: Record<string, string> = {
+  trial: 'bg-amber-500/20 text-amber-300',
+  starter: 'bg-slate-500/20 text-slate-300',
+  professional: 'bg-indigo-500/20 text-indigo-300',
+  enterprise: 'bg-violet-500/20 text-violet-300',
+};
+
 export function Sidebar({ onClose }: { onClose?: () => void }) {
-  const { user, logout } = useAuth();
+  const { user, logout, orgName, plan } = useAuth();
   const { t, i18n } = useTranslation();
   const [expanded, setExpanded] = useState<string | null>(null);
 
@@ -134,17 +141,25 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
 
   return (
     <aside className="w-64 bg-slate-900 text-white flex flex-col h-full md:h-screen md:sticky top-0 overflow-y-auto">
-      {/* Logo */}
+      {/* Logo + org */}
       <div className="px-5 py-4 border-b border-slate-700">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center flex-shrink-0 shadow">
             <span className="text-white font-bold text-sm">M</span>
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <div className="text-base font-bold text-white leading-tight">Mirsad</div>
             <div className="text-slate-400 text-xs">مرصاد · Daily Ops</div>
           </div>
         </div>
+        {orgName && (
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <span className="text-xs text-slate-400 truncate">{orgName}</span>
+            <span className={clsx('px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0', PLAN_BADGE[plan] ?? 'bg-slate-500/20 text-slate-300')}>
+              {plan.charAt(0).toUpperCase() + plan.slice(1)}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Nav */}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import apiClient from '../../api/client';
 import toast from 'react-hot-toast';
@@ -57,8 +57,9 @@ export function LoginPage() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 className="input"
-                placeholder="Enter your email"
+                placeholder="you@company.com"
                 required
+                autoComplete="email"
               />
             </div>
             <div>
@@ -68,15 +69,28 @@ export function LoginPage() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 className="input"
-                placeholder="Enter your password"
+                placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
             </div>
             <button type="submit" disabled={loading} className="btn-primary w-full justify-center py-2.5 mt-2">
-              {loading ? 'Signing in…' : 'Sign In'}
+              {loading ? 'Signing in…' : 'Sign In →'}
             </button>
           </form>
 
+          <p className="mt-6 text-center text-sm text-slate-500">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-indigo-600 hover:text-indigo-700 font-medium">
+              Start your free trial
+            </Link>
+          </p>
+
+          <div className="mt-4 pt-4 border-t border-slate-100 text-center">
+            <Link to="/" className="text-xs text-slate-400 hover:text-slate-600 transition-colors">
+              ← Back to home
+            </Link>
+          </div>
         </div>
       </div>
     </div>

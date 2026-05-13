@@ -6,6 +6,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { ClientDashboardPage } from './pages/dashboard/ClientDashboardPage';
+import { LandingPage } from './pages/landing/LandingPage';
 import { useAuth } from './contexts/AuthContext';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 
@@ -22,6 +23,11 @@ function DashboardRouter() {
   const { user } = useAuth();
   if (user?.role === 'superadmin') return <Navigate to="/super-admin" replace />;
   return user?.role === 'client' ? <ClientDashboardPage /> : <DashboardPage />;
+}
+
+function HomeRoute() {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 }
 import { UsersPage } from './pages/users/UsersPage';
 import { ProjectsPage } from './pages/projects/ProjectsPage';
@@ -82,13 +88,13 @@ export default function App() {
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AuthProvider>
         <Routes>
+          <Route path="/" element={<HomeRoute />} />
           <Route path="/login"  element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>
               <Route element={<PageBoundary />}>
-              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardRouter />} />
 
               {/* Super Admin */}
