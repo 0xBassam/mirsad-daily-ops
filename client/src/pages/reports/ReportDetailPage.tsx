@@ -9,6 +9,8 @@ import { StatusBadge, Badge } from '../../components/ui/Badge';
 import { formatDate } from '../../utils/formatDate';
 import { downloadExport } from '../../utils/downloadExport';
 import { ArrowLeft, Download, Loader2 } from 'lucide-react';
+
+const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
 import toast from 'react-hot-toast';
 
 const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray'> = {
@@ -58,7 +60,7 @@ export function ReportDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to="/reports" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to="/reports" className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5 rtl:rotate-180" /></Link>
         <h1 className="text-xl font-bold text-slate-900 flex-1">{r.title}</h1>
         <StatusBadge status={r.status} />
       </div>
@@ -88,6 +90,7 @@ export function ReportDetailPage() {
             {t('reports.preview')}
             {!previewLoading && <span className="ms-2 text-xs text-slate-400 font-normal">({rows.length} {t('common.rows')})</span>}
           </h2>
+          {!IS_DEMO && (
           <div className="flex gap-3">
             <button onClick={() => handleExport('pdf')} disabled={!!exporting}
               className="btn-primary text-sm flex items-center gap-1.5 disabled:opacity-60">
@@ -100,6 +103,7 @@ export function ReportDetailPage() {
               {t('reports.exportExcel')}
             </button>
           </div>
+          )}
         </div>
         {previewLoading ? (
           <div className="p-8 text-center text-slate-400">{t('common.loading')}</div>

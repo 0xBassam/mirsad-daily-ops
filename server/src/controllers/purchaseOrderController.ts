@@ -5,6 +5,8 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
+import { applyMovementToBalance } from '../services/inventoryService';
+import { sendNewPurchaseOrder, getNotificationRecipients } from '../services/emailService';
 
 export const getPurchaseOrders = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, skip } = getPaginationParams(req);
@@ -49,6 +51,16 @@ export const createPurchaseOrder = asyncHandler(async (req: Request, res: Respon
   const data = await PurchaseOrder.create({ ...req.body, lines, createdBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'purchase_order', entityId: data._id, req });
   res.status(201).json({ success: true, data });
+
+  (async () => {
+    try {
+      const populated = await PurchaseOrder.findById(data._id).populate('supplier', 'name').lean() as any;
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendNewPurchaseOrder({ to: recipients, poNumber: data.poNumber, supplierName: populated?.supplier?.name || '—', month: data.month || '', lineCount: data.lines?.length || 0, poId: String(data._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const updatePurchaseOrder = asyncHandler(async (req: Request, res: Response) => {
@@ -73,22 +85,16 @@ export const receivePOLine = asyncHandler(async (req: Request, res: Response) =>
   if (!line) throw new AppError('PO line not found', 404);
 
   line.receivedQty += quantity;
-  line.remainingQty = line.approvedQty - line.distributedQty - line.consumedQty;
-  (po as any).recalculate();
+  (po as any).recalculate(); // sets remainingQty = approvedQty - receivedQty
   await po.save();
 
-  // Create RECEIVE stock movement
+  const movDate = new Date();
   await StockMovement.create({
-    project: po.project,
-    item: line.item,
-    movementType: 'RECEIVE',
-    quantity,
-    movementDate: new Date(),
-    sourceType: 'purchase_order',
-    sourceRef: po._id,
-    notes: notes || `PO ${po.poNumber} — receive`,
-    createdBy: req.user?.userId,
+    project: po.project, item: line.item, movementType: 'RECEIVE', quantity,
+    movementDate: movDate, sourceType: 'purchase_order', sourceRef: po._id,
+    notes: notes || `PO ${po.poNumber} — receive`, createdBy: req.user?.userId,
   });
+  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: 'RECEIVE', quantity, date: movDate });
 
   await logAction({ userId: req.user?.userId, action: 'update', entityType: 'purchase_order', entityId: po._id, req });
   res.json({ success: true, data: po });
@@ -111,18 +117,14 @@ export const distributePOLine = asyncHandler(async (req: Request, res: Response)
   (po as any).recalculate();
   await po.save();
 
-  // Create stock movement
+  const movType2 = type === 'consume' ? 'CONSUMPTION' : 'ISSUE';
+  const movDate2 = new Date();
   await StockMovement.create({
-    project: po.project,
-    item: line.item,
-    movementType: type === 'consume' ? 'CONSUMPTION' : 'ISSUE',
-    quantity,
-    movementDate: new Date(),
-    sourceType: 'purchase_order',
-    sourceRef: po._id,
-    notes: notes || `PO ${po.poNumber} — ${type}`,
-    createdBy: req.user?.userId,
+    project: po.project, item: line.item, movementType: movType2, quantity,
+    movementDate: movDate2, sourceType: 'purchase_order', sourceRef: po._id,
+    notes: notes || `PO ${po.poNumber} — ${type}`, createdBy: req.user?.userId,
   });
+  await applyMovementToBalance({ project: po.project as any, item: line.item as any, movementType: movType2 as any, quantity, date: movDate2 });
 
   res.json({ success: true, data: po });
 });

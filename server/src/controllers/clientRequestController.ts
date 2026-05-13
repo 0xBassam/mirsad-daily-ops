@@ -1,9 +1,13 @@
 import { Request, Response } from 'express';
 import { ClientRequest } from '../models/ClientRequest';
+import { Item } from '../models/Item';
+import { StockMovement } from '../models/StockMovement';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
+import { applyMovementToBalance } from '../services/inventoryService';
+import { sendRequestCreated, sendRequestAssigned, sendRequestDelivered, sendRequestConfirmed, getNotificationRecipients } from '../services/emailService';
 
 const POPULATE = [
   { path: 'project',     select: 'name' },
@@ -38,6 +42,31 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
   const data = await ClientRequest.create({ ...req.body, requestedBy: req.user?.userId });
   await logAction({ userId: req.user?.userId, action: 'create', entityType: 'client_request', entityId: data._id, req });
   res.status(201).json({ success: true, data });
+
+  // Fire-and-forget email to notification recipients
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(data._id).populate('requestedBy', 'fullName').populate('building', 'name').populate('floor', 'name').lean() as any;
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendRequestCreated({
+          to: recipients,
+          requestTitle:  data.title,
+          requestType:   data.requestType,
+          requesterName: populated?.requestedBy?.fullName || 'Client',
+          building:      populated?.building?.name,
+          floor:         populated?.floor?.name,
+          room:          data.room,
+          itemCount:     data.items?.length,
+          requestId:     String(data._id),
+          scheduledDate: data.scheduledDate ? data.scheduledDate.toISOString().split('T')[0] : undefined,
+          scheduledTime: data.scheduledTime,
+          employeeName:  data.employeeName,
+          employeeId:    data.employeeId,
+        });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const updateClientRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -57,6 +86,16 @@ export const assignClientRequest = asyncHandler(async (req: Request, res: Respon
   await cr.save();
   await logAction({ userId: req.user?.userId, action: 'assign', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
+
+  // Notify requester
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').populate('assignedTo', 'fullName').lean() as any;
+      if (populated?.requestedBy?.email) {
+        await sendRequestAssigned({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, assigneeName: populated.assignedTo?.fullName || 'Staff', requestId: String(cr._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const startClientRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -76,8 +115,37 @@ export const deliverClientRequest = asyncHandler(async (req: Request, res: Respo
   cr.deliveredAt = new Date();
   if (req.body.notes) cr.notes = req.body.notes;
   await cr.save();
+
+  // Auto-consume inventory for request items (best-effort name match, never blocks delivery)
+  if (cr.items?.length && cr.project) {
+    const movDate = new Date();
+    for (const reqItem of cr.items) {
+      try {
+        const invItem = await Item.findOne({ name: { $regex: new RegExp(`^${reqItem.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
+        if (!invItem) continue;
+        await StockMovement.create({
+          project: cr.project, item: invItem._id, movementType: 'CONSUMPTION',
+          quantity: reqItem.quantity, movementDate: movDate,
+          sourceType: 'client_request', sourceRef: cr._id,
+          notes: cr.title, createdBy: req.user?.userId,
+        });
+        await applyMovementToBalance({ project: cr.project as any, item: invItem._id as any, movementType: 'CONSUMPTION', quantity: reqItem.quantity, date: movDate });
+      } catch { /* silent — don't fail delivery if inventory lookup errors */ }
+    }
+  }
+
   await logAction({ userId: req.user?.userId, action: 'deliver', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
+
+  // Notify requester to confirm
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName email').lean() as any;
+      if (populated?.requestedBy?.email) {
+        await sendRequestDelivered({ to: populated.requestedBy.email, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated.requestedBy.fullName, requestId: String(cr._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const confirmClientRequest = asyncHandler(async (req: Request, res: Response) => {
@@ -89,6 +157,17 @@ export const confirmClientRequest = asyncHandler(async (req: Request, res: Respo
   await cr.save();
   await logAction({ userId: req.user?.userId, action: 'confirm', entityType: 'client_request', entityId: cr._id, req });
   res.json({ success: true, data: cr });
+
+  // Notify notification recipients of confirmation
+  (async () => {
+    try {
+      const populated = await ClientRequest.findById(cr._id).populate('requestedBy', 'fullName').lean() as any;
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendRequestConfirmed({ to: recipients, requestTitle: cr.title, requestType: cr.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', requestId: String(cr._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });
 
 export const rejectClientRequest = asyncHandler(async (req: Request, res: Response) => {

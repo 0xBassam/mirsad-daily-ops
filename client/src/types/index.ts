@@ -1,4 +1,4 @@
-export type UserRole = 'admin' | 'supervisor' | 'assistant_supervisor' | 'project_manager' | 'client';
+export type UserRole = 'admin' | 'supervisor' | 'assistant_supervisor' | 'project_manager' | 'client' | 'operations' | 'warehouse' | 'kitchen';
 
 export interface User {
   _id: string;
@@ -61,7 +61,7 @@ export interface DailyPlan {
   project: { _id: string; name: string } | string;
   building: { _id: string; name: string } | string;
   shift: 'morning' | 'afternoon' | 'evening' | 'night';
-  status: 'draft' | 'published' | 'closed';
+  status: 'draft' | 'published' | 'in_progress' | 'completed' | 'closed';
   notes?: string;
   createdBy?: { _id: string; fullName: string };
   createdAt: string;
@@ -246,7 +246,7 @@ export interface DashboardStats {
   lowStockItemsList?: DashboardLowStockRow[];
 }
 
-export type ReportType = 'daily_floor_check' | 'daily_project_summary' | 'weekly_warehouse' | 'monthly_food_inventory' | 'monthly_materials' | 'approval_summary';
+export type ReportType = 'daily_floor_check' | 'daily_project_summary' | 'weekly_warehouse' | 'monthly_food_inventory' | 'monthly_materials' | 'approval_summary' | 'food_stock_balance';
 
 export interface Report {
   _id: string;
@@ -445,6 +445,8 @@ export interface ClientRequest {
   project: { _id: string; name: string } | string;
   building?: { _id: string; name: string } | string;
   floor?: { _id: string; name: string } | string;
+  room?: string;
+  locationNotes?: string;
   requestedBy: { _id: string; fullName: string; role?: string } | string;
   assignedTo?: { _id: string; fullName: string } | string;
   status: 'submitted' | 'assigned' | 'in_progress' | 'delivered' | 'confirmed' | 'rejected';

@@ -25,8 +25,17 @@ export interface IClientRequest extends Document {
   expectedDelivery?: Date;
   deliveredAt?:      Date;
   confirmedAt?:      Date;
+  room?:             string;
+  locationNotes?:    string;
   rejectionReason?:  string;
   notes?:            string;
+  // Scheduling & employee fields
+  scheduledDate?:    Date;
+  scheduledTime?:    string;
+  employeeName?:     string;
+  employeeId?:       string;
+  department?:       string;
+  mobile?:           string;
 }
 
 const itemSchema = new Schema<IRequestItem>({
@@ -50,8 +59,16 @@ const clientRequestSchema = new Schema<IClientRequest>({
   expectedDelivery: Date,
   deliveredAt:      Date,
   confirmedAt:      Date,
+  room:             String,
+  locationNotes:    String,
   rejectionReason:  String,
   notes:            String,
+  scheduledDate:    Date,
+  scheduledTime:    String,
+  employeeName:     String,
+  employeeId:       String,
+  department:       String,
+  mobile:           String,
 }, { timestamps: true });
 
 clientRequestSchema.index({ project: 1, status: 1, requestedBy: 1 });

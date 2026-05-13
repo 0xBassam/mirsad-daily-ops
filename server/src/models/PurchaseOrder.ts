@@ -69,20 +69,27 @@ purchaseOrderSchema.methods.recalculate = function () {
   let totalReceived = 0;
 
   for (const line of this.lines) {
-    line.remainingQty = line.approvedQty - line.distributedQty - line.consumedQty;
-    line.variance = line.remainingQty - (line.approvedQty - line.receivedQty);
+    // Remaining = units still pending delivery from supplier
+    line.remainingQty = line.approvedQty - line.receivedQty;
+    // Variance = received stock not yet consumed/distributed (on-hand buffer)
+    line.variance = line.receivedQty - line.distributedQty - line.consumedQty;
     totalApproved += line.approvedQty;
     totalReceived += line.receivedQty;
-    if (line.remainingQty < 0) anyOverConsumed = true;
-    else if (line.approvedQty > 0 && line.remainingQty / line.approvedQty < 0.15) anyNearDepletion = true;
+
+    const usedQty = line.distributedQty + line.consumedQty;
+    if (usedQty > line.receivedQty) {
+      anyOverConsumed = true;
+    } else if (line.receivedQty > 0 && (line.receivedQty - usedQty) / Math.max(1, line.approvedQty) < 0.15) {
+      anyNearDepletion = true;
+    }
   }
 
   if (this.status === 'closed') return;
-  if (anyOverConsumed) this.status = 'over_consumed';
-  else if (anyNearDepletion) this.status = 'near_depletion';
-  else if (totalReceived >= totalApproved) this.status = 'fully_received';
-  else if (totalReceived > 0) this.status = 'partially_received';
-  else this.status = 'active';
+  if (anyOverConsumed)                                    this.status = 'over_consumed';
+  else if (anyNearDepletion)                              this.status = 'near_depletion';
+  else if (totalApproved > 0 && totalReceived >= totalApproved) this.status = 'fully_received';
+  else if (totalReceived > 0)                             this.status = 'partially_received';
+  else                                                    this.status = 'active';
 };
 
 export const PurchaseOrder = mongoose.model<IPurchaseOrder>('PurchaseOrder', purchaseOrderSchema);

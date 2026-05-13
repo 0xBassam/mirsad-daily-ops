@@ -4,31 +4,30 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ShieldCheck } from 'lucide-react';
 import apiClient from '../../api/client';
+import { useAuth } from '../../contexts/AuthContext';
 
 const SOURCE_TYPES = ['fridge_check', 'floor_check', 'inventory', 'manual'] as const;
 const PRIORITIES   = ['low', 'medium', 'high', 'critical'] as const;
 
 interface CAForm {
   title: string; description: string;
-  sourceType: string; project: string;
+  sourceType: string;
   assignedTo: string; dueDate: string; priority: string;
 }
 
 const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 3);
 const EMPTY: CAForm = {
-  title: '', description: '', sourceType: 'manual', project: '',
+  title: '', description: '', sourceType: 'manual',
   assignedTo: '', dueDate: tomorrow.toISOString().split('T')[0], priority: 'medium',
 };
 
 export function CorrectiveActionNewPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const userProject = (user as any)?.project;
   const [form, setForm] = useState<CAForm>(EMPTY);
 
-  const { data: projectsData } = useQuery({
-    queryKey: ['projects-list'],
-    queryFn: () => apiClient.get('/projects', { params: { limit: 50 } }).then(r => r.data),
-  });
   const { data: usersData } = useQuery({
     queryKey: ['users-list'],
     queryFn: () => apiClient.get('/users', { params: { limit: 100 } }).then(r => r.data),
@@ -50,7 +49,7 @@ export function CorrectiveActionNewPage() {
 
       <form
         className="card p-6 space-y-4"
-        onSubmit={e => { e.preventDefault(); mutation.mutate(form); }}
+        onSubmit={e => { e.preventDefault(); mutation.mutate({ ...form, project: userProject || undefined }); }}
       >
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">{t('correctiveActions.title')} *</label>
@@ -63,13 +62,6 @@ export function CorrectiveActionNewPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">{t('common.project')} *</label>
-            <select className="input w-full" value={form.project} onChange={e => f('project', e.target.value)} required>
-              <option value="">{t('common.selectProject')}</option>
-              {(projectsData?.data || []).map((p: any) => <option key={p._id} value={p._id}>{p.name}</option>)}
-            </select>
-          </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">{t('correctiveActions.sourceType')} *</label>
             <select className="input w-full" value={form.sourceType} onChange={e => f('sourceType', e.target.value)}>

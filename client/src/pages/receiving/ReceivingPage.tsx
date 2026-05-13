@@ -3,7 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { Truck, Package } from 'lucide-react';
+import { Truck, Package, Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import apiClient from '../../api/client';
 import { Receiving } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
@@ -39,6 +40,9 @@ export function ReceivingPage() {
           <h1 className="text-2xl font-bold text-slate-900">{t('receiving.title')}</h1>
           <p className="text-slate-500 text-sm mt-1">{t('receiving.subtitle')}</p>
         </div>
+        <Link to="/receiving/new" className="btn-primary flex items-center gap-2">
+          <Plus className="h-4 w-4" />{t('receiving.new')}
+        </Link>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

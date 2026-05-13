@@ -42,7 +42,7 @@ export function InventoryItemDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Link to={backPath} className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5" /></Link>
+        <Link to={backPath} className="text-slate-400 hover:text-slate-600"><ArrowLeft className="h-5 w-5 rtl:rotate-180" /></Link>
         <h1 className="text-2xl font-bold text-slate-900 flex-1">{item?.name || '—'}</h1>
         <StatusBadge status={balance.status} />
       </div>

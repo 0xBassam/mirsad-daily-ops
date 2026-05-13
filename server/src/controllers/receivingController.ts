@@ -6,6 +6,8 @@ import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { getPaginationParams, paginationMeta } from '../utils/paginate';
 import { logAction } from '../services/auditService';
+import { applyMovementToBalance } from '../services/inventoryService';
+import { sendReceivingCompleted, getNotificationRecipients } from '../services/emailService';
 
 export const getReceivings = asyncHandler(async (req: Request, res: Response) => {
   const { page, limit, skip } = getPaginationParams(req);
@@ -72,16 +74,13 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
 
   for (const line of goodLines) {
     await StockMovement.create({
-      project: receiving.project,
-      item: line.item,
-      movementType: 'RECEIVE',
-      quantity: line.quantityReceived,
-      movementDate: receiving.deliveryDate,
-      sourceType: 'receiving',
-      sourceRef: receiving._id,
+      project: receiving.project, item: line.item, movementType: 'RECEIVE',
+      quantity: line.quantityReceived, movementDate: receiving.deliveryDate,
+      sourceType: 'receiving', sourceRef: receiving._id,
       notes: receiving.invoiceNumber ? `Invoice ${receiving.invoiceNumber}` : 'Delivery received',
       createdBy: req.user?.userId,
     });
+    await applyMovementToBalance({ project: receiving.project as any, item: line.item as any, movementType: 'RECEIVE', quantity: line.quantityReceived, date: receiving.deliveryDate });
   }
 
   // Update linked PO receivedQty
@@ -101,4 +100,14 @@ export const confirmReceiving = asyncHandler(async (req: Request, res: Response)
 
   await logAction({ userId: req.user?.userId, action: 'confirm', entityType: 'receiving', entityId: receiving._id, req });
   res.json({ success: true, data: receiving });
+
+  (async () => {
+    try {
+      const populated = await Receiving.findById(receiving._id).populate('supplier', 'name').lean() as any;
+      const recipients = await getNotificationRecipients();
+      if (recipients.length) {
+        await sendReceivingCompleted({ to: recipients, invoiceNumber: receiving.invoiceNumber || '', supplierName: populated?.supplier?.name || '—', lineCount: receiving.lines?.length || 0, receivingId: String(receiving._id) });
+      }
+    } catch { /* silent */ }
+  })();
 });

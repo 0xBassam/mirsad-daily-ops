@@ -10,6 +10,8 @@ import { Pagination } from '../../components/ui/Pagination';
 import { formatDate } from '../../utils/formatDate';
 import { downloadExport } from '../../utils/downloadExport';
 import { Download, Plus, X } from 'lucide-react';
+
+const IS_DEMO = import.meta.env.VITE_DEMO_MODE === 'true';
 import toast from 'react-hot-toast';
 
 const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray'> = {
@@ -19,6 +21,7 @@ const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray
   monthly_food_inventory: 'yellow',
   monthly_materials: 'gray',
   approval_summary: 'indigo',
+  food_stock_balance: 'green',
 };
 
 const REPORT_TYPES = [
@@ -28,6 +31,7 @@ const REPORT_TYPES = [
   'monthly_food_inventory',
   'monthly_materials',
   'approval_summary',
+  'food_stock_balance',
 ] as const;
 
 const today = new Date().toISOString().split('T')[0];
@@ -134,13 +138,13 @@ export function ReportsPage() {
       <div className="card overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
-            <tr>{[t('common.name'), t('reports.reportType'), t('common.project'), t('reports.dateRange'), t('common.status'), t('common.createdBy'), ''].map(h => (
+            <tr>{[t('common.name'), t('reports.reportType'), t('common.project'), t('reports.dateRange'), t('common.status'), t('common.createdBy'), ...(!IS_DEMO ? [''] : [])].map(h => (
               <th key={h} className="px-4 py-3 text-start text-xs font-semibold text-slate-500 uppercase">{h}</th>
             ))}</tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {data?.data?.map((r: Report) => (
-              <tr key={r._id} className="hover:bg-slate-50 cursor-pointer" onClick={() => navigate(`/reports/${r._id}`)}>
+              <tr key={r._id} className={`hover:bg-slate-50 ${!IS_DEMO ? 'cursor-pointer' : ''}`} onClick={() => !IS_DEMO && navigate(`/reports/${r._id}`)}>
                 <td className="px-4 py-3 font-medium text-slate-900 max-w-xs truncate">{r.title}</td>
                 <td className="px-4 py-3">
                   <Badge variant={TYPE_COLORS[r.reportType] || 'gray'}>{t(`reports.${r.reportType}`)}</Badge>
@@ -149,6 +153,7 @@ export function ReportsPage() {
                 <td className="px-4 py-3 text-slate-500 text-xs">{formatDate(r.dateFrom)} – {formatDate(r.dateTo)}</td>
                 <td className="px-4 py-3"><StatusBadge status={r.status} /></td>
                 <td className="px-4 py-3 text-slate-500">{r.generatedBy?.fullName || '—'}</td>
+                {!IS_DEMO && (
                 <td className="px-4 py-3" onClick={e => e.stopPropagation()}>
                   <button
                     className="text-slate-400 hover:text-indigo-600"
@@ -158,6 +163,7 @@ export function ReportsPage() {
                     <Download className="h-4 w-4" />
                   </button>
                 </td>
+                )}
               </tr>
             ))}
             {(!data?.data || data.data.length === 0) && (

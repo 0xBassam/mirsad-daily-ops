@@ -56,7 +56,7 @@ export function BatchDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <button onClick={() => navigate(-1)} className="p-2 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-5 w-5 rtl:rotate-180" />
         </button>
         <div>
           <h1 className="text-xl font-bold text-slate-900">{batch.batchNumber}</h1>

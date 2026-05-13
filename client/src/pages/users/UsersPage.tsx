@@ -12,7 +12,7 @@ import { formatDate } from '../../utils/formatDate';
 import { Plus, Pencil, UserX } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const ROLES = ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'client'];
+const ROLES = ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'warehouse', 'kitchen', 'client'];
 
 export function UsersPage() {
   const { t } = useTranslation();
