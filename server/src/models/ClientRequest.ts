@@ -11,6 +11,7 @@ interface IRequestItem {
 }
 
 export interface IClientRequest extends Document {
+  organization?:     mongoose.Types.ObjectId;
   title:             string;
   description:       string;
   requestType:       ClientRequestType;
@@ -45,6 +46,7 @@ const itemSchema = new Schema<IRequestItem>({
 }, { _id: false });
 
 const clientRequestSchema = new Schema<IClientRequest>({
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
   title:       { type: String, required: true, trim: true },
   description: { type: String, required: true },
   requestType: { type: String, enum: ['operation_request','coffee_break_request','catering','maintenance','supplies','event','housekeeping','other'], required: true },
@@ -71,6 +73,7 @@ const clientRequestSchema = new Schema<IClientRequest>({
   mobile:           String,
 }, { timestamps: true });
 
+clientRequestSchema.index({ organization: 1, project: 1, status: 1 });
 clientRequestSchema.index({ project: 1, status: 1, requestedBy: 1 });
 
 export const ClientRequest = mongoose.model<IClientRequest>('ClientRequest', clientRequestSchema);

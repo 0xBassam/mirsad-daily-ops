@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IAttachment extends Document {
+  organization?: mongoose.Types.ObjectId;
   filename: string;
   originalName: string;
   mimeType: string;
@@ -14,6 +15,7 @@ export interface IAttachment extends Document {
 
 const attachmentSchema = new Schema<IAttachment>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     filename: { type: String, required: true },
     originalName: { type: String },
     mimeType: { type: String },
@@ -25,5 +27,7 @@ const attachmentSchema = new Schema<IAttachment>(
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
+
+attachmentSchema.index({ organization: 1 });
 
 export const Attachment = mongoose.model<IAttachment>('Attachment', attachmentSchema);

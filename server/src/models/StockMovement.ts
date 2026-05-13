@@ -11,6 +11,7 @@ export type MovementType =
   | 'CONSUMPTION';
 
 export interface IStockMovement extends Document {
+  organization?: mongoose.Types.ObjectId;
   project: mongoose.Types.ObjectId;
   item: mongoose.Types.ObjectId;
   movementType: MovementType;
@@ -25,6 +26,7 @@ export interface IStockMovement extends Document {
 
 const stockMovementSchema = new Schema<IStockMovement>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     project: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
     item: { type: Schema.Types.ObjectId, ref: 'Item', required: true },
     movementType: {
@@ -46,6 +48,7 @@ const stockMovementSchema = new Schema<IStockMovement>(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
+stockMovementSchema.index({ organization: 1, project: 1, movementDate: -1 });
 stockMovementSchema.index({ project: 1, item: 1, movementDate: -1 });
 
 export const StockMovement = mongoose.model<IStockMovement>('StockMovement', stockMovementSchema);

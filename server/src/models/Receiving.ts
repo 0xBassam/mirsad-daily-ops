@@ -12,6 +12,7 @@ interface IReceivingLine {
 }
 
 export interface IReceiving extends Document {
+  organization?:  mongoose.Types.ObjectId;
   project:        mongoose.Types.ObjectId;
   supplier:       mongoose.Types.ObjectId;
   purchaseOrder?: mongoose.Types.ObjectId;
@@ -37,6 +38,7 @@ const lineSchema = new Schema<IReceivingLine>({
 }, { _id: true });
 
 const receivingSchema = new Schema<IReceiving>({
+  organization:  { type: Schema.Types.ObjectId, ref: 'Organization' },
   project:       { type: Schema.Types.ObjectId, ref: 'Project',      required: true },
   supplier:      { type: Schema.Types.ObjectId, ref: 'Supplier',     required: true },
   purchaseOrder: { type: Schema.Types.ObjectId, ref: 'PurchaseOrder' },
@@ -50,6 +52,7 @@ const receivingSchema = new Schema<IReceiving>({
   confirmedAt:   Date,
 }, { timestamps: true });
 
+receivingSchema.index({ organization: 1, project: 1, status: 1, deliveryDate: -1 });
 receivingSchema.index({ project: 1, status: 1, deliveryDate: -1 });
 receivingSchema.index({ purchaseOrder: 1 });
 

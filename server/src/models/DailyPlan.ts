@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IDailyPlan extends Document {
+  organization?: mongoose.Types.ObjectId;
   date: Date;
   project: mongoose.Types.ObjectId;
   building: mongoose.Types.ObjectId;
@@ -15,6 +16,7 @@ export interface IDailyPlan extends Document {
 
 const dailyPlanSchema = new Schema<IDailyPlan>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     date: { type: Date, required: true },
     project: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
     building: { type: Schema.Types.ObjectId, ref: 'Building', required: true },
@@ -30,5 +32,8 @@ const dailyPlanSchema = new Schema<IDailyPlan>(
   },
   { timestamps: true }
 );
+
+dailyPlanSchema.index({ organization: 1, date: -1 });
+dailyPlanSchema.index({ organization: 1, project: 1, status: 1 });
 
 export const DailyPlan = mongoose.model<IDailyPlan>('DailyPlan', dailyPlanSchema);

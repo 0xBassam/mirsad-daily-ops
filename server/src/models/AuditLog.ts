@@ -19,6 +19,7 @@ export type AuditAction =
   | 'deliver';
 
 export interface IAuditLog extends Document {
+  organization?: mongoose.Types.ObjectId;
   user?: mongoose.Types.ObjectId;
   action: AuditAction;
   entityType?: string;
@@ -32,6 +33,7 @@ export interface IAuditLog extends Document {
 
 const auditLogSchema = new Schema<IAuditLog>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     action: {
       type: String,
@@ -48,6 +50,7 @@ const auditLogSchema = new Schema<IAuditLog>(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
+auditLogSchema.index({ organization: 1, createdAt: -1 });
 auditLogSchema.index({ user: 1, createdAt: -1 });
 auditLogSchema.index({ entityType: 1, entityId: 1 });
 

@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ISupplier extends Document {
+  organization?: mongoose.Types.ObjectId;
   name: string;
   nameAr?: string;
   contactName?: string;
@@ -17,6 +18,7 @@ export interface ISupplier extends Document {
 
 const supplierSchema = new Schema<ISupplier>(
   {
+    organization:  { type: Schema.Types.ObjectId, ref: 'Organization' },
     name:          { type: String, required: true, trim: true },
     nameAr:        { type: String, trim: true },
     contactName:   { type: String, trim: true },
@@ -31,6 +33,7 @@ const supplierSchema = new Schema<ISupplier>(
   { timestamps: true }
 );
 
-supplierSchema.index({ category: 1, status: 1 });
+supplierSchema.index({ organization: 1 });
+supplierSchema.index({ organization: 1, category: 1, status: 1 });
 
 export const Supplier = mongoose.model<ISupplier>('Supplier', supplierSchema);

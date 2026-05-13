@@ -7,6 +7,7 @@ interface ITransferLine {
 }
 
 export interface ITransfer extends Document {
+  organization?: mongoose.Types.ObjectId;
   project:  mongoose.Types.ObjectId;
   building: mongoose.Types.ObjectId;
   floor:    mongoose.Types.ObjectId;
@@ -26,6 +27,7 @@ const lineSchema = new Schema<ITransferLine>({
 }, { _id: true });
 
 const transferSchema = new Schema<ITransfer>({
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
   project:  { type: Schema.Types.ObjectId, ref: 'Project',  required: true },
   building: { type: Schema.Types.ObjectId, ref: 'Building', required: true },
   floor:    { type: Schema.Types.ObjectId, ref: 'Floor',    required: true },
@@ -38,6 +40,7 @@ const transferSchema = new Schema<ITransfer>({
   confirmedAt: Date,
 }, { timestamps: true });
 
+transferSchema.index({ organization: 1, project: 1, status: 1, transferDate: -1 });
 transferSchema.index({ project: 1, status: 1, transferDate: -1 });
 
 export const Transfer = mongoose.model<ITransfer>('Transfer', transferSchema);

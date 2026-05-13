@@ -18,6 +18,7 @@ export interface IFridgeCheckItem {
 }
 
 export interface IFridgeCheck extends Document {
+  organization?:    mongoose.Types.ObjectId;
   date:             Date;
   floor:            mongoose.Types.ObjectId;
   building:         mongoose.Types.ObjectId;
@@ -47,6 +48,7 @@ const fridgeCheckItemSchema = new Schema<IFridgeCheckItem>({
 }, { _id: true });
 
 const fridgeCheckSchema = new Schema<IFridgeCheck>({
+  organization:     { type: Schema.Types.ObjectId, ref: 'Organization' },
   date:             { type: Date, required: true },
   floor:            { type: Schema.Types.ObjectId, ref: 'Floor',    required: true },
   building:         { type: Schema.Types.ObjectId, ref: 'Building', required: true },
@@ -63,6 +65,7 @@ const fridgeCheckSchema = new Schema<IFridgeCheck>({
   correctiveActionId: { type: Schema.Types.ObjectId, ref: 'CorrectiveAction' },
 }, { timestamps: true });
 
+fridgeCheckSchema.index({ organization: 1, project: 1, status: 1, date: -1 });
 fridgeCheckSchema.index({ project: 1, status: 1, date: -1 });
 fridgeCheckSchema.index({ floor: 1, date: -1 });
 

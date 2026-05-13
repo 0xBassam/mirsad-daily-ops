@@ -1,11 +1,14 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { User } from '../types';
+import { createContext, useContext, useState, ReactNode } from 'react';
+import { User, OrgPlan } from '../types';
 
 interface AuthContextValue {
-  user: User | null;
-  token: string | null;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  user:            User | null;
+  token:           string | null;
+  organizationId:  string | null;
+  orgName:         string;
+  plan:            OrgPlan;
+  login:           (user: User, token: string) => void;
+  logout:          () => void;
   isAuthenticated: boolean;
 }
 
@@ -16,7 +19,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = sessionStorage.getItem('mirsad_user');
     return stored ? JSON.parse(stored) : null;
   });
-  const [token, setToken] = useState<string | null>(() => sessionStorage.getItem('mirsad_token'));
+  const [token, setToken] = useState<string | null>(
+    () => sessionStorage.getItem('mirsad_token')
+  );
 
   function login(u: User, t: string) {
     setUser(u);
@@ -32,8 +37,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem('mirsad_token');
   }
 
+  // Derived from the user object returned by the login endpoint,
+  // which now includes organizationId, orgName, and plan.
+  const organizationId = user?.organizationId ?? null;
+  const orgName        = user?.orgName ?? '';
+  const plan: OrgPlan  = (user?.plan as OrgPlan) ?? 'trial';
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, token, organizationId, orgName, plan, login, logout, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );

@@ -5,6 +5,7 @@ export type CorrectiveActionPriority   = 'low' | 'medium' | 'high' | 'critical';
 export type CorrectiveActionStatus     = 'open' | 'in_progress' | 'resolved' | 'closed';
 
 export interface ICorrectiveAction extends Document {
+  organization?: mongoose.Types.ObjectId;
   title:       string;
   description: string;
   sourceType:  CorrectiveActionSourceType;
@@ -20,6 +21,7 @@ export interface ICorrectiveAction extends Document {
 }
 
 const correctiveActionSchema = new Schema<ICorrectiveAction>({
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
   title:       { type: String, required: true, trim: true },
   description: { type: String, required: true },
   sourceType:  { type: String, enum: ['fridge_check','floor_check','inventory','manual'], required: true },
@@ -34,6 +36,7 @@ const correctiveActionSchema = new Schema<ICorrectiveAction>({
   project:     { type: Schema.Types.ObjectId, ref: 'Project', required: true },
 }, { timestamps: true });
 
+correctiveActionSchema.index({ organization: 1, project: 1, status: 1, priority: 1 });
 correctiveActionSchema.index({ project: 1, status: 1, priority: 1 });
 correctiveActionSchema.index({ assignedTo: 1, status: 1 });
 

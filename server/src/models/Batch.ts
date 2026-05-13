@@ -4,6 +4,7 @@ export type StorageZone = 'cold' | 'chilled' | 'freezer' | 'ambient' | 'dry_stor
 export type BatchStatus = 'active' | 'consumed' | 'expired' | 'spoiled' | 'recalled';
 
 export interface IBatch extends Document {
+  organization?: mongoose.Types.ObjectId;
   batchNumber: string;
   item: mongoose.Types.ObjectId;
   supplier: mongoose.Types.ObjectId;
@@ -23,6 +24,7 @@ export interface IBatch extends Document {
 
 const batchSchema = new Schema<IBatch>(
   {
+    organization:  { type: Schema.Types.ObjectId, ref: 'Organization' },
     batchNumber:   { type: String, required: true, trim: true, unique: true },
     item:          { type: Schema.Types.ObjectId, ref: 'Item', required: true },
     supplier:      { type: Schema.Types.ObjectId, ref: 'Supplier', required: true },
@@ -40,7 +42,7 @@ const batchSchema = new Schema<IBatch>(
   { timestamps: true }
 );
 
-batchSchema.index({ project: 1, item: 1, status: 1 });
+batchSchema.index({ organization: 1, project: 1, item: 1, status: 1 });
 batchSchema.index({ expiryDate: 1, status: 1 }); // FEFO queries
 batchSchema.index({ receivedDate: 1, status: 1 }); // FIFO queries
 

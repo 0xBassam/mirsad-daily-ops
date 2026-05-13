@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export type InventoryStatus = 'available' | 'low_stock' | 'out_of_stock' | 'over_consumed';
 
 export interface IInventoryBalance extends Document {
+  organization?: mongoose.Types.ObjectId;
   project: mongoose.Types.ObjectId;
   item: mongoose.Types.ObjectId;
   period: string; // YYYY-MM
@@ -20,6 +21,7 @@ export interface IInventoryBalance extends Document {
 
 const inventoryBalanceSchema = new Schema<IInventoryBalance>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     project: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
     item: { type: Schema.Types.ObjectId, ref: 'Item', required: true },
     period: { type: String, required: true }, // YYYY-MM
@@ -40,6 +42,7 @@ const inventoryBalanceSchema = new Schema<IInventoryBalance>(
   { timestamps: { updatedAt: true, createdAt: false } }
 );
 
+inventoryBalanceSchema.index({ organization: 1, project: 1, period: 1, status: 1 });
 inventoryBalanceSchema.index({ project: 1, item: 1, period: 1 }, { unique: true });
 
 inventoryBalanceSchema.methods.recalculate = function () {

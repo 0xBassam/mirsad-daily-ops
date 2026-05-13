@@ -5,6 +5,7 @@ export type SpoilageAlertType = 'expired' | 'near_expiry' | 'temperature_breach'
 export type SpoilageStatus = 'active' | 'resolved' | 'dismissed';
 
 export interface ISpoilage extends Document {
+  organization?: mongoose.Types.ObjectId;
   item: mongoose.Types.ObjectId;
   batch?: mongoose.Types.ObjectId;
   project: mongoose.Types.ObjectId;
@@ -28,6 +29,7 @@ export interface ISpoilage extends Document {
 
 const spoilageSchema = new Schema<ISpoilage>(
   {
+    organization:    { type: Schema.Types.ObjectId, ref: 'Organization' },
     item:            { type: Schema.Types.ObjectId, ref: 'Item', required: true },
     batch:           { type: Schema.Types.ObjectId, ref: 'Batch' },
     project:         { type: Schema.Types.ObjectId, ref: 'Project', required: true },
@@ -49,6 +51,7 @@ const spoilageSchema = new Schema<ISpoilage>(
   { timestamps: true }
 );
 
+spoilageSchema.index({ organization: 1, project: 1, status: 1, detectedAt: -1 });
 spoilageSchema.index({ project: 1, status: 1, detectedAt: -1 });
 spoilageSchema.index({ item: 1, date: -1 });
 

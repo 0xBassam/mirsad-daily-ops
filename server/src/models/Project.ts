@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IProject extends Document {
+  organization?: mongoose.Types.ObjectId;
   name: string;
   clientName?: string;
   locationCode?: string;
@@ -12,6 +13,7 @@ export interface IProject extends Document {
 
 const projectSchema = new Schema<IProject>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     name: { type: String, required: true, trim: true },
     clientName: { type: String, trim: true },
     locationCode: { type: String, trim: true },
@@ -20,5 +22,7 @@ const projectSchema = new Schema<IProject>(
   },
   { timestamps: true }
 );
+
+projectSchema.index({ organization: 1 });
 
 export const Project = mongoose.model<IProject>('Project', projectSchema);

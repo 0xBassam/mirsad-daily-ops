@@ -7,7 +7,9 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc && node -e \"const{cpSync,mkdirSync}=require('fs');mkdirSync('dist/assets/fonts',{recursive:true});cpSync('src/assets/fonts','dist/assets/fonts',{recursive:true});\"",
     "start": "node dist/server.js",
-    "seed": "ts-node ../seed/index.ts"
+    "seed": "ts-node ../seed/index.ts",
+    "migrate:001": "ts-node src/migrations/001_add_organization.ts",
+    "migrate:001:dry": "DRY_RUN=true ts-node src/migrations/001_add_organization.ts"
   },
   "dependencies": {
     "@types/nodemailer": "^8.0.0",

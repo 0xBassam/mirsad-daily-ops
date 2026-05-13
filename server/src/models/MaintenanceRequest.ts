@@ -5,6 +5,7 @@ export type MaintenanceStatus = 'open' | 'assigned' | 'in_progress' | 'resolved'
 export type MaintenancePriority = 'low' | 'medium' | 'high' | 'critical';
 
 export interface IMaintenanceRequest extends Document {
+  organization?: mongoose.Types.ObjectId;
   title:       string;
   description: string;
   project:     mongoose.Types.ObjectId;
@@ -22,6 +23,7 @@ export interface IMaintenanceRequest extends Document {
 }
 
 const maintenanceSchema = new Schema<IMaintenanceRequest>({
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
   title:       { type: String, required: true, trim: true },
   description: { type: String, required: true },
   project:     { type: Schema.Types.ObjectId, ref: 'Project',  required: true },
@@ -38,6 +40,7 @@ const maintenanceSchema = new Schema<IMaintenanceRequest>({
   notes:       String,
 }, { timestamps: true });
 
+maintenanceSchema.index({ organization: 1, project: 1, status: 1, priority: 1 });
 maintenanceSchema.index({ project: 1, status: 1, priority: 1 });
 
 export const MaintenanceRequest = mongoose.model<IMaintenanceRequest>('MaintenanceRequest', maintenanceSchema);
