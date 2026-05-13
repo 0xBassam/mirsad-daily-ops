@@ -37,7 +37,7 @@ export async function getNotificationRecipients(orgId: string): Promise<string[]
     const s = await loadOrgSettings(orgId);
     if (s.notificationRecipients?.length) return s.notificationRecipients;
   } catch { /* DB not ready */ }
-  const users = await User.find({ organization: orgId, role: { $in: ['admin', 'project_manager'] }, isActive: true }).select('email').lean();
+  const users = await User.find({ organization: orgId, role: { $in: ['admin', 'project_manager'] }, status: 'active' }).select('email').lean();
   return (users as any[]).map((u: any) => u.email).filter(Boolean);
 }
 
