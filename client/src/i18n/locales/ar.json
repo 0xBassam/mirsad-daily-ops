@@ -45,9 +45,13 @@
     "itemsMaster": "تعريف الأصناف",
     "itemsMasterSubtitle": "تعريف أسماء الأصناف وأنواعها وفئاتها والحدود الشهرية",
     "inventory": "أرصدة المخزون",
+    "kitchenDashboard": "لوحة المطبخ",
+    "kitchenStock": "مخزوني",
+    "kitchenToday": "مهام اليوم",
     "section": {
       "operations": "العمليات",
       "inventory": "المخزون",
+      "kitchen": "المطبخ",
       "management": "الإدارة",
       "reportsGov": "التقارير والحوكمة"
     }
@@ -518,7 +522,33 @@
     "copy": "نسخ الخطة",
     "lines": "بنود الخطة",
     "copiedMessage": "تم نسخ الخطة لليوم التالي",
-    "plannedQty": "الكمية المخططة"
+    "plannedQty": "الكمية المخططة",
+    "actualQty": "الكمية الفعلية",
+    "assignedTo": "مكلف إلى",
+    "lineStatus": "حالة البند",
+    "completedBy": "أُنجز بواسطة",
+    "completedAt": "وقت الإنجاز",
+    "startPlan": "بدء الخطة",
+    "closePlan": "إغلاق الخطة",
+    "markComplete": "تحديد مكتمل",
+    "reportShortage": "الإبلاغ عن نقص",
+    "updateQty": "تحديث الكمية",
+    "noTasksToday": "لا توجد مهام مسندة لهذا اليوم",
+    "variance": "الفارق"
+  },
+  "kitchen": {
+    "title": "لوحة المطبخ",
+    "todaysTasks": "المهام المسندة اليوم",
+    "myStock": "مخزون مطبخي",
+    "summary": "ملخص اليوم",
+    "totalTasks": "إجمالي المهام",
+    "completed": "مكتملة",
+    "pending": "معلقة",
+    "shortage": "نقص",
+    "confirmQty": "تأكيد الكمية",
+    "recordConsumption": "تسجيل الاستهلاك",
+    "noTasks": "لا توجد مهام مسندة إليك اليوم",
+    "shortage_note": "ملاحظة النقص"
   },
   "approvals": {
     "title": "قائمة الاعتمادات",

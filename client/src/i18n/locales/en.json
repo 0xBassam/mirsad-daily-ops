@@ -45,9 +45,13 @@
     "itemsMaster": "Item Master",
     "itemsMasterSubtitle": "Define item names, types, categories, and monthly thresholds",
     "inventory": "Stock Balances",
+    "kitchenDashboard": "Kitchen Dashboard",
+    "kitchenStock": "My Stock",
+    "kitchenToday": "Today's Tasks",
     "section": {
       "operations": "Operations",
       "inventory": "Inventory",
+      "kitchen": "Kitchen",
       "management": "Management",
       "reportsGov": "Reports & Governance"
     }
@@ -518,7 +522,33 @@
     "copy": "Copy Plan",
     "lines": "Plan Lines",
     "copiedMessage": "Plan copied to next day",
-    "plannedQty": "Planned Qty"
+    "plannedQty": "Planned Qty",
+    "actualQty": "Actual Qty",
+    "assignedTo": "Assigned To",
+    "lineStatus": "Line Status",
+    "completedBy": "Completed By",
+    "completedAt": "Completed At",
+    "startPlan": "Start Plan",
+    "closePlan": "Close Plan",
+    "markComplete": "Mark Complete",
+    "reportShortage": "Report Shortage",
+    "updateQty": "Update Qty",
+    "noTasksToday": "No tasks assigned for today",
+    "variance": "Variance"
+  },
+  "kitchen": {
+    "title": "Kitchen Dashboard",
+    "todaysTasks": "Today's Assigned Tasks",
+    "myStock": "My Kitchen Stock",
+    "summary": "Today's Summary",
+    "totalTasks": "Total Tasks",
+    "completed": "Completed",
+    "pending": "Pending",
+    "shortage": "Shortage",
+    "confirmQty": "Confirm Quantity",
+    "recordConsumption": "Record Consumption",
+    "noTasks": "No tasks assigned to you today",
+    "shortage_note": "Shortage Note"
   },
   "approvals": {
     "title": "Approvals Queue",

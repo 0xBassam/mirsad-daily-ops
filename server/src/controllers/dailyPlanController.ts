@@ -39,7 +39,9 @@ export const getDailyPlan = asyncHandler(async (req: Request, res: Response) => 
 
   const lines = await DailyPlanLine.find({ dailyPlan: req.params.id })
     .populate('floor', 'name')
-    .populate('item', 'name unit type');
+    .populate('item', 'name unit type')
+    .populate('assignedTo', 'fullName')
+    .populate('completedBy', 'fullName');
 
   res.json({ success: true, data: { ...plan.toObject(), lines } });
 });
@@ -65,11 +67,83 @@ export const updateDailyPlan = asyncHandler(async (req: Request, res: Response) 
   if (lines) {
     await DailyPlanLine.deleteMany({ dailyPlan: req.params.id });
     const linesDocs = lines.map((l: any) => ({ ...l, dailyPlan: plan._id }));
-    await DailyPlanLine.insertMany(linesDocs);
+    if (linesDocs.length) await DailyPlanLine.insertMany(linesDocs);
   }
 
   await logAction({ userId: req.user?.userId, action: 'update', entityType: 'daily_plan', entityId: req.params.id, req });
   res.json({ success: true, data: plan });
+});
+
+export const startPlan = asyncHandler(async (req: Request, res: Response) => {
+  const plan = await DailyPlan.findByIdAndUpdate(
+    req.params.id,
+    { status: 'in_progress' },
+    { new: true, runValidators: true }
+  );
+  if (!plan) throw new AppError('Daily plan not found', 404);
+  await logAction({ userId: req.user?.userId, action: 'update', entityType: 'daily_plan', entityId: req.params.id, req });
+  res.json({ success: true, data: plan });
+});
+
+export const closePlan = asyncHandler(async (req: Request, res: Response) => {
+  const plan = await DailyPlan.findByIdAndUpdate(
+    req.params.id,
+    { status: 'closed' },
+    { new: true, runValidators: true }
+  );
+  if (!plan) throw new AppError('Daily plan not found', 404);
+  await logAction({ userId: req.user?.userId, action: 'update', entityType: 'daily_plan', entityId: req.params.id, req });
+  res.json({ success: true, data: plan });
+});
+
+export const updatePlanLine = asyncHandler(async (req: Request, res: Response) => {
+  const { lineId } = req.params;
+  const { actualQty, lineStatus, notes } = req.body;
+
+  const update: Record<string, unknown> = {};
+  if (actualQty !== undefined) update.actualQty = actualQty;
+  if (lineStatus)              update.lineStatus = lineStatus;
+  if (notes !== undefined)     update.notes = notes;
+  if (lineStatus === 'completed') {
+    update.completedBy = req.user?.userId;
+    update.completedAt = new Date();
+  }
+
+  const line = await DailyPlanLine.findByIdAndUpdate(lineId, update, { new: true, runValidators: true })
+    .populate('item', 'name unit')
+    .populate('floor', 'name')
+    .populate('completedBy', 'fullName')
+    .populate('assignedTo', 'fullName');
+
+  if (!line) throw new AppError('Line not found', 404);
+  await logAction({ userId: req.user?.userId, action: 'update', entityType: 'daily_plan_line', entityId: lineId, req });
+  res.json({ success: true, data: line });
+});
+
+export const getKitchenToday = asyncHandler(async (req: Request, res: Response) => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const plans = await DailyPlan.find({
+    date: { $gte: today, $lt: tomorrow },
+    status: { $in: ['published', 'in_progress'] },
+  }).select('_id date shift status building project');
+
+  const lines = plans.length
+    ? await DailyPlanLine.find({
+        dailyPlan: { $in: plans.map(p => p._id) },
+        assignedTo: req.user?.userId,
+      })
+        .populate('item', 'name unit type')
+        .populate('floor', 'name')
+        .populate('assignedTo', 'fullName')
+        .populate('completedBy', 'fullName')
+        .populate({ path: 'dailyPlan', select: 'date shift status building project', populate: { path: 'building', select: 'name' } })
+    : [];
+
+  res.json({ success: true, data: lines });
 });
 
 export const copyDailyPlan = asyncHandler(async (req: Request, res: Response) => {
@@ -96,6 +170,7 @@ export const copyDailyPlan = asyncHandler(async (req: Request, res: Response) =>
     floor: l.floor,
     item: l.item,
     plannedQty: l.plannedQty,
+    assignedTo: l.assignedTo,
   }));
   if (newLines.length) await DailyPlanLine.insertMany(newLines);
 

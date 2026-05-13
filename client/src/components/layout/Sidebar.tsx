@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Users, Building2, Package, ClipboardList,
   CheckSquare, Utensils, GitBranch,
   FileText, BookOpen, LogOut, ChevronDown, Thermometer,
-  Boxes, ShieldCheck, ShoppingCart, Trash2, ArrowRightLeft, Truck, Wrench, MessageSquare, UtensilsCrossed, Settings
+  Boxes, ShieldCheck, ShoppingCart, Trash2, ArrowRightLeft, Truck, Wrench, MessageSquare, UtensilsCrossed, Settings, ChefHat
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { UserRole } from '../../types';
@@ -31,7 +31,7 @@ interface NavSection {
 const navSections: NavSection[] = [
   {
     items: [
-      { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'client'] },
+      { to: '/dashboard', icon: LayoutDashboard, labelKey: 'nav.dashboard', roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'client', 'kitchen'] },
     ],
   },
   {
@@ -51,10 +51,19 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    labelKey: 'nav.section.kitchen',
+    items: [
+      { to: '/kitchen-dashboard', icon: ChefHat,  labelKey: 'nav.kitchenDashboard', roles: ['kitchen'] },
+      { to: '/inventory/food',    icon: Utensils,  labelKey: 'nav.kitchenStock',     roles: ['kitchen'] },
+      { to: '/spoilage',          icon: Trash2,    labelKey: 'nav.spoilageRecording', roles: ['kitchen'] },
+      { to: '/reports',           icon: FileText,  labelKey: 'nav.reports',           roles: ['kitchen'] },
+    ],
+  },
+  {
     labelKey: 'nav.section.inventory',
     items: [
       {
-        to: '/inventory', icon: Utensils, labelKey: 'nav.inventory', roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse', 'kitchen'],
+        to: '/inventory', icon: Utensils, labelKey: 'nav.inventory', roles: ['admin', 'project_manager', 'assistant_supervisor', 'warehouse'],
         children: [
           { to: '/inventory/food',      labelKey: 'nav.foodInventory' },
           { to: '/inventory/materials', labelKey: 'nav.materialsWarehouse' },

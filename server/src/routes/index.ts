@@ -39,6 +39,7 @@ router.use('/auth', authRoutes);
 // ── Role shorthand helpers ────────────────────────────────────────────────────
 const ADMIN_PM     = requireRole('admin', 'project_manager');
 const OPS_ROLES    = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations');
+const PLAN_ROLES   = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'kitchen');
 const WH_ROLES     = requireRole('admin', 'project_manager', 'assistant_supervisor', 'warehouse');
 const STOCK_ROLES  = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'warehouse', 'kitchen');
 const ALL_OPS      = requireRole('admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'operations', 'warehouse');
@@ -51,7 +52,7 @@ router.use('/buildings',  verifyJWT, ALL_OPS, buildingRoutes);
 router.use('/floors',     verifyJWT, ALL_OPS, floorRoutes);
 router.use('/categories', verifyJWT, ADMIN_PM, itemCategoryRoutes);
 router.use('/items',      verifyJWT, ADMIN_PM, itemRoutes);
-router.use('/daily-plans',   verifyJWT, OPS_ROLES, dailyPlanRoutes);
+router.use('/daily-plans',   verifyJWT, PLAN_ROLES, dailyPlanRoutes);
 router.use('/floor-checks',  verifyJWT, OPS_ROLES, floorCheckRoutes);
 router.use('/approvals',     verifyJWT, requireRole('admin', 'assistant_supervisor', 'project_manager'), approvalRoutes);
 router.use('/inventory',     verifyJWT, STOCK_ROLES, inventoryRoutes);

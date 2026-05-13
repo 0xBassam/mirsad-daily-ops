@@ -68,11 +68,19 @@ export interface DailyPlan {
   lines?: DailyPlanLine[];
 }
 
+export type PlanLineStatus = 'pending' | 'in_progress' | 'completed' | 'shortage';
+
 export interface DailyPlanLine {
   _id: string;
+  dailyPlan?: { _id: string; date: string; shift: string; status: string; building?: { _id: string; name: string } } | string;
   floor: { _id: string; name: string } | string;
   item: { _id: string; name: string; unit: string } | string;
   plannedQty: number;
+  actualQty: number;
+  assignedTo?: { _id: string; fullName: string } | string;
+  lineStatus: PlanLineStatus;
+  completedBy?: { _id: string; fullName: string };
+  completedAt?: string;
   notes?: string;
 }
 
