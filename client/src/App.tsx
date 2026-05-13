@@ -29,6 +29,12 @@ function HomeRoute() {
   const { isAuthenticated } = useAuth();
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />;
 }
+
+function SuperAdminRoute() {
+  const { user } = useAuth();
+  if (user?.role !== 'superadmin') return <Navigate to="/dashboard" replace />;
+  return <Outlet />;
+}
 import { UsersPage } from './pages/users/UsersPage';
 import { ProjectsPage } from './pages/projects/ProjectsPage';
 import { BuildingsPage } from './pages/projects/BuildingsPage';
@@ -97,10 +103,12 @@ export default function App() {
               <Route element={<PageBoundary />}>
               <Route path="/dashboard" element={<DashboardRouter />} />
 
-              {/* Super Admin */}
-              <Route path="/super-admin"                          element={<SuperAdminDashboard />} />
-              <Route path="/super-admin/organizations"            element={<SuperAdminOrgsPage />} />
-              <Route path="/super-admin/organizations/:id"        element={<SuperAdminOrgDetailPage />} />
+              {/* Super Admin — requires role=superadmin on client AND server */}
+              <Route element={<SuperAdminRoute />}>
+                <Route path="/super-admin"                        element={<SuperAdminDashboard />} />
+                <Route path="/super-admin/organizations"          element={<SuperAdminOrgsPage />} />
+                <Route path="/super-admin/organizations/:id"      element={<SuperAdminOrgDetailPage />} />
+              </Route>
 
               <Route path="/users" element={<UsersPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
