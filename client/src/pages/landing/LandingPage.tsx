@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { setLanguage } from '../../i18n/index';
 import {
   ClipboardList, CheckSquare, Package, ShoppingCart, Thermometer,
   Wrench, MessageSquare, BarChart2, ArrowRightLeft, Truck,
@@ -14,6 +16,7 @@ function LandingNav() {
   const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const { i18n } = useTranslation();
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20);
@@ -38,6 +41,10 @@ function LandingNav() {
         </nav>
 
         <div className="flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-1 me-2">
+            <button onClick={() => setLanguage('en')} className={`text-xs px-2 py-1 rounded transition-colors ${i18n.language === 'en' ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'}`}>EN</button>
+            <button onClick={() => setLanguage('ar')} className={`text-xs px-2 py-1 rounded transition-colors ${i18n.language === 'ar' ? 'bg-white/20 text-white' : 'text-slate-400 hover:text-white'}`}>عربي</button>
+          </div>
           {isAuthenticated ? (
             <button onClick={() => navigate('/dashboard')} className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors">
               Go to Dashboard →

@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { env } from '../config/env';
 import { Organization, IOrganizationSettings } from '../models/Organization';
 import { User } from '../models/User';
+import { AppError } from '../utils/AppError';
 
 // ─── Per-org cache with 6-hour TTL ───────────────────────────────────────────
 
@@ -424,4 +425,74 @@ export async function sendMaintenanceCompleted(data: MaintenanceEmailData, orgId
     </table>
     ${actionButton('View Record', link, '#059669')}`;
   await send(data.to, `Resolved: ${data.title}`, layout('Maintenance Resolved', body, '#059669', orgFooter(s)), 'maintenanceCompleted', orgId, s);
+}
+
+// ─── Platform OTP email (for signup verification) ─────────────────────────────
+
+export async function sendPlatformOtpEmail(to: string, otpCode: string, orgName: string): Promise<void> {
+  const subject = 'Verify your Mirsad account — رمز التحقق';
+  const html = layout(
+    'Verify your Mirsad account | تحقق من حسابك في ميرصد',
+    `<p style="color:#1e293b;font-size:14px;margin:0 0 12px">
+      Hello / مرحباً,
+    </p>
+    <p style="color:#1e293b;font-size:14px;margin:0 0 16px">
+      Thank you for registering <strong>${orgName}</strong> on the Mirsad platform.
+      Use the code below to verify your account. It expires in <strong>10 minutes</strong>.
+    </p>
+    <p style="color:#475569;font-size:13px;margin:0 0 16px" dir="rtl">
+      شكراً لتسجيل <strong>${orgName}</strong> في منصة ميرصد.
+      استخدم الرمز أدناه للتحقق من حسابك. ينتهي صلاحيته خلال <strong>10 دقائق</strong>.
+    </p>
+    <div style="text-align:center;margin:24px 0">
+      <span style="display:inline-block;background:#f1f5f9;border:2px solid #4f46e5;border-radius:10px;padding:16px 32px;font-size:36px;font-weight:700;letter-spacing:8px;color:#1e293b;font-family:monospace">${otpCode}</span>
+    </div>
+    <p style="color:#64748b;font-size:12px;margin:0">
+      If you did not sign up for Mirsad, you can safely ignore this email. / إذا لم تسجّل في ميرصد، يمكنك تجاهل هذا البريد.
+    </p>`,
+    '#4f46e5',
+    'Mirsad Operations Platform · Automated notification',
+  );
+
+  const useResend = env.RESEND_API_KEY && env.EMAIL_PROVIDER === 'resend';
+
+  if (useResend) {
+    const client = new Resend(env.RESEND_API_KEY!);
+    const fromEmail = env.RESEND_FROM_EMAIL || 'alerts@stdsec.sa';
+    const fromName  = env.RESEND_FROM_NAME  || 'Mirsad';
+    const result = await client.emails.send({
+      from: `${fromName} <${fromEmail}>`,
+      to:   [to],
+      subject,
+      html,
+    });
+    if (result.error) {
+      console.warn('[otp-email] Resend error:', result.error);
+      throw new AppError('Failed to send verification email', 502);
+    }
+    console.log(`[otp-email] OTP sent via Resend to ${maskEmail(to)}`);
+    return;
+  }
+
+  if (env.SMTP_HOST && env.SMTP_USER && env.SMTP_PASS) {
+    const port = Number(env.SMTP_PORT || 587);
+    const transporter = makeSmtpTransport(env.SMTP_HOST, port, port !== 465, env.SMTP_USER, env.SMTP_PASS);
+    const fromEmail = env.SMTP_FROM_EMAIL || env.SMTP_USER;
+    const fromName  = env.SMTP_FROM_NAME  || 'Mirsad';
+    try {
+      await transporter.sendMail({
+        from:    `"${fromName}" <${fromEmail}>`,
+        to,
+        subject,
+        html,
+      });
+      console.log(`[otp-email] OTP sent via SMTP to ${maskEmail(to)}`);
+    } catch (err) {
+      console.warn('[otp-email] SMTP send failed:', (err as Error).message);
+      throw new AppError('Failed to send verification email', 502);
+    }
+    return;
+  }
+
+  throw new AppError('Email service is not configured on this platform', 503);
 }

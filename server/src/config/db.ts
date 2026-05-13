@@ -20,15 +20,11 @@ export async function connectDB(): Promise<void> {
     const { seedDemo } = await import('../db/seedDemo');
     await seedDemo();
   } else {
-    const userCount = await mongoose.connection.db!.collection('users').countDocuments();
-    if (userCount === 0) {
-      console.log('Empty database detected — running auto-seed...');
-      const { seedLive } = await import('../db/seedLive');
-      await seedLive();
-    }
+    console.log('Production mode — skipping demo seed. Use /auth/signup to create organizations.');
   }
 
   await ensureSuperAdmin();
+  await disableOldDemoData();
 }
 
 async function ensureSuperAdmin(): Promise<void> {
@@ -43,11 +39,31 @@ async function ensureSuperAdmin(): Promise<void> {
   const password = await bcrypt.hash(pass, 12);
   await db.collection('users').updateOne(
     { email },
-    { $set: { fullName: 'Super Admin', email, password, role: 'superadmin', status: 'active', updatedAt: new Date() },
+    { $set: { fullName: 'Super Admin', email, password, role: 'superadmin', status: 'active', emailVerified: true, updatedAt: new Date() },
       $setOnInsert: { createdAt: new Date() } },
     { upsert: true },
   );
   console.log(`Super admin created: ${email}`);
+}
+
+async function disableOldDemoData(): Promise<void> {
+  const OLD_EMAILS = [
+    'admin@mirsad.com', 'manager@mirsad.com', 'supervisor@mirsad.com',
+    'assistant@mirsad.com', 'client@mirsad.com',
+  ];
+  const db = mongoose.connection.db!;
+  const result = await db.collection('users').updateMany(
+    { email: { $in: OLD_EMAILS } },
+    { $set: { status: 'inactive', emailVerified: false, updatedAt: new Date() } }
+  );
+  if (result.modifiedCount > 0) {
+    console.log(`[startup] Disabled ${result.modifiedCount} old demo user(s)`);
+  }
+  // Suspend demo org if not already suspended
+  await db.collection('organizations').updateMany(
+    { slug: 'demo', status: { $ne: 'suspended' } },
+    { $set: { status: 'suspended', suspendedAt: new Date(), suspendedReason: 'Legacy demo org — production SaaS launch', updatedAt: new Date() } }
+  );
 }
 
 export async function disconnectDB(): Promise<void> {

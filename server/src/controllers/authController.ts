@@ -1,11 +1,14 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcryptjs';
 import { User } from '../models/User';
 import { Organization } from '../models/Organization';
 import { Project } from '../models/Project';
+import { Otp } from '../models/Otp';
 import { generateToken } from '../utils/generateToken';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
 import { logAction } from '../services/auditService';
+import { sendPlatformOtpEmail } from '../services/emailService';
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
@@ -16,6 +19,11 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     throw new AppError('Invalid credentials', 401);
   }
   if (user.status === 'inactive') throw new AppError('Account is disabled', 403);
+
+  // Block unverified users (superadmin is exempt)
+  if (user.role !== 'superadmin' && user.emailVerified !== true) {
+    throw new AppError('Please verify your email address before logging in. Check your inbox for the verification code.', 403);
+  }
 
   user.lastLoginAt = new Date();
   await user.save();
@@ -78,9 +86,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export const signup = asyncHandler(async (req: Request, res: Response) => {
   const {
     orgName, slug, adminFullName, adminEmail, adminPassword,
-    plan = 'trial', siteName,
+    siteName,
     logoUrl, primaryColor, contactPhone,
   } = req.body;
+
+  // Plan is ALWAYS trial — ignore any submitted plan value
+  const plan = 'trial';
 
   // ── Validation ────────────────────────────────────────────────────────────
   if (!orgName?.trim())       throw new AppError('Organization name is required', 400);
@@ -91,8 +102,6 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
   if (!EMAIL_RE.test(adminEmail)) throw new AppError('Invalid email address', 400);
   if (!adminPassword || adminPassword.length < 8) throw new AppError('Password must be at least 8 characters', 400);
   if (!siteName?.trim())      throw new AppError('First site/location name is required', 400);
-  if (!['trial', 'starter', 'professional', 'enterprise'].includes(plan))
-    throw new AppError('Invalid plan selection', 400);
 
   const [slugTaken, emailTaken] = await Promise.all([
     Organization.exists({ slug }),
@@ -101,13 +110,13 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
   if (slugTaken)  throw new AppError('Organization slug is already taken — please choose another', 409);
   if (emailTaken) throw new AppError('Email is already registered', 409);
 
-  // ── Create Organization ────────────────────────────────────────────────────
-  const trialEndsAt = plan === 'trial' ? new Date(Date.now() + 14 * 86_400_000) : undefined;
+  // ── Create Organization (pending verification) ─────────────────────────────
+  const trialEndsAt = new Date(Date.now() + 14 * 86_400_000);
   const org = await Organization.create({
     name: orgName.trim(),
     slug: slug.trim(),
     plan,
-    status: plan === 'trial' ? 'trial' : 'active',
+    status: 'pending_verification',
     trialEndsAt,
     contactPhone: contactPhone?.trim(),
     settings: {
@@ -116,14 +125,15 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     },
   });
 
-  // ── Create Admin User ──────────────────────────────────────────────────────
+  // ── Create Admin User (inactive, unverified) ───────────────────────────────
   const admin = await User.create({
-    fullName:     adminFullName.trim(),
-    email:        adminEmail.toLowerCase().trim(),
-    password:     adminPassword,
-    role:         'admin',
-    organization: org._id,
-    status:       'active',
+    fullName:      adminFullName.trim(),
+    email:         adminEmail.toLowerCase().trim(),
+    password:      adminPassword,
+    role:          'admin',
+    organization:  org._id,
+    status:        'inactive',
+    emailVerified: false,
   });
 
   // ── Create First Site/Project ──────────────────────────────────────────────
@@ -134,27 +144,126 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     createdBy:    admin._id,
   });
 
-  await logAction({ userId: admin._id.toString(), action: 'create', entityType: 'organization', entityId: org._id, req });
+  // ── Generate and store OTP ─────────────────────────────────────────────────
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpHash = await bcrypt.hash(otp, 8);
+  const email = admin.email;
 
-  const token = generateToken({
-    userId:         admin._id.toString(),
-    role:           admin.role,
-    email:          admin.email,
-    organizationId: org._id.toString(),
-    plan:           org.plan,
-  });
+  await Otp.findOneAndUpdate(
+    { email },
+    {
+      otpHash,
+      expiresAt:    new Date(Date.now() + 10 * 60 * 1000),
+      attempts:     0,
+      resendCount:  0,
+      lastResendAt: undefined,
+    },
+    { upsert: true, setDefaultsOnInsert: true }
+  );
+
+  // ── Send OTP email ─────────────────────────────────────────────────────────
+  await sendPlatformOtpEmail(admin.email, otp, orgName.trim());
 
   res.status(201).json({
+    success:              true,
+    requiresVerification: true,
+    email:                admin.email,
+  });
+});
+
+// ─── Verify OTP ───────────────────────────────────────────────────────────────
+
+export const verifyOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { email, otp } = req.body;
+  if (!email || !otp) throw new AppError('Email and OTP are required', 400);
+
+  const record = await Otp.findOne({ email: email.toLowerCase().trim() });
+  if (!record) throw new AppError('No pending verification found for this email. Please sign up or request a new code.', 404);
+  if (record.expiresAt < new Date()) {
+    await Otp.deleteOne({ email: record.email });
+    throw new AppError('Verification code has expired. Please request a new one.', 410);
+  }
+  if (record.attempts >= 5) throw new AppError('Too many failed attempts. Please request a new verification code.', 429);
+
+  const valid = await bcrypt.compare(String(otp), record.otpHash);
+  if (!valid) {
+    await Otp.updateOne({ _id: record._id }, { $inc: { attempts: 1 } });
+    const remaining = 4 - record.attempts;
+    throw new AppError(`Invalid verification code. ${remaining > 0 ? `${remaining} attempt(s) remaining.` : 'No attempts remaining — please request a new code.'}`, 400);
+  }
+
+  // Valid OTP — activate
+  await Otp.deleteOne({ _id: record._id });
+
+  const user = await User.findOneAndUpdate(
+    { email: record.email },
+    { $set: { status: 'active', emailVerified: true } },
+    { new: true }
+  );
+  if (!user) throw new AppError('User not found', 404);
+
+  const orgId = user.organization?.toString() ?? null;
+  if (orgId) {
+    await Organization.findByIdAndUpdate(orgId, { $set: { status: 'trial' } });
+  }
+  await logAction({ userId: user._id.toString(), action: 'create', entityType: 'user', entityId: user._id, req });
+
+  const token = generateToken({
+    userId:         user._id.toString(),
+    role:           user.role,
+    email:          user.email,
+    organizationId: orgId,
+    plan:           'trial',
+  });
+
+  res.json({
     success: true,
     token,
     user: {
-      _id:            admin._id,
-      fullName:       admin.fullName,
-      email:          admin.email,
-      role:           admin.role,
-      organizationId: org._id.toString(),
-      orgName:        org.name,
-      plan:           org.plan,
+      _id:            user._id,
+      fullName:       user.fullName,
+      email:          user.email,
+      role:           user.role,
+      organizationId: orgId,
+      orgName:        '',
+      plan:           'trial',
     },
   });
+});
+
+// ─── Resend OTP ───────────────────────────────────────────────────────────────
+
+export const resendOtp = asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email) throw new AppError('Email is required', 400);
+  const emailNorm = email.toLowerCase().trim();
+
+  const record = await Otp.findOne({ email: emailNorm });
+  if (!record) throw new AppError('No pending verification found for this email.', 404);
+
+  // Rate limit: max 5 resends, min 60 seconds between resends
+  if (record.resendCount >= 5) throw new AppError('Maximum resend limit reached. Please contact support.', 429);
+  if (record.lastResendAt && (Date.now() - record.lastResendAt.getTime()) < 60_000) {
+    throw new AppError('Please wait at least 60 seconds before requesting a new code.', 429);
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otpHash = await bcrypt.hash(otp, 8);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await Otp.updateOne(
+    { _id: record._id },
+    { $set: { otpHash, expiresAt, attempts: 0, lastResendAt: new Date() }, $inc: { resendCount: 1 } }
+  );
+
+  // Get org name for the email
+  const user = await User.findOne({ email: emailNorm }).select('organization').lean();
+  let orgName = 'Mirsad';
+  if (user?.organization) {
+    const org = await Organization.findById(user.organization).select('name').lean();
+    if (org) orgName = org.name;
+  }
+
+  await sendPlatformOtpEmail(emailNorm, otp, orgName);
+  res.json({ success: true, message: 'A new verification code has been sent to your email.' });
 });
