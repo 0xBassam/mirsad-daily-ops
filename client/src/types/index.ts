@@ -1,5 +1,7 @@
 export type UserRole = 'admin' | 'supervisor' | 'assistant_supervisor' | 'project_manager' | 'client' | 'operations' | 'warehouse' | 'kitchen';
 
+export type OrgPlan = 'trial' | 'starter' | 'professional' | 'enterprise';
+
 export interface User {
   _id: string;
   fullName: string;
@@ -7,6 +9,9 @@ export interface User {
   phone?: string;
   role: UserRole;
   project?: { _id: string; name: string } | string;
+  organizationId?: string | null;
+  orgName?: string;
+  plan?: OrgPlan;
   status: 'active' | 'inactive';
   lastLoginAt?: string;
   createdAt: string;

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { User } from '../models/User';
+import { Organization } from '../models/Organization';
 import { generateToken } from '../utils/generateToken';
 import { AppError } from '../utils/AppError';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -20,17 +21,39 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
   await logAction({ userId: user._id.toString(), action: 'login', entityType: 'user', entityId: user._id, req });
 
-  const token = generateToken({ userId: user._id.toString(), role: user.role, email: user.email });
+  // Resolve organization info for JWT
+  const orgId = user.organization ? user.organization.toString() : null;
+  let orgName = '';
+  let plan = 'trial';
+  if (orgId) {
+    const org = await Organization.findById(orgId).select('name plan status').lean();
+    if (org) {
+      orgName = org.name;
+      plan = org.plan;
+      if (org.status === 'suspended') throw new AppError('Organization is suspended', 403);
+    }
+  }
+
+  const token = generateToken({
+    userId:         user._id.toString(),
+    role:           user.role,
+    email:          user.email,
+    organizationId: orgId,
+    plan,
+  });
 
   res.json({
     success: true,
     token,
     user: {
-      _id: user._id,
-      fullName: user.fullName,
-      email: user.email,
-      role: user.role,
-      project: user.project,
+      _id:            user._id,
+      fullName:       user.fullName,
+      email:          user.email,
+      role:           user.role,
+      project:        user.project,
+      organizationId: orgId,
+      orgName,
+      plan,
     },
   });
 });

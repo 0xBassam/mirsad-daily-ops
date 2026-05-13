@@ -10,6 +10,7 @@ export type ReportType =
   | 'food_stock_balance';
 
 export interface IReport extends Document {
+  organization?: mongoose.Types.ObjectId;
   reportType: ReportType;
   title?: string;
   project?: mongoose.Types.ObjectId;
@@ -27,6 +28,7 @@ export interface IReport extends Document {
 
 const reportSchema = new Schema<IReport>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     reportType: {
       type: String,
       enum: ['daily_floor_check', 'daily_project_summary', 'weekly_warehouse', 'monthly_food_inventory', 'monthly_materials', 'approval_summary', 'food_stock_balance'],
@@ -46,5 +48,7 @@ const reportSchema = new Schema<IReport>(
   },
   { timestamps: { createdAt: true, updatedAt: false } }
 );
+
+reportSchema.index({ organization: 1, createdAt: -1 });
 
 export const Report = mongoose.model<IReport>('Report', reportSchema);

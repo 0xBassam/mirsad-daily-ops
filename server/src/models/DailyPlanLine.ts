@@ -3,6 +3,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 export type LineStatus = 'pending' | 'in_progress' | 'completed' | 'shortage';
 
 export interface IDailyPlanLine extends Document {
+  organization?: mongoose.Types.ObjectId;
   dailyPlan: mongoose.Types.ObjectId;
   floor: mongoose.Types.ObjectId;
   item: mongoose.Types.ObjectId;
@@ -19,6 +20,7 @@ export interface IDailyPlanLine extends Document {
 
 const dailyPlanLineSchema = new Schema<IDailyPlanLine>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     dailyPlan:   { type: Schema.Types.ObjectId, ref: 'DailyPlan', required: true },
     floor:       { type: Schema.Types.ObjectId, ref: 'Floor', required: true },
     item:        { type: Schema.Types.ObjectId, ref: 'Item', required: true },
@@ -33,6 +35,7 @@ const dailyPlanLineSchema = new Schema<IDailyPlanLine>(
   { timestamps: true }
 );
 
+dailyPlanLineSchema.index({ organization: 1, assignedTo: 1 });
 dailyPlanLineSchema.index({ dailyPlan: 1 });
 dailyPlanLineSchema.index({ assignedTo: 1 });
 

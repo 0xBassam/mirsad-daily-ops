@@ -15,6 +15,7 @@ export interface IPOLine {
 }
 
 export interface IPurchaseOrder extends Document {
+  organization?: mongoose.Types.ObjectId;
   poNumber: string;
   supplier: mongoose.Types.ObjectId;
   project: mongoose.Types.ObjectId;
@@ -45,6 +46,7 @@ const poLineSchema = new Schema<IPOLine>(
 
 const purchaseOrderSchema = new Schema<IPurchaseOrder>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     poNumber:  { type: String, required: true, unique: true, trim: true },
     supplier:  { type: Schema.Types.ObjectId, ref: 'Supplier', required: true },
     project:   { type: Schema.Types.ObjectId, ref: 'Project', required: true },
@@ -59,6 +61,7 @@ const purchaseOrderSchema = new Schema<IPurchaseOrder>(
   { timestamps: true }
 );
 
+purchaseOrderSchema.index({ organization: 1, project: 1, month: 1 });
 purchaseOrderSchema.index({ project: 1, month: 1 });
 purchaseOrderSchema.index({ supplier: 1, status: 1 });
 

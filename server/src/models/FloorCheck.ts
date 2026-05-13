@@ -10,6 +10,7 @@ export type FloorCheckStatus =
   | 'closed';
 
 export interface IFloorCheck extends Document {
+  organization?: mongoose.Types.ObjectId;
   dailyPlan?: mongoose.Types.ObjectId;
   date: Date;
   project: mongoose.Types.ObjectId;
@@ -29,6 +30,7 @@ export interface IFloorCheck extends Document {
 
 const floorCheckSchema = new Schema<IFloorCheck>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     dailyPlan: { type: Schema.Types.ObjectId, ref: 'DailyPlan' },
     date: { type: Date, required: true },
     project: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
@@ -58,6 +60,7 @@ const floorCheckSchema = new Schema<IFloorCheck>(
   { timestamps: true }
 );
 
+floorCheckSchema.index({ organization: 1, date: -1, status: 1 });
 floorCheckSchema.index({ date: -1, project: 1, status: 1 });
 
 export const FloorCheck = mongoose.model<IFloorCheck>('FloorCheck', floorCheckSchema);

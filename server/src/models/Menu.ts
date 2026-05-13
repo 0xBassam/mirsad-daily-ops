@@ -10,6 +10,7 @@ export interface IMenuItem {
 }
 
 export interface IMenu extends Document {
+  organization?: mongoose.Types.ObjectId;
   date:      Date;
   project:   mongoose.Types.ObjectId;
   mealType:  MealType;
@@ -29,6 +30,7 @@ const MenuItemSchema = new Schema<IMenuItem>({
 }, { _id: true });
 
 const MenuSchema = new Schema<IMenu>({
+  organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
   date:      { type: Date, required: true },
   project:   { type: Schema.Types.ObjectId, ref: 'Project', required: true },
   mealType:  { type: String, enum: ['breakfast', 'lunch', 'dinner', 'coffee_break'], required: true },
@@ -38,6 +40,7 @@ const MenuSchema = new Schema<IMenu>({
   createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
 }, { timestamps: true });
 
+MenuSchema.index({ organization: 1, date: 1, project: 1 });
 MenuSchema.index({ date: 1, project: 1 });
 
 export const Menu = mongoose.model<IMenu>('Menu', MenuSchema);

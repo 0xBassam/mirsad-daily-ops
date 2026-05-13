@@ -9,6 +9,7 @@ export interface IUser extends Document {
   password: string;
   phone?: string;
   role: UserRole;
+  organization?: mongoose.Types.ObjectId;
   project?: mongoose.Types.ObjectId;
   status: 'active' | 'inactive';
   lastLoginAt?: Date;
@@ -28,12 +29,16 @@ const userSchema = new Schema<IUser>(
       enum: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager', 'client', 'operations', 'warehouse', 'kitchen'],
       required: true,
     },
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     project: { type: Schema.Types.ObjectId, ref: 'Project' },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
     lastLoginAt: { type: Date },
   },
   { timestamps: true }
 );
+
+userSchema.index({ organization: 1 });
+userSchema.index({ organization: 1, role: 1 });
 
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();

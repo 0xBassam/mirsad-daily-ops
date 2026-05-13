@@ -4,6 +4,7 @@ export type ApprovalStep = 'supervisor' | 'assistant_supervisor' | 'project_mana
 export type ApprovalAction = 'submit' | 'review' | 'approve' | 'return' | 'reject' | 'close';
 
 export interface IApprovalRecord extends Document {
+  organization?: mongoose.Types.ObjectId;
   entityType: 'floor_check' | 'daily_plan' | 'report';
   entityId: mongoose.Types.ObjectId;
   step: ApprovalStep;
@@ -17,6 +18,7 @@ export interface IApprovalRecord extends Document {
 
 const approvalRecordSchema = new Schema<IApprovalRecord>(
   {
+    organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     entityType: {
       type: String,
       enum: ['floor_check', 'daily_plan', 'report'],
@@ -41,6 +43,7 @@ const approvalRecordSchema = new Schema<IApprovalRecord>(
   { timestamps: { createdAt: true, updatedAt: false } }
 );
 
+approvalRecordSchema.index({ organization: 1 });
 approvalRecordSchema.index({ entityType: 1, entityId: 1 });
 
 export const ApprovalRecord = mongoose.model<IApprovalRecord>('ApprovalRecord', approvalRecordSchema);
