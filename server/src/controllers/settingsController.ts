@@ -125,6 +125,30 @@ function validateTestEmailBody(body: Record<string, unknown>): { subject: string
   return { subject, message };
 }
 
+export const getSubscription = asyncHandler(async (req: Request, res: Response) => {
+  const orgId = req.organizationId as string;
+  const org = await Organization.findById(orgId)
+    .select('name plan status trialEndsAt planExpiresAt maxUsers maxProjects storageLimitMb featureFlags suspendedAt')
+    .lean();
+  if (!org) throw new AppError('Organization not found', 404);
+
+  const flags = org.featureFlags as Record<string, boolean>;
+  res.json({
+    success: true,
+    data: {
+      plan:           org.plan,
+      status:         org.status,
+      trialEndsAt:    org.trialEndsAt,
+      planExpiresAt:  org.planExpiresAt,
+      maxUsers:       org.maxUsers,
+      maxProjects:    org.maxProjects,
+      storageLimitMb: org.storageLimitMb,
+      featureFlags:   flags,
+      suspendedAt:    org.suspendedAt,
+    },
+  });
+});
+
 export const testEmail = asyncHandler(async (req: Request, res: Response) => {
   const orgId      = req.organizationId as string;
   const recipients = parseAndValidateRecipients(req.body.to);
