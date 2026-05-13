@@ -4,6 +4,7 @@ import { ProtectedRoute } from './components/layout/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
+import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { ClientDashboardPage } from './pages/dashboard/ClientDashboardPage';
 import { LandingPage } from './pages/landing/LandingPage';
@@ -95,8 +96,9 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<HomeRoute />} />
-          <Route path="/login"  element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/login"        element={<LoginPage />} />
+          <Route path="/signup"       element={<SignupPage />} />
+          <Route path="/verify-email" element={<VerifyEmailPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route element={<AppLayout />}>

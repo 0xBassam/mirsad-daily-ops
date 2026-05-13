@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export type OrgPlan = 'trial' | 'starter' | 'professional' | 'enterprise';
-export type OrgStatus = 'active' | 'suspended' | 'cancelled' | 'trial';
+export type OrgStatus = 'active' | 'suspended' | 'cancelled' | 'trial' | 'pending_verification';
 
 export interface IOrganizationSettings {
   // Email
@@ -133,7 +133,7 @@ const organizationSchema = new Schema<IOrganization>(
     maxProjects:     { type: Number, default: PLAN_LIMITS.trial.maxProjects },
     storageLimitMb:  { type: Number, default: PLAN_LIMITS.trial.storageLimitMb },
     featureFlags:    { type: Map, of: Boolean, default: defaultFeatureFlags },
-    status:          { type: String, enum: ['active', 'suspended', 'cancelled', 'trial'], default: 'trial' },
+    status:          { type: String, enum: ['active', 'suspended', 'cancelled', 'trial', 'pending_verification'], default: 'trial' },
     suspendedAt:     { type: Date },
     suspendedReason: { type: String },
     settings:        { type: orgSettingsSchema, default: () => ({}) },

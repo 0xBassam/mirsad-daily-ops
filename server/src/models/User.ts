@@ -12,6 +12,7 @@ export interface IUser extends Document {
   organization?: mongoose.Types.ObjectId;
   project?: mongoose.Types.ObjectId;
   status: 'active' | 'inactive';
+  emailVerified?: boolean;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -32,6 +33,7 @@ const userSchema = new Schema<IUser>(
     organization: { type: Schema.Types.ObjectId, ref: 'Organization' },
     project: { type: Schema.Types.ObjectId, ref: 'Project' },
     status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+    emailVerified: { type: Boolean, default: false },
     lastLoginAt: { type: Date },
   },
   { timestamps: true }
