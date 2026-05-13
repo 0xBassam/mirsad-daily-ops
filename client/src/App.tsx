@@ -49,6 +49,7 @@ import { SpoilageRecordingPage } from './pages/spoilage-records/SpoilageRecordin
 import { TransfersPage } from './pages/transfers/TransfersPage';
 import { ReceivingPage } from './pages/receiving/ReceivingPage';
 import { ReceivingDetailPage } from './pages/receiving/ReceivingDetailPage';
+import { ReceivingNewPage } from './pages/receiving/ReceivingNewPage';
 import { MaintenanceRequestsPage } from './pages/maintenance/MaintenanceRequestsPage';
 import { MaintenanceDetailPage } from './pages/maintenance/MaintenanceDetailPage';
 import { MaintenanceNewPage } from './pages/maintenance/MaintenanceNewPage';
@@ -99,6 +100,7 @@ export default function App() {
               <Route path="/spoilage" element={<SpoilageRecordingPage />} />
               <Route path="/transfers" element={<TransfersPage />} />
               <Route path="/receiving" element={<ReceivingPage />} />
+              <Route path="/receiving/new" element={<ReceivingNewPage />} />
               <Route path="/receiving/:id" element={<ReceivingDetailPage />} />
               <Route path="/maintenance" element={<MaintenanceRequestsPage />} />
               <Route path="/maintenance/new" element={<MaintenanceNewPage />} />

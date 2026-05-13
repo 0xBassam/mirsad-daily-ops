@@ -246,7 +246,7 @@ export interface DashboardStats {
   lowStockItemsList?: DashboardLowStockRow[];
 }
 
-export type ReportType = 'daily_floor_check' | 'daily_project_summary' | 'weekly_warehouse' | 'monthly_food_inventory' | 'monthly_materials' | 'approval_summary';
+export type ReportType = 'daily_floor_check' | 'daily_project_summary' | 'weekly_warehouse' | 'monthly_food_inventory' | 'monthly_materials' | 'approval_summary' | 'food_stock_balance';
 
 export interface Report {
   _id: string;

@@ -410,7 +410,8 @@
     "returned": "المرتجع",
     "remainingQty": "المتبقي",
     "balanceBreakdown": "تفاصيل الرصيد",
-    "linkedMovements": "الحركات المرتبطة"
+    "linkedMovements": "الحركات المرتبطة",
+    "flowLabel": "التدفق"
   },
   "movements": {
     "title": "حركات المخزون",
@@ -426,7 +427,11 @@
     "contactName": "جهة الاتصال",
     "licenseNumber": "رقم الترخيص",
     "qualityHistory": "سجل الجودة",
-    "linkedBatches": "الدفعات المرتبطة"
+    "linkedBatches": "الدفعات المرتبطة",
+    "food": "غذائي",
+    "material": "مواد",
+    "both": "غذاء ومواد",
+    "blacklisted": "محظور"
   },
   "batches": {
     "title": "تتبع الدفعات",
@@ -531,6 +536,7 @@
     "monthly_food_inventory": "مخزون الغذاء الشهري",
     "monthly_materials": "المواد الشهرية",
     "approval_summary": "ملخص الاعتمادات",
+    "food_stock_balance": "تقرير رصيد مخزون الغذاء",
     "generateNew": "إنشاء تقرير",
     "generate": "إنشاء",
     "generated": "تم إنشاء التقرير بنجاح"
@@ -590,6 +596,13 @@
     "totalReceived": "إجمالي المستلم",
     "rejected": "الأسطر المرفوضة",
     "receivedBy": "استُلم بواسطة",
+    "new": "سجل استلام جديد",
+    "deliveryInfo": "معلومات التسليم",
+    "invoiceNumber": "رقم الفاتورة",
+    "batchNumber": "رقم الدفعة / اللوت",
+    "createRecord": "حفظ سجل الاستلام",
+    "noPO": "بدون أمر شراء",
+    "prefillLines": "ملء من أمر الشراء",
     "conditions": {
       "good": "جيد",
       "damaged": "تالف",

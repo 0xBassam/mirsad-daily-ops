@@ -21,6 +21,7 @@ const TYPE_COLORS: Record<string, 'blue' | 'green' | 'indigo' | 'yellow' | 'gray
   monthly_food_inventory: 'yellow',
   monthly_materials: 'gray',
   approval_summary: 'indigo',
+  food_stock_balance: 'green',
 };
 
 const REPORT_TYPES = [
@@ -30,6 +31,7 @@ const REPORT_TYPES = [
   'monthly_food_inventory',
   'monthly_materials',
   'approval_summary',
+  'food_stock_balance',
 ] as const;
 
 const today = new Date().toISOString().split('T')[0];
