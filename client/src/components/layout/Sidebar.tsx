@@ -18,6 +18,7 @@ interface NavItem {
   to: string;
   icon: React.ElementType;
   labelKey: string;
+  roleLabelKeys?: Partial<Record<UserRole, string>>;
   roles: UserRole[];
   children?: { to: string; labelKey: string }[];
 }
@@ -45,7 +46,7 @@ const navSections: NavSection[] = [
       { to: '/transfers',          icon: ArrowRightLeft,  labelKey: 'nav.transfers',         roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/receiving',          icon: Truck,           labelKey: 'nav.receiving',         roles: ['assistant_supervisor', 'project_manager', 'admin'] },
       { to: '/maintenance',        icon: Wrench,          labelKey: 'nav.maintenance',       roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin'] },
-      { to: '/client-requests',    icon: MessageSquare,   labelKey: 'nav.clientRequests',    roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'client'] },
+      { to: '/client-requests',    icon: MessageSquare,   labelKey: 'nav.clientRequests', roleLabelKeys: { client: 'nav.myRequests' }, roles: ['supervisor', 'assistant_supervisor', 'project_manager', 'admin', 'client'] },
       { to: '/menu',               icon: UtensilsCrossed, labelKey: 'nav.menu',              roles: ['admin', 'supervisor', 'assistant_supervisor', 'project_manager'] },
     ],
   },
@@ -152,6 +153,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                   const Icon = item.icon;
                   const hasChildren = item.children && item.children.length > 0;
                   const isExpanded = expanded === item.to;
+                  const labelKey = (user?.role && item.roleLabelKeys?.[user.role]) ?? item.labelKey;
 
                   if (hasChildren) {
                     return (
@@ -161,7 +163,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
                         >
                           <Icon className="h-4 w-4 flex-shrink-0" />
-                          <span className="flex-1 text-start">{t(item.labelKey)}</span>
+                          <span className="flex-1 text-start">{t(labelKey)}</span>
                           <ChevronDown className={clsx('h-3.5 w-3.5 transition-transform', isExpanded && 'rotate-180')} />
                         </button>
                         {isExpanded && (
@@ -196,7 +198,7 @@ export function Sidebar({ onClose }: { onClose?: () => void }) {
                       }
                     >
                       <Icon className="h-4 w-4 flex-shrink-0" />
-                      {t(item.labelKey)}
+                      {t(labelKey)}
                     </NavLink>
                   );
                 })}

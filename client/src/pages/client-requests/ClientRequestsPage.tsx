@@ -10,6 +10,7 @@ import { ClientRequest } from '../../types';
 import { StatusBadge } from '../../components/ui/Badge';
 import { PageLoader } from '../../components/ui/LoadingSpinner';
 import { Pagination } from '../../components/ui/Pagination';
+import { useAuth } from '../../contexts/AuthContext';
 
 const PRIORITY_RING: Record<string, string> = {
   urgent: 'border-s-4 border-s-red-500',
@@ -37,6 +38,8 @@ const TYPE_COLORS: Record<string, string> = {
 export function ClientRequestsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isClient = user?.role === 'client';
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
@@ -64,9 +67,11 @@ export function ClientRequestsPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             <MessageSquare className="h-6 w-6 text-indigo-500" />
-            {t('clientRequests.title')}
+            {isClient ? t('clientRequests.myTitle') : t('clientRequests.title')}
           </h1>
-          <p className="text-slate-500 text-sm mt-1">{t('clientRequests.subtitle')}</p>
+          <p className="text-slate-500 text-sm mt-1">
+            {isClient ? t('clientRequests.mySubtitle') : t('clientRequests.subtitle')}
+          </p>
         </div>
         <button onClick={() => navigate('/client-requests/new')} className="btn-primary">
           <Plus className="h-4 w-4" />{t('clientRequests.new')}
@@ -117,7 +122,7 @@ export function ClientRequestsPage() {
           </button>
         )}
         <span className="ms-auto text-xs text-slate-400 font-medium">
-          {crData?.pagination?.total ?? requests.length} {t('clientRequests.title').toLowerCase()}
+          {crData?.pagination?.total ?? requests.length} {(isClient ? t('clientRequests.myTitle') : t('clientRequests.title')).toLowerCase()}
         </span>
       </div>
 
@@ -161,10 +166,11 @@ export function ClientRequestsPage() {
                       {req.room && ` · ${req.room}`}
                     </span>
                   )}
-                  {req.expectedDelivery && (
+                  {(req as any).scheduledDate && (
                     <span className="flex items-center gap-1">
                       <CalendarDays className="h-3 w-3" />
-                      {t('common.dueDate')}: {format(new Date(req.expectedDelivery), 'dd MMM')}
+                      {format(new Date((req as any).scheduledDate), 'dd MMM')}
+                      {(req as any).scheduledTime && ` · ${(req as any).scheduledTime}`}
                     </span>
                   )}
                   {req.items?.length > 0 && (

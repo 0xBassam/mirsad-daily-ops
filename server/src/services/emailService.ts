@@ -210,18 +210,26 @@ export interface RequestEmailData {
   room?: string;
   itemCount?: number;
   requestId: string;
+  scheduledDate?: string;
+  scheduledTime?: string;
+  employeeName?: string;
+  employeeId?: string;
+  building?: string;
 }
 
 export async function sendRequestCreated(data: RequestEmailData) {
   if (!await isAlertEnabled('clientRequestCreated')) return;
   const link = appLink(`/client-requests/${data.requestId}`);
+  const location = [data.building, data.floor, data.room].filter(Boolean).join(' › ');
   const body = `
     <p style="color:#1e293b;font-size:14px;margin:0 0 16px">A new client request has been submitted:</p>
     <table style="border-collapse:collapse;width:100%">
       ${row('Title', data.requestTitle)}
       ${row('Type', data.requestType)}
       ${row('Requested by', data.requesterName)}
-      ${data.floor ? row('Floor', `${data.floor}${data.room ? ' — ' + data.room : ''}`) : ''}
+      ${data.scheduledDate ? row('Scheduled', `${data.scheduledDate}${data.scheduledTime ? ' at ' + data.scheduledTime : ''}`) : ''}
+      ${data.employeeName ? row('Employee', `${data.employeeName}${data.employeeId ? ' (ID: ' + data.employeeId + ')' : ''}`) : ''}
+      ${location ? row('Location', location) : ''}
       ${data.itemCount ? row('Items', String(data.itemCount)) : ''}
     </table>
     ${actionButton('View Request', link)}`;

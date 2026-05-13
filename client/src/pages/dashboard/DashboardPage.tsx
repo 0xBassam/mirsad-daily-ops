@@ -290,12 +290,14 @@ const CR_STATUS_COLORS: Record<string, string> = {
   rejected:    'bg-red-100    text-red-700',
 };
 
-type WidgetId = 'stats' | 'awaiting' | 'active' | 'history';
+type WidgetId = 'stats' | 'awaiting' | 'upcoming' | 'active' | 'bytype' | 'history';
 interface WidgetDef { id: WidgetId; labelKey: string; }
 const ALL_WIDGETS: WidgetDef[] = [
   { id: 'stats',   labelKey: 'dashboard.widgets.stats' },
   { id: 'awaiting',labelKey: 'dashboard.widgets.awaiting' },
+  { id: 'upcoming',labelKey: 'clientRequests.upcomingServices' },
   { id: 'active',  labelKey: 'dashboard.widgets.active' },
+  { id: 'bytype',  labelKey: 'clientRequests.byType' },
   { id: 'history', labelKey: 'dashboard.widgets.history' },
 ];
 const DATE_RANGES = [7, 14, 30, 0] as const;
@@ -303,7 +305,14 @@ const DATE_RANGES = [7, 14, 30, 0] as const;
 function loadLayout(userId: string): { order: WidgetId[]; hidden: WidgetId[] } {
   try {
     const raw = localStorage.getItem(`clientDash:${userId}`);
-    if (raw) return JSON.parse(raw);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      // ensure new widget ids are present (migration for existing stored layouts)
+      const allIds = ALL_WIDGETS.map(w => w.id);
+      const missing = allIds.filter(id => !parsed.order.includes(id));
+      if (missing.length) parsed.order = [...parsed.order, ...missing];
+      return parsed;
+    }
   } catch { /* ignore */ }
   return { order: ALL_WIDGETS.map(w => w.id), hidden: [] };
 }
@@ -363,6 +372,18 @@ function ClientDashboard() {
   const delivered = all.filter(r => r.status === 'delivered');
   const history   = all.filter(r => ['confirmed','rejected'].includes(r.status)).slice(0, 5);
 
+  const todayStr = new Date().toISOString().split('T')[0];
+  const upcoming = (data?.data ?? [])
+    .filter((r: any) => r.scheduledDate && r.scheduledDate.slice(0, 10) >= todayStr && !['confirmed','rejected'].includes(r.status))
+    .sort((a: any, b: any) => a.scheduledDate.localeCompare(b.scheduledDate))
+    .slice(0, 5);
+
+  const byType: Record<string, number> = {};
+  for (const r of all) {
+    byType[r.requestType] = (byType[r.requestType] ?? 0) + 1;
+  }
+  const byTypeEntries = Object.entries(byType).sort((a, b) => b[1] - a[1]);
+
   function RequestCard({ req }: { req: any }) {
     const statusColor = CR_STATUS_COLORS[req.status] ?? 'bg-slate-100 text-slate-600';
     return (
@@ -386,13 +407,25 @@ function ClientDashboard() {
     );
   }
 
+  const TYPE_COLORS: Record<string, string> = {
+    operation_request:    'bg-indigo-100 text-indigo-700',
+    coffee_break_request: 'bg-purple-100 text-purple-700',
+    catering:             'bg-orange-100 text-orange-700',
+    maintenance:          'bg-slate-100  text-slate-700',
+    supplies:             'bg-blue-100   text-blue-700',
+    event:                'bg-pink-100   text-pink-700',
+    housekeeping:         'bg-teal-100   text-teal-700',
+    other:                'bg-gray-100   text-gray-600',
+  };
+
   const widgetMap: Record<WidgetId, React.ReactNode> = {
     stats: (
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: t('clientRequests.active'),               value: active.length,    color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-          { label: t('clientRequests.awaitingConfirmation'),  value: delivered.length, color: 'bg-violet-50 border-violet-200 text-violet-700' },
-          { label: t('dashboard.completed'),                  value: history.length,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+          { label: t('clientRequests.total'),               value: all.length,       color: 'bg-slate-50 border-slate-200 text-slate-700' },
+          { label: t('clientRequests.active'),              value: active.length,    color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
+          { label: t('clientRequests.awaitingConfirmation'), value: delivered.length, color: 'bg-violet-50 border-violet-200 text-violet-700' },
+          { label: t('dashboard.completed'),                 value: history.length,   color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
         ].map(s => (
           <div key={s.label} className={`rounded-2xl border p-4 text-center ${s.color}`}>
             <p className="text-3xl font-extrabold tabular-nums">{s.value}</p>
@@ -401,6 +434,58 @@ function ClientDashboard() {
         ))}
       </div>
     ),
+    upcoming: (
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+          {t('clientRequests.upcomingServices')} {upcoming.length > 0 && `(${upcoming.length})`}
+        </h2>
+        {upcoming.length === 0
+          ? <p className="text-slate-400 text-sm py-4 text-center">{t('clientRequests.noUpcoming')}</p>
+          : (
+            <div className="space-y-2">
+              {upcoming.map((r: any) => (
+                <Link key={r._id} to={`/client-requests/${r._id}`}
+                  className="flex items-start justify-between bg-white border border-slate-200 rounded-2xl px-4 py-3.5 hover:shadow-md hover:border-indigo-200 transition-all">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-slate-900 text-sm truncate">{r.title}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {t(`clientRequests.types.${r.requestType}`, { defaultValue: r.requestType.replace(/_/g, ' ') })}
+                      {r.employeeName && <> · {r.employeeName}</>}
+                    </p>
+                  </div>
+                  <div className="text-end flex-shrink-0 ms-3">
+                    <p className="text-xs font-bold text-indigo-600">{format(parseISO(r.scheduledDate), 'dd MMM')}</p>
+                    {r.scheduledTime && <p className="text-xs text-slate-400">{r.scheduledTime}</p>}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )
+        }
+      </div>
+    ),
+    bytype: byTypeEntries.length > 0 ? (
+      <div className="space-y-3">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('clientRequests.byType')}</h2>
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+          {byTypeEntries.map(([type, count]) => {
+            const maxCount = byTypeEntries[0][1];
+            const pct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+            return (
+              <div key={type} className="px-4 py-3 border-b border-slate-50 last:border-0 flex items-center gap-3">
+                <span className={`text-xs px-2 py-0.5 rounded-full font-semibold w-36 text-center flex-shrink-0 ${TYPE_COLORS[type] ?? 'bg-gray-100 text-gray-600'}`}>
+                  {t(`clientRequests.types.${type}`, { defaultValue: type.replace(/_/g, ' ') })}
+                </span>
+                <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${pct}%` }} />
+                </div>
+                <span className="text-sm font-bold text-slate-700 tabular-nums w-5 text-end">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    ) : null,
     awaiting: delivered.length > 0 ? (
       <div className="space-y-3">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest">

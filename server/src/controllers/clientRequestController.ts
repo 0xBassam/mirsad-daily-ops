@@ -46,10 +46,24 @@ export const createClientRequest = asyncHandler(async (req: Request, res: Respon
   // Fire-and-forget email to notification recipients
   (async () => {
     try {
-      const populated = await ClientRequest.findById(data._id).populate('requestedBy', 'fullName').populate('floor', 'name').lean() as any;
+      const populated = await ClientRequest.findById(data._id).populate('requestedBy', 'fullName').populate('building', 'name').populate('floor', 'name').lean() as any;
       const recipients = await getNotificationRecipients();
       if (recipients.length) {
-        await sendRequestCreated({ to: recipients, requestTitle: data.title, requestType: data.requestType, requesterName: populated?.requestedBy?.fullName || 'Client', floor: populated?.floor?.name, room: data.room, itemCount: data.items?.length, requestId: String(data._id) });
+        await sendRequestCreated({
+          to: recipients,
+          requestTitle:  data.title,
+          requestType:   data.requestType,
+          requesterName: populated?.requestedBy?.fullName || 'Client',
+          building:      populated?.building?.name,
+          floor:         populated?.floor?.name,
+          room:          data.room,
+          itemCount:     data.items?.length,
+          requestId:     String(data._id),
+          scheduledDate: data.scheduledDate ? data.scheduledDate.toISOString().split('T')[0] : undefined,
+          scheduledTime: data.scheduledTime,
+          employeeName:  data.employeeName,
+          employeeId:    data.employeeId,
+        });
       }
     } catch { /* silent */ }
   })();
